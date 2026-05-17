@@ -149,13 +149,15 @@
     .form-hint{font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;margin-top:5px}
 
     /* DRAG & DROP */
-    .card[draggable]{cursor:grab}
-    .card[draggable]:active{cursor:grabbing}
-    .card.dragging{opacity:0.4;transform:scale(0.98)}
-    .card.drag-over{border-color:var(--teal);border-style:dashed}
-    .drag-handle{display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--text-3);cursor:grab;flex-shrink:0;touch-action:none}
-    .drag-handle:active{cursor:grabbing}
+    .card[draggable]{cursor:default;transition:transform 0.2s ease,opacity 0.2s ease,box-shadow 0.2s ease}
+    .card.dragging{opacity:0.35;transform:scale(0.97);box-shadow:none;pointer-events:none}
+    .card.drag-over{border-color:var(--teal);border-width:2px;transform:translateY(-2px);box-shadow:0 6px 20px rgba(61,155,156,0.2)}
+    .card.drag-placeholder{border:2px dashed var(--teal);background:var(--teal-bg);height:60px;border-radius:var(--radius);margin-bottom:10px;transition:all 0.2s ease}
+    .drag-handle{display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--text-3);cursor:grab;flex-shrink:0;touch-action:none;-webkit-touch-action:none;transition:color 0.15s}
+    .drag-handle:hover{color:var(--text-2)}
+    .drag-handle:active{cursor:grabbing;color:var(--teal)}
     .drag-handle svg{width:14px;height:14px}
+    #contentList{transition:none}
     .chip.removable{display:inline-flex;align-items:center;gap:5px;padding-right:7px}
     .chip-x{font-size:13px;color:var(--text-3);line-height:1;cursor:pointer;margin-left:2px}
     .chip-add{border-style:dashed;color:var(--text-3)}
@@ -660,85 +662,121 @@ async function saveAudience(){
 
 // ===== DRAG & DROP =====
 let dragSrcId=null;
+// Touch drag state
+let touchDragId=null,touchStartX=0,touchStartY=0,touchMoved=false,touchLongPressTimer=null,touchClone=null,touchOffsetY=0;
+
 function initDragDrop(){
   const cards=document.querySelectorAll('#contentList .card[draggable]');
+
+  // ── DESKTOP DRAG ──
   cards.forEach(card=>{
     card.addEventListener('dragstart',e=>{
       dragSrcId=card.dataset.id;
-      card.classList.add('dragging');
+      setTimeout(()=>card.classList.add('dragging'),0);
       e.dataTransfer.effectAllowed='move';
     });
     card.addEventListener('dragend',()=>{
       card.classList.remove('dragging');
       document.querySelectorAll('.card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+      document.querySelectorAll('.card.drag-placeholder').forEach(c=>c.remove());
     });
     card.addEventListener('dragover',e=>{
       e.preventDefault();
       e.dataTransfer.dropEffect='move';
-      if(card.dataset.id!==dragSrcId) card.classList.add('drag-over');
+      if(card.dataset.id!==dragSrcId){
+        document.querySelectorAll('.card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+        card.classList.add('drag-over');
+      }
     });
-    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+    card.addEventListener('dragleave',e=>{
+      if(!card.contains(e.relatedTarget)) card.classList.remove('drag-over');
+    });
     card.addEventListener('drop',async e=>{
       e.preventDefault();
       card.classList.remove('drag-over');
-      const targetId=card.dataset.id;
-      if(!dragSrcId||dragSrcId===targetId)return;
-      // Reorder in DB: swap sortOrder
-      const all=await dbByIdx('contents','accountId',cur.id);
-      all.sort((a,b)=>(b.sortOrder||0)-(a.sortOrder||0)||new Date(b.date)-new Date(a.date)||Number(b.id)-Number(a.id));
-      const srcIdx=all.findIndex(c=>c.id===dragSrcId);
-      const tgtIdx=all.findIndex(c=>c.id===targetId);
-      if(srcIdx<0||tgtIdx<0)return;
-      // Move src to target position by swapping createdAt to reorder
-      const srcItem=all.splice(srcIdx,1)[0];
-      all.splice(tgtIdx,0,srcItem);
-      // Re-assign id-based ordering via a sortOrder field
-      for(let i=0;i<all.length;i++){
-        all[i].sortOrder=all.length-i;
-        await dbPut('contents',all[i]);
-      }
-      await renderLog();
+      await reorderContents(dragSrcId, card.dataset.id);
     });
-    // Touch drag support
-    let touchStartY=0,touchEl=null;
-    card.addEventListener('touchstart',e=>{
+  });
+
+  // ── TOUCH DRAG — only from drag-handle ──
+  const handles=document.querySelectorAll('#contentList .drag-handle');
+  handles.forEach(handle=>{
+    const card=handle.closest('.card');
+
+    handle.addEventListener('touchstart',e=>{
+      touchStartX=e.touches[0].clientX;
       touchStartY=e.touches[0].clientY;
-      dragSrcId=card.dataset.id;
-      touchEl=card;
+      touchMoved=false;
+      touchDragId=card.dataset.id;
+      // Long press 200ms to activate drag
+      touchLongPressTimer=setTimeout(()=>{
+        activateTouchDrag(card, e.touches[0]);
+      },200);
     },{passive:true});
-    card.addEventListener('touchmove',e=>{
-      if(!touchEl)return;
-      touchEl.classList.add('dragging');
-    },{passive:true});
-    card.addEventListener('touchend',async e=>{
-      if(!touchEl)return;
-      touchEl.classList.remove('dragging');
-      const touchEndY=e.changedTouches[0].clientY;
-      const moved=touchEndY-touchStartY;
-      if(Math.abs(moved)<40){dragSrcId=null;touchEl=null;return;}
-      // Find target card by position
-      const allCards=[...document.querySelectorAll('#contentList .card[draggable]')];
-      const targetCard=allCards.find(c=>{
-        if(c===touchEl)return false;
-        const rect=c.getBoundingClientRect();
-        return touchEndY>=rect.top&&touchEndY<=rect.bottom;
-      });
-      if(targetCard&&targetCard.dataset.id!==dragSrcId){
-        const targetId=targetCard.dataset.id;
-        const all=await dbByIdx('contents','accountId',cur.id);
-        all.sort((a,b)=>(b.sortOrder||0)-(a.sortOrder||0)||Number(b.id)-Number(a.id));
-        const srcIdx=all.findIndex(c=>c.id===dragSrcId);
-        const tgtIdx=all.findIndex(c=>c.id===targetId);
-        if(srcIdx>=0&&tgtIdx>=0){
-          const srcItem=all.splice(srcIdx,1)[0];
-          all.splice(tgtIdx,0,srcItem);
-          for(let i=0;i<all.length;i++){all[i].sortOrder=all.length-i;await dbPut('contents',all[i]);}
-          await renderLog();
-        }
+
+    handle.addEventListener('touchmove',e=>{
+      const dx=Math.abs(e.touches[0].clientX-touchStartX);
+      const dy=Math.abs(e.touches[0].clientY-touchStartY);
+      // Cancel long press if moved too much before activation
+      if(!touchClone&&(dx>8||dy>8)){
+        clearTimeout(touchLongPressTimer);
+        touchDragId=null;
+        return;
       }
-      dragSrcId=null;touchEl=null;
+      if(!touchClone)return;
+      e.preventDefault();
+      touchMoved=true;
+      const y=e.touches[0].clientY;
+      // Move clone
+      touchClone.style.top=(y-touchOffsetY)+'px';
+      // Highlight target
+      document.querySelectorAll('.card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+      const el=document.elementFromPoint(e.touches[0].clientX, y);
+      const targetCard=el?.closest('#contentList .card[draggable]');
+      if(targetCard&&targetCard.dataset.id!==touchDragId) targetCard.classList.add('drag-over');
+    },{passive:false});
+
+    handle.addEventListener('touchend',async e=>{
+      clearTimeout(touchLongPressTimer);
+      if(!touchClone){touchDragId=null;return;}
+      // Remove clone
+      touchClone.remove();touchClone=null;
+      document.querySelector('.card.dragging')?.classList.remove('dragging');
+      const y=e.changedTouches[0].clientY;
+      const el=document.elementFromPoint(e.changedTouches[0].clientX, y);
+      const targetCard=el?.closest('#contentList .card[draggable]');
+      document.querySelectorAll('.card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+      if(touchMoved&&targetCard&&targetCard.dataset.id!==touchDragId){
+        await reorderContents(touchDragId, targetCard.dataset.id);
+      }
+      touchDragId=null;touchMoved=false;
     },{passive:true});
   });
+}
+
+function activateTouchDrag(card, touch){
+  touchMoved=false;
+  card.classList.add('dragging');
+  const rect=card.getBoundingClientRect();
+  touchOffsetY=touch.clientY-rect.top;
+  // Create floating clone
+  touchClone=card.cloneNode(true);
+  touchClone.style.cssText=`position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;z-index:999;pointer-events:none;opacity:0.92;transform:scale(1.02);box-shadow:0 12px 32px rgba(0,0,0,0.7);border-radius:var(--radius);background:var(--surface);border:1px solid var(--teal);transition:none`;
+  document.body.appendChild(touchClone);
+}
+
+async function reorderContents(srcId, targetId){
+  if(!srcId||!targetId||srcId===targetId)return;
+  const all=await dbByIdx('contents','accountId',cur.id);
+  all.sort((a,b)=>(b.sortOrder||0)-(a.sortOrder||0)||new Date(b.date)-new Date(a.date)||Number(b.id)-Number(a.id));
+  const srcIdx=all.findIndex(c=>c.id===srcId);
+  const tgtIdx=all.findIndex(c=>c.id===targetId);
+  if(srcIdx<0||tgtIdx<0)return;
+  const srcItem=all.splice(srcIdx,1)[0];
+  all.splice(tgtIdx,0,srcItem);
+  for(let i=0;i<all.length;i++){all[i].sortOrder=all.length-i;await dbPut('contents',all[i]);}
+  await renderLog();
+  showToast('Urutan disimpan');
 }
 
 // ===== INSIGHT =====
