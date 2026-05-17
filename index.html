@@ -323,9 +323,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" style="flex-shrink:0;color:var(--text-3)"><polyline points="6 9 12 15 18 9"/></svg>
   </div>
   <div class="top-actions">
-    <button class="icon-btn" onclick="openSheet('sheetAudience')" title="Data Audiens">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-    </button>
+
     <button class="icon-btn" onclick="openSheet('sheetSettings')" title="Pengaturan Akun">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     </button>
@@ -444,8 +442,8 @@
     <div class="step-bar"><div class="step active" id="sb1"></div><div class="step" id="sb2"></div></div>
     <div id="addStep1">
       <div class="form-group"><label class="form-label">Judul</label><input type="text" class="form-input" id="inTitle" placeholder="Judul atau hook utama..."/></div>
+      <input type="hidden" id="inDateHidden"/>
       <div class="form-group"><label class="form-label">Deskripsi / Caption</label><textarea class="form-input" id="inDesc" placeholder="Caption + hashtag..."></textarea></div>
-      <div class="form-group"><label class="form-label">Tanggal Upload</label><input type="date" class="form-input" id="inDate"/></div>
       <div class="form-group"><label class="form-label">Format Konten</label><div class="chip-group" id="inFmtChips"></div></div>
       <div class="form-group" id="slideGroup"><label class="form-label">Jumlah Slide</label><input type="number" class="form-input" id="inSlides" placeholder="Misal: 6" min="1" max="30"/></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="inHookChips"></div></div>
@@ -480,6 +478,7 @@
   <div class="sheet-body">
     <input type="hidden" id="perfId"/>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:16px"><div style="font-size:13px;font-weight:600;color:var(--text)" id="perfTitleLabel">—</div></div>
+    <div class="sec-title" style="margin-bottom:10px;display:block">Metrik Dasar</div>
     <div class="grid2">
       <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</label><input type="number" class="form-input" id="pView" placeholder="0"/></div>
       <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg> Like</label><input type="number" class="form-input" id="pLike" placeholder="0"/></div>
@@ -488,30 +487,18 @@
       <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><path d="M10 14L21 3"/><path d="M21 13v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"/></svg> Share</label><input type="number" class="form-input" id="pShare" placeholder="0"/></div>
       <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Follower Baru</label><input type="number" class="form-input" id="pFollower" placeholder="0"/></div>
     </div>
+    <div class="sec-title" style="margin:14px 0 10px;display:block">Retention <span style="color:var(--teal);font-size:10px;font-weight:600;margin-left:4px">SINYAL ALGORITMA</span></div>
+    <div class="info-box" style="font-size:11px;margin-bottom:12px">Ada di TikTok Studio → Analytics → pilih konten → Insight</div>
+    <div class="grid2">
+      <div class="form-group"><label class="form-label">⏱ Avg Watch Time (detik)</label><input type="number" class="form-input" id="pWatchTime" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label">✅ Completion Rate (%)</label><input type="number" class="form-input" id="pCompRate" placeholder="0" min="0" max="100"/></div>
+      <div class="form-group"><label class="form-label">🔁 Re-watch Rate (%)</label><input type="number" class="form-input" id="pRewatchRate" placeholder="0" min="0" max="100"/></div>
+      <div class="form-group"><label class="form-label">⏱ Durasi Konten (detik)</label><input type="number" class="form-input" id="pDuration" placeholder="0"/></div>
+    </div>
     <button class="btn-primary" onclick="savePerf()">Simpan Performa</button>
   </div>
 </div>
 
-<!-- SHEET: AUDIENCE -->
-<div class="sheet-overlay" id="overlayAudience" onclick="closeSheet('sheetAudience')"></div>
-<div class="sheet" id="sheetAudience">
-  <div class="sheet-handle"></div>
-  <div class="sheet-hdr"><div class="sheet-title">Data Audiens</div><button class="sheet-close" onclick="closeSheet('sheetAudience')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-  <div class="sheet-body">
-    <div class="form-group"><label class="form-label">Periode</label><input type="text" class="form-input" id="audPeriode" placeholder="Misal: 8-14 Mei"/></div>
-    <div class="grid2">
-      <div class="form-group"><label class="form-label">Total Tayangan</label><input type="number" class="form-input" id="audView" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">Tampilan Profil</label><input type="number" class="form-input" id="audProfile" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">% Gender Pria</label><input type="number" class="form-input" id="audMale" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">% FYP / Explore</label><input type="number" class="form-input" id="audFyp" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">% Usia 18-24</label><input type="number" class="form-input" id="aud1824" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">% Usia 25-34</label><input type="number" class="form-input" id="aud2534" placeholder="0"/></div>
-    </div>
-    <div class="form-group"><label class="form-label">Waktu Paling Aktif</label><input type="text" class="form-input" id="audTime" placeholder="Misal: Jumat jam 6 pagi"/></div>
-    <div class="form-group"><label class="form-label">Search Query Masuk</label><textarea class="form-input" id="audQuery" placeholder="Satu per baris..."></textarea></div>
-    <button class="btn-primary" onclick="saveAudience()">Simpan Data Audiens</button>
-  </div>
-</div>
 
 <!-- SHEET: SETTINGS -->
 <div class="sheet-overlay" id="overlaySettings" onclick="closeSheet('sheetSettings')"></div>
@@ -733,7 +720,9 @@ function renderContentList(list, avgView, avgSave){
   listEl.innerHTML=list.map(c=>{
     const hp=c.perf&&c.perf.view>0;
     const dt=c.date?new Date(c.date+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'2-digit'}):'—';
-    const perf=hp?`<div class="metrics-row"><div class="metric-item"><div class="metric-val">${fmt(c.perf.view)}</div><div class="metric-label">View</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.like)}</div><div class="metric-label">Like</div></div><div class="metric-item"><div class="metric-val hi">${fmt(c.perf.save)}</div><div class="metric-label">Save</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.comment)}</div><div class="metric-label">Komen</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.share)}</div><div class="metric-label">Share</div></div></div>`:'';
+    const hasRet=c.retention&&(c.retention.compRate>0||c.retention.watchTime>0);
+    const retRow=hasRet?`<div class="metrics-row" style="border-top:1px dashed var(--border);margin-top:8px;padding-top:8px">${c.retention.watchTime?`<div class="metric-item"><div class="metric-val hi">${c.retention.watchTime}s</div><div class="metric-label">Watch</div></div>`:'<div class="metric-item"></div>'}${c.retention.compRate?`<div class="metric-item"><div class="metric-val hi">${c.retention.compRate}%</div><div class="metric-label">Complete</div></div>`:'<div class="metric-item"></div>'}${c.retention.rewatchRate?`<div class="metric-item"><div class="metric-val hi">${c.retention.rewatchRate}%</div><div class="metric-label">Re-watch</div></div>`:'<div class="metric-item"></div>'}<div class="metric-item"></div><div class="metric-item"></div></div>`:'';
+    const perf=hp?`<div class="metrics-row"><div class="metric-item"><div class="metric-val">${fmt(c.perf.view)}</div><div class="metric-label">View</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.like)}</div><div class="metric-label">Like</div></div><div class="metric-item"><div class="metric-val hi">${fmt(c.perf.save)}</div><div class="metric-label">Save</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.comment)}</div><div class="metric-label">Komen</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.share)}</div><div class="metric-label">Share</div></div></div>${retRow}`:'';
     const perfBadge=getPerfBadge(c,avgView,avgSave);
     const needsPerf=!hp&&c.date&&daysSince(c.date)>=1;
     const reminderBadge=needsPerf?`<span class="reminder-badge"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Input performa</span>`:'';
@@ -769,8 +758,9 @@ function openAddSheet(){
   if(!cur){showToast('Pilih akun dulu');return;}
   editingId=null;
   document.getElementById('addSheetTitle').textContent='Tambah Konten';
-  document.getElementById('inDate').value=new Date().toISOString().split('T')[0];
-  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower','inNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('inDateHidden').value=new Date().toISOString().split('T')[0];
+  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('inDateHidden').value=new Date().toISOString().split('T')[0];
   document.querySelectorAll('#sheetAdd .chip').forEach(c=>c.classList.remove('selected'));
   cs={};backStep1();document.getElementById('slideGroup').style.display='';openSheet('sheetAdd');
 }
@@ -782,7 +772,7 @@ async function openEditSheet(id){
   // Fill step 1
   document.getElementById('inTitle').value=c.title||'';
   document.getElementById('inDesc').value=c.desc||'';
-  document.getElementById('inDate').value=c.date||new Date().toISOString().split('T')[0];
+  document.getElementById('inDateHidden').value=c.date||new Date().toISOString().split('T')[0];
   document.getElementById('inSlides').value=c.slides||'';
   // Reset chips then select matching
   document.querySelectorAll('#sheetAdd .chip').forEach(ch=>ch.classList.remove('selected'));
@@ -799,6 +789,10 @@ async function openEditSheet(id){
   selByText('inTopicChips',c.topic,'inTopic');
   selByText('inGoalChips',c.goal,'inGoal');
   document.getElementById('inNotes').value=c.notes||'';
+  document.getElementById('inWatchTime').value=c.retention?.watchTime||'';
+  document.getElementById('inCompRate').value=c.retention?.compRate||'';
+  document.getElementById('inRewatchRate').value=c.retention?.rewatchRate||'';
+  document.getElementById('inDuration').value=c.retention?.duration||'';
   // Show/hide slide field
   document.getElementById('slideGroup').style.display=c.format==='Carousel'?'':'none';
   // Fill step 2 if has perf
@@ -832,7 +826,7 @@ function buildContent(withPerf){
     accountId:cur.id,
     title:document.getElementById('inTitle').value.trim(),
     desc:document.getElementById('inDesc').value.trim(),
-    date:document.getElementById('inDate').value,
+    date:document.getElementById('inDateHidden').value,
     format:cs['inFmt']||'—',
     slides:parseInt(document.getElementById('inSlides').value)||0,
     hook:cs['inHook']||'—',
@@ -840,6 +834,12 @@ function buildContent(withPerf){
     topic:cs['inTopic']||'—',
     goal:cs['inGoal']||'—',
     notes:document.getElementById('inNotes')?.value.trim()||null,
+    retention:{
+      watchTime:parseInt(document.getElementById('inWatchTime')?.value)||0,
+      compRate:parseFloat(document.getElementById('inCompRate')?.value)||0,
+      rewatchRate:parseFloat(document.getElementById('inRewatchRate')?.value)||0,
+      duration:parseInt(document.getElementById('inDuration')?.value)||0,
+    },
     perf:withPerf?{view:parseInt(document.getElementById('inView').value)||0,like:parseInt(document.getElementById('inLike').value)||0,save:parseInt(document.getElementById('inSave').value)||0,comment:parseInt(document.getElementById('inComment').value)||0,share:parseInt(document.getElementById('inShare').value)||0,follower:parseInt(document.getElementById('inFollower').value)||0}:null,
     createdAt:new Date().toISOString()
   };
@@ -860,16 +860,12 @@ async function openPerfSheet(id){
 async function savePerf(){
   const id=document.getElementById('perfId').value;const c=await dbGet('contents',id);if(!c)return;
   c.perf={view:parseInt(document.getElementById('pView').value)||0,like:parseInt(document.getElementById('pLike').value)||0,save:parseInt(document.getElementById('pSave').value)||0,comment:parseInt(document.getElementById('pComment').value)||0,share:parseInt(document.getElementById('pShare').value)||0,follower:parseInt(document.getElementById('pFollower').value)||0};
+  c.retention={watchTime:parseInt(document.getElementById('pWatchTime').value)||0,compRate:parseFloat(document.getElementById('pCompRate').value)||0,rewatchRate:parseFloat(document.getElementById('pRewatchRate').value)||0,duration:parseInt(document.getElementById('pDuration').value)||0};
   await dbPut('contents',c);closeSheet('sheetPerf');await renderLog();await renderInsight();showToast('Performa diperbarui ✓');
 }
 async function delContent(id){if(!confirm('Hapus konten ini?'))return;await dbDel('contents',id);await renderLog();await renderInsight();showToast('Dihapus');}
 
-// ===== AUDIENCE =====
-async function saveAudience(){
-  if(!cur){showToast('Pilih akun dulu');return;}
-  await dbPut('audience',{id:Date.now().toString(),accountId:cur.id,periode:document.getElementById('audPeriode').value,view:parseInt(document.getElementById('audView').value)||0,profile:parseInt(document.getElementById('audProfile').value)||0,male:parseFloat(document.getElementById('audMale').value)||0,fyp:parseFloat(document.getElementById('audFyp').value)||0,age1824:parseFloat(document.getElementById('aud1824').value)||0,age2534:parseFloat(document.getElementById('aud2534').value)||0,activeTime:document.getElementById('audTime').value,queries:document.getElementById('audQuery').value.split('\n').filter(Boolean),savedAt:new Date().toISOString()});
-  closeSheet('sheetAudience');showToast('Data audiens disimpan ✓');
-}
+// ===== AUDIENCE — removed =====
 
 
 // ===== DRAG & DROP =====
@@ -1114,6 +1110,21 @@ function buildLineChart(live){
     </div>
   </div>`;
 }
+function buildRetentionInsight(live){
+  const withRet=live.filter(c=>c.retention&&c.retention.compRate>0);
+  if(!withRet.length)return null;
+  // Best completion rate
+  const avgComp=withRet.reduce((s,c)=>s+c.retention.compRate,0)/withRet.length;
+  const avgWatch=withRet.filter(c=>c.retention.watchTime>0).reduce((s,c)=>s+c.retention.watchTime,0)/Math.max(withRet.filter(c=>c.retention.watchTime>0).length,1);
+  const avgRewatch=withRet.filter(c=>c.retention.rewatchRate>0).reduce((s,c)=>s+c.retention.rewatchRate,0)/Math.max(withRet.filter(c=>c.retention.rewatchRate>0).length,1);
+  // Best hook by completion
+  const hookComp={};
+  withRet.forEach(c=>{if(!hookComp[c.hook])hookComp[c.hook]={s:0,n:0};hookComp[c.hook].s+=c.retention.compRate;hookComp[c.hook].n++;});
+  const bestHook=Object.entries(hookComp).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n))[0];
+  const worstHook=Object.entries(hookComp).sort((a,b)=>(a[1].s/a[1].n)-(b[1].s/b[1].n))[0];
+  return{avgComp:avgComp.toFixed(1),avgWatch:Math.round(avgWatch),avgRewatch:avgRewatch.toFixed(1),bestHook:bestHook?{name:bestHook[0],val:(bestHook[1].s/bestHook[1].n).toFixed(1)}:null,worstHook:worstHook&&worstHook[0]!==bestHook?.[0]?{name:worstHook[0],val:(worstHook[1].s/worstHook[1].n).toFixed(1)}:null,count:withRet.length};
+}
+
 function buildPatterns(live){
   const p=[];
   const best=[...live].sort((a,b)=>b.perf.view-a.perf.view)[0];
@@ -1124,6 +1135,11 @@ function buildPatterns(live){
   const avg=live.reduce((s,c)=>s+c.perf.save,0)/live.length;
   const gs=live.filter(c=>c.goal==='Save tinggi');
   if(gs.length>0){const gAvg=gs.reduce((s,c)=>s+c.perf.save,0)/gs.length;p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,title:'Tujuan vs Realita',text:gAvg>=avg?`Konten "Save tinggi" rata-rata ${gAvg.toFixed(1)} save — di atas rata-rata (${avg.toFixed(1)}). ✓`:`Konten "Save tinggi" rata-rata ${gAvg.toFixed(1)} save — di bawah rata-rata (${avg.toFixed(1)}). Evaluasi hook dan struktur.`});}
+  // Retention insights
+  const ret=buildRetentionInsight(live);
+  if(ret){
+    p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,title:`Retention (${ret.count} konten)`,text:`Avg completion rate: <strong>${ret.avgComp}%</strong>${ret.avgWatch?` · Avg watch time: <strong>${ret.avgWatch}s</strong>`:''}${ret.avgRewatch>0?` · Avg re-watch: <strong>${ret.avgRewatch}%</strong>`:''}.${ret.bestHook?` Hook terbaik untuk retention: <strong>${ret.bestHook.name}</strong> (${ret.bestHook.val}%).`:''}${ret.worstHook?` Hook dengan completion terendah: <strong>${ret.worstHook.name}</strong> (${ret.worstHook.val}%).`:''}`});
+  }
   return p;
 }
 function buildTable(live,key){
@@ -1252,7 +1268,7 @@ function renderDraftForm(type){
 async function analyzeDraft(type){
   if(!cur){showToast('Pilih akun dulu');return;}
   const live=(await dbByIdx('contents','accountId',cur.id)).filter(c=>c.perf&&c.perf.view>0);
-  const hist=live.length?live.map(c=>`- "${c.title}" | Hook:${c.hook} | Struktur:${c.struct} | View:${c.perf.view} | Save:${c.perf.save} | Like:${c.perf.like}`).join('\n'):'Belum ada histori.';
+  const hist=live.length?live.map(c=>`- "${c.title}" | Hook:${c.hook} | Struktur:${c.struct} | View:${c.perf.view} | Save:${c.perf.save} | Like:${c.perf.like}${c.retention?.compRate?` | Completion:${c.retention.compRate}% | Watch:${c.retention.watchTime}s | Rewatch:${c.retention.rewatchRate}%`:''}`).join('\n'):'Belum ada histori.';
   const base=`Akun: ${cur.username||cur.name}\nPlatform: ${cur.platform}\nNiche: ${cur.niche}\n\nHistori konten:\n${hist}\n\n`;
   const analysisFmt=`\nAnalisis:\n1. **Potensi** — berdasarkan histori akun.\n2. **Kekuatan** — apa yang sudah bagus.\n3. **Yang perlu diperbaiki** — bagian mana yang lemah dan kenapa.\n4. **Rekomendasi spesifik** — saran konkret.\n5. **Prediksi metrik** — berdasarkan histori.\nJujur dan spesifik.`;
   let prompt='';
@@ -1415,6 +1431,8 @@ async function copyToClipboard(text, btnId){
 function buildInsightText(live, account, avgView, avgSave, topFmt){
   const lines=[];
   lines.push('=== INSIGHT KONTEN ===');
+  const retSummary=buildRetentionInsight(live);
+  if(retSummary)lines.push(`Retention — Avg completion: ${retSummary.avgComp}% | Avg watch: ${retSummary.avgWatch}s | Avg re-watch: ${retSummary.avgRewatch}%`);
   lines.push(`Akun: ${account.username||account.name} | Platform: ${account.platform} | Niche: ${account.niche}`);
   lines.push(`Total konten live: ${live.length} | Avg View: ${avgView} | Avg Save: ${avgSave} | Format terbaik: ${topFmt}`);
   lines.push('');
@@ -1450,7 +1468,8 @@ function buildInsightText(live, account, avgView, avgSave, topFmt){
   // All content list
   lines.push('--- SEMUA KONTEN LIVE ---');
   [...live].sort((a,b)=>b.perf.view-a.perf.view).forEach(c=>{
-    lines.push(`"${c.title||'Tanpa judul'}" | ${c.format} | Hook: ${c.hook} | Struktur: ${c.struct} | Topik: ${c.topic} | View: ${c.perf.view} | Like: ${c.perf.like} | Save: ${c.perf.save} | Komen: ${c.perf.comment} | Share: ${c.perf.share}${c.notes?' | Catatan: '+c.notes:''}`);
+    const retStr=c.retention?.compRate?` | Completion: ${c.retention.compRate}% | Watch: ${c.retention.watchTime}s | Re-watch: ${c.retention.rewatchRate}%`:'';
+    lines.push(`"${c.title||'Tanpa judul'}" | ${c.format} | Hook: ${c.hook} | Struktur: ${c.struct} | Topik: ${c.topic} | View: ${c.perf.view} | Like: ${c.perf.like} | Save: ${c.perf.save} | Komen: ${c.perf.comment} | Share: ${c.perf.share}${retStr}${c.notes?' | Catatan: '+c.notes:''}`);
   });
   return lines.join('\n');
 }
@@ -1539,7 +1558,7 @@ function renderCalDetail(dateStr, items){
 
 function openAddSheetWithDate(dateStr){
   openAddSheet();
-  setTimeout(()=>{document.getElementById('inDate').value=dateStr;},100);
+  setTimeout(()=>{document.getElementById('inDateHidden').value=dateStr;},100);
 }
 
 function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}calSelected=null;renderCalendar();}
