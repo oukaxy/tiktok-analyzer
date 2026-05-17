@@ -148,6 +148,102 @@
     .fade-in{animation:fadeIn .25s ease forwards}
     .form-hint{font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;margin-top:5px}
 
+
+
+
+
+    /* COPY BUTTON */
+    .copy-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .copy-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+    .copy-btn:hover{background:var(--border);color:var(--text)}
+    .copy-btn.copied{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+    .copy-btn svg{width:12px;height:12px}
+
+    /* CALENDAR */
+    .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .cal-nav-btn{width:32px;height:32px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:all .15s}
+    .cal-nav-btn:hover{background:var(--border);color:var(--text)}
+    .cal-month{font-size:15px;font-weight:600;letter-spacing:-.3px}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px}
+    .cal-day-hdr{text-align:center;font-size:10px;font-weight:600;color:var(--text-3);font-family:'DM Mono',monospace;padding:4px 0}
+    .cal-cell{min-height:44px;border-radius:8px;padding:4px;cursor:pointer;transition:background .15s;position:relative;background:var(--surface2);border:1px solid transparent}
+    .cal-cell:hover{background:var(--border)}
+    .cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
+    .cal-cell.today{border-color:var(--teal)}
+    .cal-cell.has-content{background:var(--teal-bg);border-color:var(--teal)}
+    .cal-cell.planned{background:#1a1508;border-color:var(--amber)}
+    .cal-cell.selected{background:var(--teal);border-color:var(--teal)}
+    .cal-cell.selected .cal-date{color:var(--accent-fg)}
+    .cal-date{font-size:11px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text-2)}
+    .cal-dot-wrap{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px}
+    .cal-dot{width:5px;height:5px;border-radius:50%}
+    .cal-detail{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+    .cal-detail-date{font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;margin-bottom:10px}
+    .cal-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+    .cal-item:last-child{border-bottom:none}
+    .cal-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .cal-item-info{flex:1;min-width:0}
+    .cal-item-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cal-item-meta{font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;margin-top:1px}
+    .cal-add-btn{width:100%;padding:10px;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-3);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px}
+    .cal-add-btn:hover{border-color:var(--text-2);color:var(--text-2)}
+    .cal-legend{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+    .cal-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)}
+    .cal-legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+    /* COMPARE */
+    .cmp-selector{display:flex;gap:8px;margin-bottom:16px}
+    .cmp-acc-btn{flex:1;padding:10px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .15s}
+    .cmp-acc-btn.selected{border-color:var(--teal);background:var(--teal-bg)}
+    .cmp-acc-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;margin:0 auto 5px}
+    .cmp-acc-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cmp-acc-plat{font-size:10px;color:var(--text-3);font-family:'DM Mono',monospace}
+    .cmp-bar-wrap{margin-bottom:14px}
+    .cmp-bar-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .cmp-bar-title{font-size:12px;color:var(--text-2)}
+    .cmp-bar-vals{display:flex;gap:12px}
+    .cmp-bar-val{font-size:11px;font-family:'DM Mono',monospace;font-weight:600}
+    .cmp-bar-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;display:flex;gap:2px}
+    .cmp-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+    .cmp-winner{font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;background:var(--green-bg);color:var(--green)}
+
+    /* CHART */
+    .chart-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;overflow:hidden}
+    .chart-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text-3);font-family:'DM Mono',monospace;margin-bottom:12px}
+    .chart-svg{width:100%;overflow:visible}
+    .chart-legend{display:flex;gap:14px;margin-top:10px}
+    .chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace}
+    .chart-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    /* NOTES */
+    .notes-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);cursor:pointer;padding:8px 0;border:none;background:none;font-family:'DM Sans',sans-serif;width:100%}
+    .notes-toggle svg{width:13px;height:13px;transition:transform .2s}
+    .notes-toggle.open svg{transform:rotate(180deg)}
+    .notes-area{display:none;margin-top:6px}
+    .notes-area.open{display:block}
+    .notes-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;min-height:72px;line-height:1.5;transition:border-color .15s}
+    .notes-input:focus{border-color:var(--text-3)}
+    .notes-save-btn{margin-top:6px;padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+    .notes-save-btn:hover{background:var(--border);color:var(--text)}
+    .notes-preview{font-size:12px;color:var(--text-3);font-style:italic;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* REMINDER BADGE */
+    .reminder-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:'DM Mono',monospace;font-weight:600;padding:3px 8px;border-radius:4px;background:#1a1508;color:#d4922a;margin-left:4px}
+
+    /* SEARCH & FILTER */
+    .log-toolbar{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+    .search-wrap{position:relative}
+    .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none}
+    .search-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px 9px 34px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s}
+    .search-input:focus{border-color:var(--text-3)}
+    .search-input::placeholder{color:var(--text-3)}
+    .filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+    .filter-row::-webkit-scrollbar{display:none}
+    .filter-chip{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-weight:500;color:var(--text-2);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'DM Sans',sans-serif;flex-shrink:0}
+    .filter-chip.active{background:var(--text);color:var(--accent-fg);border-color:var(--text)}
+    /* PERF BADGES */
+    .perf-badge{font-size:10px;font-weight:700;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;letter-spacing:.3px}
+    .perf-top{background:#1a2a0a;color:#7ed957}
+    .perf-low{background:#1f1510;color:#d4922a}
+
     /* DRAG & DROP */
     .card[draggable]{cursor:default;transition:transform 0.2s ease,opacity 0.2s ease,box-shadow 0.2s ease}
     .card.dragging{opacity:0.35;transform:scale(0.97);box-shadow:none;pointer-events:none}
@@ -238,6 +334,13 @@
 
 <!-- VIEWS -->
 <div class="view active" id="viewLog">
+  <div class="log-toolbar">
+    <div class="search-wrap">
+      <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Cari judul konten..." oninput="applyFilter()"/>
+    </div>
+    <div class="filter-row" id="filterRow"></div>
+  </div>
   <div class="sec-hdr"><span class="sec-title">Konten</span><span class="sec-title" id="logCount" style="color:var(--text-2)">0 konten</span></div>
   <div id="contentList"></div>
 </div>
@@ -249,7 +352,13 @@
     <div id="draftFormArea"></div>
     <div id="draftResult" style="display:none;margin-top:20px">
       <hr class="div">
-      <div class="sec-hdr"><span class="sec-title">Hasil Analisis</span></div>
+      <div class="copy-bar">
+        <span class="sec-title">Hasil Analisis</span>
+        <button class="copy-btn" id="copyDraftBtn" onclick="copyDraftResult()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy
+        </button>
+      </div>
       <div id="draftResultContent"></div>
     </div>
   </div>
@@ -265,15 +374,41 @@
   <div id="insightBody"></div>
 </div>
 
-<nav class="bottom-nav">
+<div class="view" id="viewCalendar">
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="calPrev()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="cal-month" id="calMonthLabel"></div>
+    <button class="cal-nav-btn" onclick="calNext()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+  </div>
+  <div class="cal-legend">
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--teal)"></div>Sudah posting</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--amber)"></div>Direncanakan</div>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div id="calDetail"></div>
+</div>
+
+<div class="view" id="viewCompare">
+  <div class="sec-hdr"><span class="sec-title">Bandingkan Akun</span></div>
+  <div class="cmp-selector" id="cmpSelector"></div>
+  <div id="cmpBody"></div>
+</div>
+
+<nav class="bottom-nav" style="grid-template-columns:repeat(5,1fr)">
   <button class="nav-item active" onclick="switchView('Log',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>Log
   </button>
   <button class="nav-item" onclick="switchView('Draft',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Draft
   </button>
+  <button class="nav-item" onclick="switchView('Calendar',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Kalender
+  </button>
   <button class="nav-item" onclick="switchView('Insight',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Insight
+  </button>
+  <button class="nav-item" onclick="switchView('Compare',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Bandingkan
   </button>
 </nav>
 
@@ -317,6 +452,7 @@
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="inStructChips"></div></div>
       <div class="form-group"><label class="form-label">Topik Spesifik</label><div class="chip-group" id="inTopicChips"></div></div>
       <div class="form-group"><label class="form-label">Tujuan Konten</label><div class="chip-group" id="inGoalChips"><div class="chip" onclick="selChip(this,'inGoal')">Save tinggi</div><div class="chip" onclick="selChip(this,'inGoal')">Like & engagement</div><div class="chip" onclick="selChip(this,'inGoal')">Jangkauan luas</div><div class="chip" onclick="selChip(this,'inGoal')">Follower growth</div></div></div>
+      <div class="form-group"><label class="form-label">Catatan Pribadi <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional)</span></label><textarea class="form-input" id="inNotes" placeholder="Misal: konten ini viral karena trending audio, dibuat saat ramadan..." style="min-height:70px"></textarea></div>
       <button class="btn-primary" onclick="goStep2()">Lanjut → Input Performa</button>
       <button class="btn-secondary" onclick="saveAsDraft()">Simpan Dulu (Belum Ada Performa)</button>
     </div>
@@ -528,22 +664,97 @@ function selChip(el,group){
 // ===== LOG =====
 async function renderLog(){
   if(!cur){document.getElementById('contentList').innerHTML='<div class="empty-state"><div class="empty-title">Pilih akun dulu</div></div>';return;}
-  const all=await dbByIdx('contents','accountId',cur.id);
-  all.sort((a,b)=>(b.sortOrder||0)-(a.sortOrder||0)||new Date(b.date)-new Date(a.date)||Number(b.id)-Number(a.id));
-  document.getElementById('logCount').textContent=all.length+' konten';
-  if(!all.length){document.getElementById('contentList').innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg><div class="empty-title">Belum ada konten</div><p>Tap + untuk mulai catat.<br>Makin banyak data, makin akurat analisisnya.</p></div>';return;}
+  allContents=await dbByIdx('contents','accountId',cur.id);
+  // Sort by date desc, newest first
+  allContents.sort((a,b)=>new Date(b.date)-new Date(a.date)||Number(b.id)-Number(a.id));
+  // Compute avg view & save for perf badges
+  const live=allContents.filter(c=>c.perf&&c.perf.view>0);
+  const avgView=live.length?live.reduce((s,c)=>s+c.perf.view,0)/live.length:0;
+  const avgSave=live.length?live.reduce((s,c)=>s+c.perf.save,0)/live.length:0;
+  // Build filter chips
+  renderFilterChips();
+  document.getElementById('logCount').textContent=allContents.length+' konten';
+  if(!allContents.length){document.getElementById('contentList').innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg><div class="empty-title">Belum ada konten</div><p>Tap + untuk mulai catat.<br>Makin banyak data, makin akurat analisisnya.</p></div>';return;}
+  renderContentList(allContents, avgView, avgSave);
+}
+
+function renderFilterChips(){
+  const formats=[...new Set(allContents.map(c=>c.format).filter(f=>f&&f!=='—'))];
+  const topics=[...new Set(allContents.map(c=>c.topic).filter(t=>t&&t!=='—'))];
+  const row=document.getElementById('filterRow');
+  const chip=(label,key,val)=>`<div class="filter-chip ${activeFilters[key]===val?'active':''}" onclick="setFilter('${key}','${val}')">${label}</div>`;
+  row.innerHTML=[
+    chip('Semua','status','all'),
+    chip('Live','status','live'),
+    chip('Draft','status','draft'),
+    ...formats.map(f=>chip(f,'format',f)),
+    ...topics.map(t=>chip(t,'topic',t)),
+  ].join('');
+}
+
+function setFilter(key,val){
+  activeFilters[key]=val;
+  applyFilter();
+}
+
+function applyFilter(){
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase().trim();
+  const live2=allContents.filter(c=>c.perf&&c.perf.view>0);
+  const avgView=live2.length?live2.reduce((s,c)=>s+c.perf.view,0)/live2.length:0;
+  const avgSave=live2.length?live2.reduce((s,c)=>s+c.perf.save,0)/live2.length:0;
+  let filtered=allContents.filter(c=>{
+    if(q&&!(c.title||'').toLowerCase().includes(q))return false;
+    if(activeFilters.status==='live'&&!(c.perf&&c.perf.view>0))return false;
+    if(activeFilters.status==='draft'&&(c.perf&&c.perf.view>0))return false;
+    if(activeFilters.format!=='all'&&c.format!==activeFilters.format)return false;
+    if(activeFilters.topic!=='all'&&c.topic!==activeFilters.topic)return false;
+    return true;
+  });
+  renderFilterChips();
+  document.getElementById('logCount').textContent=filtered.length+' konten';
+  if(!filtered.length){
+    document.getElementById('contentList').innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><div class="empty-title">Tidak ditemukan</div><p>Coba kata kunci atau filter lain.</p></div>';
+    return;
+  }
+  renderContentList(filtered, avgView, avgSave);
+}
+
+function getPerfBadge(c, avgView, avgSave){
+  if(!c.perf||!c.perf.view)return'';
+  const isTop=c.perf.view>=avgView*1.3||c.perf.save>=avgSave*1.5;
+  const isLow=c.perf.view<avgView*0.6&&avgView>0;
+  if(isTop)return'<span class="perf-badge perf-top">TOP</span>';
+  if(isLow)return'<span class="perf-badge perf-low">LOW</span>';
+  return'';
+}
+
+function renderContentList(list, avgView, avgSave){
   const listEl=document.getElementById('contentList');
-  listEl.innerHTML=all.map((c,idx)=>{
+  listEl.innerHTML=list.map(c=>{
     const hp=c.perf&&c.perf.view>0;
     const dt=c.date?new Date(c.date+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'2-digit'}):'—';
     const perf=hp?`<div class="metrics-row"><div class="metric-item"><div class="metric-val">${fmt(c.perf.view)}</div><div class="metric-label">View</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.like)}</div><div class="metric-label">Like</div></div><div class="metric-item"><div class="metric-val hi">${fmt(c.perf.save)}</div><div class="metric-label">Save</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.comment)}</div><div class="metric-label">Komen</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.share)}</div><div class="metric-label">Share</div></div></div>`:'';
-    return `<div class="card fade-in" draggable="true" data-id="${c.id}" data-idx="${idx}">
+    const perfBadge=getPerfBadge(c,avgView,avgSave);
+    const needsPerf=!hp&&c.date&&daysSince(c.date)>=1;
+    const reminderBadge=needsPerf?`<span class="reminder-badge"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Input performa</span>`:'';
+    const phaseBadge=`<span class="phase-tag ${hp?'phase-live':'phase-draft'}">${hp?'● Live':'◌ Draft'}</span>`;
+    const notesHtml=c.notes?`<button class="notes-toggle" id="nt-${c.id}" onclick="toggleNotes('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><span class="notes-preview" id="np-${c.id}">${c.notes}</span></button><div class="notes-area" id="na-${c.id}"><textarea class="notes-input" id="ni-${c.id}">${c.notes}</textarea><button class="notes-save-btn" onclick="saveNotes('${c.id}')">Simpan Catatan</button></div>`:`<button class="notes-toggle" id="nt-${c.id}" onclick="toggleNotes('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><span style="font-size:12px;color:var(--text-3)">+ Tambah catatan pribadi</span></button><div class="notes-area" id="na-${c.id}"><textarea class="notes-input" id="ni-${c.id}" placeholder="Catatan untuk konten ini..."></textarea><button class="notes-save-btn" onclick="saveNotes('${c.id}')">Simpan Catatan</button></div>`;
+    return `<div class="card fade-in" data-id="${c.id}">
       <div class="card-hdr">
-        <div class="drag-handle" title="Drag untuk reorder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg></div>
-        <div style="flex:1;min-width:0"><div class="card-title">${c.title||'(Tanpa judul)'}</div><div class="card-meta">${dt} · ${c.format||'—'}${c.slides>0?' · '+c.slides+' slide':''}</div></div>
-        <span class="phase-tag ${hp?'phase-live':'phase-draft'}">${hp?'● Live':'◌ Draft'}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div class="card-title" style="flex:none;max-width:100%">${c.title||'(Tanpa judul)'}</div>
+            ${perfBadge}${reminderBadge}
+          </div>
+          <div class="card-meta">${dt} · ${c.format||'—'}${c.slides>0?' · '+c.slides+' slide':''}</div>
+        </div>
+        ${phaseBadge}
       </div>
-      <div class="card-body"><div style="display:flex;gap:5px;flex-wrap:wrap">${c.hook&&c.hook!=='—'?`<span class="badge b-neu">${c.hook}</span>`:''} ${c.struct&&c.struct!=='—'?`<span class="badge b-neu">${c.struct}</span>`:''} ${c.topic&&c.topic!=='—'?`<span class="badge b-teal">${c.topic}</span>`:''} ${c.goal&&c.goal!=='—'?`<span class="badge b-amber">${c.goal}</span>`:''}</div>${perf}</div>
+      <div class="card-body">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:${c.notes||needsPerf?'10px':'0'}">${c.hook&&c.hook!=='—'?`<span class="badge b-neu">${c.hook}</span>`:''} ${c.struct&&c.struct!=='—'?`<span class="badge b-neu">${c.struct}</span>`:''} ${c.topic&&c.topic!=='—'?`<span class="badge b-teal">${c.topic}</span>`:''} ${c.goal&&c.goal!=='—'?`<span class="badge b-amber">${c.goal}</span>`:''}</div>
+        ${notesHtml}
+        ${perf}
+      </div>
       <div class="card-actions">
         <button class="act-btn" onclick="openEditSheet('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
         <button class="act-btn accent" onclick="openPerfSheet('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>${hp?'Update':'Performa'}</button>
@@ -551,7 +762,6 @@ async function renderLog(){
       </div>
     </div>`;
   }).join('');
-  initDragDrop();
 }
 
 // ===== ADD CONTENT =====
@@ -560,7 +770,7 @@ function openAddSheet(){
   editingId=null;
   document.getElementById('addSheetTitle').textContent='Tambah Konten';
   document.getElementById('inDate').value=new Date().toISOString().split('T')[0];
-  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower'].forEach(id=>document.getElementById(id).value='');
+  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower','inNotes'].forEach(id=>document.getElementById(id).value='');
   document.querySelectorAll('#sheetAdd .chip').forEach(c=>c.classList.remove('selected'));
   cs={};backStep1();document.getElementById('slideGroup').style.display='';openSheet('sheetAdd');
 }
@@ -588,6 +798,7 @@ async function openEditSheet(id){
   selByText('inStructChips',c.struct,'inStruct');
   selByText('inTopicChips',c.topic,'inTopic');
   selByText('inGoalChips',c.goal,'inGoal');
+  document.getElementById('inNotes').value=c.notes||'';
   // Show/hide slide field
   document.getElementById('slideGroup').style.display=c.format==='Carousel'?'':'none';
   // Fill step 2 if has perf
@@ -628,6 +839,7 @@ function buildContent(withPerf){
     struct:cs['inStruct']||'—',
     topic:cs['inTopic']||'—',
     goal:cs['inGoal']||'—',
+    notes:document.getElementById('inNotes')?.value.trim()||null,
     perf:withPerf?{view:parseInt(document.getElementById('inView').value)||0,like:parseInt(document.getElementById('inLike').value)||0,save:parseInt(document.getElementById('inSave').value)||0,comment:parseInt(document.getElementById('inComment').value)||0,share:parseInt(document.getElementById('inShare').value)||0,follower:parseInt(document.getElementById('inFollower').value)||0}:null,
     createdAt:new Date().toISOString()
   };
@@ -662,6 +874,8 @@ async function saveAudience(){
 
 // ===== DRAG & DROP =====
 let dragSrcId=null;
+let activeFilters={status:'all',format:'all',topic:'all'};
+let allContents=[];
 // Touch drag state
 let touchDragId=null,touchStartX=0,touchStartY=0,touchMoved=false,touchLongPressTimer=null,touchClone=null,touchOffsetY=0;
 
@@ -779,6 +993,39 @@ async function reorderContents(srcId, targetId){
   showToast('Urutan disimpan');
 }
 
+
+// ===== NOTES =====
+function daysSince(dateStr){
+  if(!dateStr)return 0;
+  const d=new Date(dateStr+'T00:00:00');
+  return Math.floor((Date.now()-d.getTime())/(1000*60*60*24));
+}
+function toggleNotes(id){
+  const btn=document.getElementById('nt-'+id);
+  const area=document.getElementById('na-'+id);
+  if(!btn||!area)return;
+  const isOpen=area.classList.contains('open');
+  area.classList.toggle('open',!isOpen);
+  btn.classList.toggle('open',!isOpen);
+}
+async function saveNotes(id){
+  const val=document.getElementById('ni-'+id)?.value.trim()||null;
+  const c=await dbGet('contents',id);if(!c)return;
+  c.notes=val;
+  await dbPut('contents',c);
+  // Update preview without full re-render
+  const preview=document.getElementById('np-'+id);
+  if(preview){preview.textContent=val||'+ Tambah catatan pribadi';}
+  const area=document.getElementById('na-'+id);
+  if(area)area.classList.remove('open');
+  const btn=document.getElementById('nt-'+id);
+  if(btn)btn.classList.remove('open');
+  // Update allContents cache
+  const idx=allContents.findIndex(x=>x.id===id);
+  if(idx>-1)allContents[idx].notes=val;
+  showToast('Catatan disimpan ✓');
+}
+
 // ===== INSIGHT =====
 async function renderInsight(){
   if(!cur)return;
@@ -794,7 +1041,21 @@ async function renderInsight(){
   const byFmt={};live.forEach(c=>{if(!byFmt[c.format])byFmt[c.format]={s:0,n:0};byFmt[c.format].s+=c.perf.save;byFmt[c.format].n++;});
   let topFmt='—',topV=-1;Object.entries(byFmt).forEach(([f,d])=>{const v=d.s/d.n;if(v>topV){topV=v;topFmt=f;}});
   document.getElementById('sumTopFmt').textContent=topFmt;
+  const chartHtml=buildLineChart(live);
+  const avgViewVal=(live.reduce((s,c)=>s+c.perf.view,0)/live.length).toFixed(0);
+  const avgSaveVal=(live.reduce((s,c)=>s+c.perf.save,0)/live.length).toFixed(1);
+  // Store plain text version for copy
+  window._insightText=buildInsightText(live, cur, avgViewVal, avgSaveVal, topFmt);
   document.getElementById('insightBody').innerHTML=`
+    <div class="copy-bar">
+      <span class="sec-title">Tren Performa</span>
+      <button class="copy-btn" id="copyInsightBtn" onclick="copyInsightResult()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy Insight
+      </button>
+    </div>
+    ${chartHtml}
+    <div style="height:4px"></div>
     <div class="sec-hdr"><span class="sec-title">Pattern</span></div>
     ${buildPatterns(live).map(p=>`<div class="insight-card"><div class="insight-hdr"><span class="insight-icon">${p.icon}</span><span class="insight-title">${p.title}</span></div><div class="insight-text">${p.text}</div></div>`).join('')}
     <div style="height:4px"></div>
@@ -806,6 +1067,52 @@ async function renderInsight(){
     <div style="height:4px"></div>
     <div class="sec-hdr"><span class="sec-title">Per Topik</span></div>
     <div class="card"><div class="card-body">${buildTable(live,'topic')}</div></div>`;
+}
+function buildLineChart(live){
+  if(live.length<2)return'<div class="chart-wrap"><div style="color:var(--text-3);font-size:13px;text-align:center;padding:20px 0">Butuh minimal 2 konten live untuk menampilkan grafik.</div></div>';
+  // Sort by date asc
+  const sorted=[...live].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const views=sorted.map(c=>c.perf.view);
+  const saves=sorted.map(c=>c.perf.save);
+  const labels=sorted.map(c=>c.date?new Date(c.date+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'}):'—');
+  const maxView=Math.max(...views,1);
+  const maxSave=Math.max(...saves,1);
+  const W=320,H=100,PAD=8,n=sorted.length;
+  const xStep=(W-PAD*2)/(n-1||1);
+  const toX=i=>PAD+i*xStep;
+  const toYv=v=>H-PAD-(v/maxView)*(H-PAD*2);
+  const toYs=v=>H-PAD-(v/maxSave)*(H-PAD*2);
+  // Build polyline points
+  const viewPts=views.map((v,i)=>`${toX(i).toFixed(1)},${toYv(v).toFixed(1)}`).join(' ');
+  const savePts=saves.map((v,i)=>`${toX(i).toFixed(1)}`+','+`${toYs(v).toFixed(1)}`).join(' ');
+  // Area fill paths
+  const viewArea='M'+views.map((v,i)=>`${toX(i).toFixed(1)},${toYv(v).toFixed(1)}`).join('L')+`L${toX(n-1).toFixed(1)},${H-PAD}L${toX(0).toFixed(1)},${H-PAD}Z`;
+  const saveArea='M'+saves.map((v,i)=>`${toX(i).toFixed(1)},${toYs(v).toFixed(1)}`).join('L')+`L${toX(n-1).toFixed(1)},${H-PAD}L${toX(0).toFixed(1)},${H-PAD}Z`;
+  // X axis labels (max 5)
+  const step=Math.max(1,Math.floor(n/5));
+  const xLabels=sorted.map((c,i)=>i===0||i===n-1||i%step===0?`<text x="${toX(i).toFixed(1)}" y="${H+14}" text-anchor="middle" font-size="9" fill="var(--text-3)" font-family="DM Mono,monospace">${labels[i]}</text>`:'').join('');
+  // Dots for latest point
+  const lastV=views[n-1],lastS=saves[n-1];
+  return `<div class="chart-wrap">
+    <div class="chart-title">View & Save per Konten</div>
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H+20}" style="height:${H+20}px">
+      <defs>
+        <linearGradient id="gv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3D9B9C" stop-opacity=".25"/><stop offset="100%" stop-color="#3D9B9C" stop-opacity="0"/></linearGradient>
+        <linearGradient id="gs" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4922A" stop-opacity=".2"/><stop offset="100%" stop-color="#D4922A" stop-opacity="0"/></linearGradient>
+      </defs>
+      <path d="${viewArea}" fill="url(#gv)"/>
+      <path d="${saveArea}" fill="url(#gs)"/>
+      <polyline points="${viewPts}" fill="none" stroke="#3D9B9C" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <polyline points="${savePts}" fill="none" stroke="#D4922A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${toX(n-1).toFixed(1)}" cy="${toYv(lastV).toFixed(1)}" r="3.5" fill="#3D9B9C"/>
+      <circle cx="${toX(n-1).toFixed(1)}" cy="${toYs(lastS).toFixed(1)}" r="3.5" fill="#D4922A"/>
+      ${xLabels}
+    </svg>
+    <div class="chart-legend">
+      <div class="chart-legend-item"><div class="chart-dot" style="background:#3D9B9C"></div>View</div>
+      <div class="chart-legend-item"><div class="chart-dot" style="background:#D4922A"></div>Save</div>
+    </div>
+  </div>`;
 }
 function buildPatterns(live){
   const p=[];
@@ -1064,8 +1371,281 @@ function switchView(name,btn){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('view'+name).classList.add('active');btn.classList.add('active');
-  document.getElementById('fabBtn').classList.toggle('hidden',name!=='Log');
+  document.getElementById('fabBtn').classList.toggle('hidden',name!=='Log'&&name!=='Calendar');
   if(name==='Insight')renderInsight();
+  if(name==='Calendar')renderCalendar();
+  if(name==='Compare')renderCompare();
+}
+
+
+
+// ===== COPY =====
+function copyDraftResult(){
+  const el=document.getElementById('draftResultContent');
+  if(!el)return;
+  const text=el.innerText||el.textContent||'';
+  copyToClipboard(text,'copyDraftBtn');
+}
+
+function copyInsightResult(){
+  const text=window._insightText||'';
+  copyToClipboard(text,'copyInsightBtn');
+}
+
+async function copyToClipboard(text, btnId){
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch{
+    // fallback
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  const btn=document.getElementById(btnId);
+  if(!btn)return;
+  btn.classList.add('copied');
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> Tersalin!`;
+  setTimeout(()=>{
+    btn.classList.remove('copied');
+    btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy`;
+  },2000);
+}
+
+function buildInsightText(live, account, avgView, avgSave, topFmt){
+  const lines=[];
+  lines.push('=== INSIGHT KONTEN ===');
+  lines.push(`Akun: ${account.username||account.name} | Platform: ${account.platform} | Niche: ${account.niche}`);
+  lines.push(`Total konten live: ${live.length} | Avg View: ${avgView} | Avg Save: ${avgSave} | Format terbaik: ${topFmt}`);
+  lines.push('');
+  // Patterns
+  const patterns=buildPatterns(live);
+  lines.push('--- PATTERN ---');
+  patterns.forEach(p=>lines.push(`${p.title}: ${p.text.replace(/<[^>]+>/g,'')}`));
+  lines.push('');
+  // Per hook table
+  lines.push('--- PER TIPE HOOK ---');
+  const hookMap={};
+  live.forEach(c=>{const k=c.hook||'—';if(!hookMap[k])hookMap[k]={v:0,s:0,n:0};hookMap[k].v+=c.perf.view;hookMap[k].s+=c.perf.save;hookMap[k].n++;});
+  Object.entries(hookMap).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).forEach(([k,d])=>{
+    lines.push(`${k} (${d.n}x) — avg view: ${fmt(Math.round(d.v/d.n))}, avg save: ${(d.s/d.n).toFixed(1)}`);
+  });
+  lines.push('');
+  // Per struct
+  lines.push('--- PER STRUKTUR ---');
+  const structMap={};
+  live.forEach(c=>{const k=c.struct||'—';if(!structMap[k])structMap[k]={v:0,s:0,n:0};structMap[k].v+=c.perf.view;structMap[k].s+=c.perf.save;structMap[k].n++;});
+  Object.entries(structMap).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).forEach(([k,d])=>{
+    lines.push(`${k} (${d.n}x) — avg view: ${fmt(Math.round(d.v/d.n))}, avg save: ${(d.s/d.n).toFixed(1)}`);
+  });
+  lines.push('');
+  // Per topic
+  lines.push('--- PER TOPIK ---');
+  const topicMap={};
+  live.forEach(c=>{const k=c.topic||'—';if(!topicMap[k])topicMap[k]={v:0,s:0,n:0};topicMap[k].v+=c.perf.view;topicMap[k].s+=c.perf.save;topicMap[k].n++;});
+  Object.entries(topicMap).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).forEach(([k,d])=>{
+    lines.push(`${k} (${d.n}x) — avg view: ${fmt(Math.round(d.v/d.n))}, avg save: ${(d.s/d.n).toFixed(1)}`);
+  });
+  lines.push('');
+  // All content list
+  lines.push('--- SEMUA KONTEN LIVE ---');
+  [...live].sort((a,b)=>b.perf.view-a.perf.view).forEach(c=>{
+    lines.push(`"${c.title||'Tanpa judul'}" | ${c.format} | Hook: ${c.hook} | Struktur: ${c.struct} | Topik: ${c.topic} | View: ${c.perf.view} | Like: ${c.perf.like} | Save: ${c.perf.save} | Komen: ${c.perf.comment} | Share: ${c.perf.share}${c.notes?' | Catatan: '+c.notes:''}`);
+  });
+  return lines.join('\n');
+}
+
+// ===== CALENDAR =====
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+let calSelected=null;
+const DAYS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+async function renderCalendar(){
+  if(!cur){document.getElementById('calGrid').innerHTML='<div class="empty-state"><p>Pilih akun dulu.</p></div>';return;}
+  document.getElementById('calMonthLabel').textContent=MONTHS[calMonth]+' '+calYear;
+  const all=await dbByIdx('contents','accountId',cur.id);
+  // Map date → contents
+  const byDate={};
+  all.forEach(c=>{
+    if(!c.date)return;
+    if(!byDate[c.date])byDate[c.date]=[];
+    byDate[c.date].push(c);
+  });
+  // Build grid
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const todayStr=new Date().toISOString().split('T')[0];
+  let html=DAYS.map(d=>`<div class="cal-day-hdr">${d}</div>`).join('');
+  for(let i=0;i<firstDay;i++) html+=`<div class="cal-cell empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const items=byDate[dateStr]||[];
+    const live=items.filter(c=>c.perf&&c.perf.view>0);
+    const planned=items.filter(c=>!c.perf||!c.perf.view);
+    const isToday=dateStr===todayStr;
+    const isSel=dateStr===calSelected;
+    let cls='cal-cell';
+    if(items.length&&live.length)cls+=' has-content';
+    else if(planned.length)cls+=' planned';
+    if(isToday)cls+=' today';
+    if(isSel)cls+=' selected';
+    const dots=items.slice(0,4).map(c=>{
+      const color=(c.perf&&c.perf.view)?'var(--teal)':'var(--amber)';
+      return`<div class="cal-dot" style="background:${color}"></div>`;
+    }).join('');
+    html+=`<div class="${cls}" onclick="calSelectDate('${dateStr}')">
+      <div class="cal-date">${d}</div>
+      ${dots?`<div class="cal-dot-wrap">${dots}</div>`:''}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+  if(calSelected) renderCalDetail(calSelected, byDate[calSelected]||[]);
+  else document.getElementById('calDetail').innerHTML='';
+}
+
+function calSelectDate(dateStr){
+  calSelected=calSelected===dateStr?null:dateStr;
+  renderCalendar();
+}
+
+function renderCalDetail(dateStr, items){
+  const d=new Date(dateStr+'T00:00:00');
+  const label=d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  let html=`<div class="cal-detail"><div class="cal-detail-date">${label}</div>`;
+  if(items.length){
+    html+=items.map(c=>{
+      const isLive=c.perf&&c.perf.view>0;
+      const color=isLive?'var(--teal)':'var(--amber)';
+      const meta=isLive?`${fmt(c.perf.view)} view · ${c.perf.save} save`:`${c.format||'—'}${c.slides>0?' · '+c.slides+' slide':''}`;
+      return`<div class="cal-item">
+        <div class="cal-item-dot" style="background:${color}"></div>
+        <div class="cal-item-info">
+          <div class="cal-item-title">${c.title||'(Tanpa judul)'}</div>
+          <div class="cal-item-meta">${meta}</div>
+        </div>
+        <button class="act-btn" style="flex:none;padding:5px 10px;font-size:11px" onclick="openEditSheet('${c.id}')">Edit</button>
+      </div>`;
+    }).join('');
+  } else {
+    html+=`<div style="color:var(--text-3);font-size:13px;padding:6px 0">Belum ada konten di tanggal ini.</div>`;
+  }
+  html+=`<button class="cal-add-btn" onclick="openAddSheetWithDate('${dateStr}')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Tambah konten di tanggal ini
+  </button></div>`;
+  document.getElementById('calDetail').innerHTML=html;
+}
+
+function openAddSheetWithDate(dateStr){
+  openAddSheet();
+  setTimeout(()=>{document.getElementById('inDate').value=dateStr;},100);
+}
+
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}calSelected=null;renderCalendar();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}calSelected=null;renderCalendar();}
+
+// ===== COMPARE =====
+let cmpSelected=[];
+
+async function renderCompare(){
+  const accs=await dbGetAll('accounts');
+  const sel=document.getElementById('cmpSelector');
+  const body=document.getElementById('cmpBody');
+  if(accs.length<2){
+    sel.innerHTML='';
+    body.innerHTML=`<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><div class="empty-title">Butuh 2+ akun</div><p>Tambahkan minimal 2 akun untuk bisa membandingkan performa.</p></div>`;
+    return;
+  }
+  // Default select first 2
+  if(!cmpSelected.length) cmpSelected=accs.slice(0,2).map(a=>a.id);
+  sel.innerHTML=accs.map(a=>`
+    <div class="cmp-acc-btn ${cmpSelected.includes(a.id)?'selected':''}" onclick="toggleCmpAcc('${a.id}')">
+      <div class="cmp-acc-avatar" style="background:${a.color||'var(--teal)'}">${(a.name||'?')[0].toUpperCase()}</div>
+      <div class="cmp-acc-name">${a.username||a.name}</div>
+      <div class="cmp-acc-plat">${a.platform}</div>
+    </div>`).join('');
+  if(cmpSelected.length<2){body.innerHTML=`<div class="info-box">Pilih minimal 2 akun untuk dibandingkan.</div>`;return;}
+  // Load data for selected accounts
+  const selected=accs.filter(a=>cmpSelected.includes(a.id)).slice(0,3);
+  const data=await Promise.all(selected.map(async a=>{
+    const contents=await dbByIdx('contents','accountId',a.id);
+    const live=contents.filter(c=>c.perf&&c.perf.view>0);
+    return{
+      acc:a,
+      total:contents.length,
+      live:live.length,
+      avgView:live.length?Math.round(live.reduce((s,c)=>s+c.perf.view,0)/live.length):0,
+      avgSave:live.length?+(live.reduce((s,c)=>s+c.perf.save,0)/live.length).toFixed(1):0,
+      avgLike:live.length?Math.round(live.reduce((s,c)=>s+c.perf.like,0)/live.length):0,
+      avgShare:live.length?+(live.reduce((s,c)=>s+c.perf.share,0)/live.length).toFixed(1):0,
+      topContent:live.sort((a,b)=>b.perf.view-a.perf.view)[0]||null,
+    };
+  }));
+  const colors=data.map(d=>d.acc.color||'var(--teal)');
+  // Build comparison bars
+  const metrics=[
+    {key:'avgView',label:'Avg View'},
+    {key:'avgSave',label:'Avg Save'},
+    {key:'avgLike',label:'Avg Like'},
+    {key:'avgShare',label:'Avg Share'},
+    {key:'live',label:'Konten Live'},
+    {key:'total',label:'Total Konten'},
+  ];
+  const barsHtml=metrics.map(m=>{
+    const vals=data.map(d=>d[m.key]);
+    const max=Math.max(...vals,1);
+    const winnerIdx=vals.indexOf(Math.max(...vals));
+    const barsRow=data.map((d,i)=>{
+      const pct=Math.round((d[m.key]/max)*100);
+      return`<div class="cmp-bar-val" style="color:${colors[i]}">${fmt(d[m.key])}</div>`;
+    }).join('');
+    const fills=data.map((d,i)=>{
+      const pct=Math.round((d[m.key]/max)*100);
+      return`<div class="cmp-bar-fill" style="width:${pct}%;background:${colors[i]};opacity:0.85"></div>`;
+    }).join('');
+    return`<div class="cmp-bar-wrap">
+      <div class="cmp-bar-label">
+        <span class="cmp-bar-title">${m.label}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${barsRow}
+          <span class="cmp-winner">${data[winnerIdx].acc.username||data[winnerIdx].acc.name}</span>
+        </div>
+      </div>
+      <div class="cmp-bar-track">${fills}</div>
+    </div>`;
+  }).join('');
+  // Top content per account
+  const topHtml=data.map((d,i)=>{
+    if(!d.topContent)return`<div style="color:var(--text-3);font-size:12px">Belum ada data live.</div>`;
+    return`<div class="cal-item" style="border-color:${colors[i]}20">
+      <div class="cal-item-dot" style="background:${colors[i]}"></div>
+      <div class="cal-item-info">
+        <div style="font-size:10px;color:var(--text-3);font-family:'DM Mono',monospace;margin-bottom:2px">${d.acc.username||d.acc.name}</div>
+        <div class="cal-item-title">${d.topContent.title||'Tanpa judul'}</div>
+        <div class="cal-item-meta">${fmt(d.topContent.perf.view)} view · ${d.topContent.perf.save} save</div>
+      </div>
+    </div>`;
+  }).join('');
+  // Legend
+  const legend=data.map((d,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)"><span style="width:8px;height:8px;border-radius:50%;background:${colors[i]};display:inline-block"></span>${d.acc.username||d.acc.name}</span>`).join('<span style="color:var(--text-3);margin:0 4px">vs</span>');
+  body.innerHTML=`
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${legend}</div>
+    <div class="chart-wrap">${barsHtml}</div>
+    <div style="height:4px"></div>
+    <div class="sec-hdr"><span class="sec-title">Konten Terbaik per Akun</span></div>
+    <div class="card"><div class="card-body">${topHtml}</div></div>
+  `;
+}
+
+function toggleCmpAcc(id){
+  if(cmpSelected.includes(id)){
+    if(cmpSelected.length<=2)return; // min 2
+    cmpSelected=cmpSelected.filter(x=>x!==id);
+  } else {
+    cmpSelected.push(id);
+  }
+  renderCompare();
 }
 
 // ===== SHEETS =====
@@ -1086,14 +1666,48 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 init();
 
-// Register Service Worker
+// Register Service Worker + Notification permission
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
+      .then(reg => {
+        console.log('SW registered:', reg.scope);
+        window._swReg=reg;
+      })
       .catch(err => console.log('SW error:', err));
   });
 }
+
+// ===== REMINDER =====
+async function requestNotifPermission(){
+  if(!('Notification' in window))return false;
+  if(Notification.permission==='granted')return true;
+  const result=await Notification.requestPermission();
+  return result==='granted';
+}
+
+async function scheduleReminders(){
+  // Check for draft contents that are 1+ days old and have no perf
+  if(!cur)return;
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const needsInput=all.filter(c=>!c.perf&&c.date&&daysSince(c.date)>=1);
+  if(!needsInput.length)return;
+  const granted=await requestNotifPermission();
+  if(!granted)return;
+  // Show notification for each (max 3)
+  needsInput.slice(0,3).forEach(c=>{
+    const title=`Input performa: "${c.title||'Konten'}"`;
+    const body=`Sudah ${daysSince(c.date)} hari sejak upload. Yuk catat metriknya!`;
+    if(window._swReg){
+      window._swReg.showNotification(title,{body,icon:'/icon-192.png',badge:'/icon-192.png',tag:c.id,data:{contentId:c.id}});
+    } else {
+      new Notification(title,{body,icon:'/icon-192.png'});
+    }
+  });
+}
+
+// Run reminder check on load (after 3s to not block init)
+setTimeout(()=>scheduleReminders(),3000);
 </script>
 </body>
 </html>
