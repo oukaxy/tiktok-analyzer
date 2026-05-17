@@ -352,10 +352,16 @@
       <hr class="div">
       <div class="copy-bar">
         <span class="sec-title">Hasil Analisis</span>
-        <button class="copy-btn" id="copyDraftBtn" onclick="copyDraftResult()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-          Copy
-        </button>
+        <div style="display:flex;gap:6px">
+          <button class="copy-btn" id="copyDraftBtn" onclick="copyDraftResult()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+          <button class="copy-btn" id="saveToLogBtn" onclick="saveToLog()" style="background:var(--teal-bg);border-color:var(--teal);color:var(--teal)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Simpan ke Log
+          </button>
+        </div>
       </div>
       <div id="draftResultContent"></div>
     </div>
@@ -490,10 +496,10 @@
     <div class="sec-title" style="margin:14px 0 10px;display:block">Retention <span style="color:var(--teal);font-size:10px;font-weight:600;margin-left:4px">SINYAL ALGORITMA</span></div>
     <div class="info-box" style="font-size:11px;margin-bottom:12px">Ada di TikTok Studio → Analytics → pilih konten → Insight</div>
     <div class="grid2">
-      <div class="form-group"><label class="form-label">⏱ Avg Watch Time (detik)</label><input type="number" class="form-input" id="pWatchTime" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">✅ Completion Rate (%)</label><input type="number" class="form-input" id="pCompRate" placeholder="0" min="0" max="100"/></div>
-      <div class="form-group"><label class="form-label">🔁 Re-watch Rate (%)</label><input type="number" class="form-input" id="pRewatchRate" placeholder="0" min="0" max="100"/></div>
-      <div class="form-group"><label class="form-label">⏱ Durasi Konten (detik)</label><input type="number" class="form-input" id="pDuration" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Avg Watch Time (detik)</label><input type="number" class="form-input" id="pWatchTime" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Completion Rate (%)</label><input type="number" class="form-input" id="pCompRate" placeholder="0" min="0" max="100"/></div>
+      <div class="form-group"><label class="form-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg> Re-watch Rate (%)</label><input type="number" class="form-input" id="pRewatchRate" placeholder="0" min="0" max="100"/></div>
+      <div class="form-group"><label class="form-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Durasi Konten (detik)</label><input type="number" class="form-input" id="pDuration" placeholder="0"/></div>
     </div>
     <button class="btn-primary" onclick="savePerf()">Simpan Performa</button>
   </div>
@@ -758,25 +764,34 @@ function openAddSheet(){
   if(!cur){showToast('Pilih akun dulu');return;}
   editingId=null;
   document.getElementById('addSheetTitle').textContent='Tambah Konten';
-  document.getElementById('inDateHidden').value=new Date().toISOString().split('T')[0];
-  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('inDateHidden').value=new Date().toISOString().split('T')[0];
+  const today=new Date().toISOString().split('T')[0];
+  const dateEl=document.getElementById('inDateHidden');
+  if(dateEl)dateEl.value=today;
+  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.querySelectorAll('#sheetAdd .chip').forEach(c=>c.classList.remove('selected'));
   cs={};backStep1();document.getElementById('slideGroup').style.display='';openSheet('sheetAdd');
 }
 async function openEditSheet(id){
-  if(!cur){return;}
-  const c=await dbGet('contents',id);if(!c)return;
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const c=await dbGet('contents',id);
+  if(!c){showToast('Konten tidak ditemukan');return;}
   editingId=id;
+  const setVal=(elId,val)=>{const el=document.getElementById(elId);if(el)el.value=val||'';};
   document.getElementById('addSheetTitle').textContent='Edit Konten';
-  // Fill step 1
-  document.getElementById('inTitle').value=c.title||'';
-  document.getElementById('inDesc').value=c.desc||'';
-  document.getElementById('inDateHidden').value=c.date||new Date().toISOString().split('T')[0];
-  document.getElementById('inSlides').value=c.slides||'';
-  // Reset chips then select matching
+  // Reset chips
   document.querySelectorAll('#sheetAdd .chip').forEach(ch=>ch.classList.remove('selected'));
   cs={};
+  // Fill step 1
+  setVal('inTitle',c.title);
+  setVal('inDesc',c.desc);
+  setVal('inDateHidden',c.date||new Date().toISOString().split('T')[0]);
+  setVal('inSlides',c.slides||'');
+  setVal('inNotes',c.notes);
+  setVal('inWatchTime',c.retention?.watchTime);
+  setVal('inCompRate',c.retention?.compRate);
+  setVal('inRewatchRate',c.retention?.rewatchRate);
+  setVal('inDuration',c.retention?.duration);
+  // Select chips
   const selByText=(containerId,val,group)=>{
     if(!val||val==='—')return;
     document.querySelectorAll('#'+containerId+' .chip').forEach(ch=>{
@@ -788,24 +803,16 @@ async function openEditSheet(id){
   selByText('inStructChips',c.struct,'inStruct');
   selByText('inTopicChips',c.topic,'inTopic');
   selByText('inGoalChips',c.goal,'inGoal');
-  document.getElementById('inNotes').value=c.notes||'';
-  document.getElementById('inWatchTime').value=c.retention?.watchTime||'';
-  document.getElementById('inCompRate').value=c.retention?.compRate||'';
-  document.getElementById('inRewatchRate').value=c.retention?.rewatchRate||'';
-  document.getElementById('inDuration').value=c.retention?.duration||'';
   // Show/hide slide field
-  document.getElementById('slideGroup').style.display=c.format==='Carousel'?'':'none';
-  // Fill step 2 if has perf
-  if(c.perf){
-    document.getElementById('inView').value=c.perf.view||'';
-    document.getElementById('inLike').value=c.perf.like||'';
-    document.getElementById('inSave').value=c.perf.save||'';
-    document.getElementById('inComment').value=c.perf.comment||'';
-    document.getElementById('inShare').value=c.perf.share||'';
-    document.getElementById('inFollower').value=c.perf.follower||'';
-  } else {
-    ['inView','inLike','inSave','inComment','inShare','inFollower'].forEach(id=>document.getElementById(id).value='');
-  }
+  const sg=document.getElementById('slideGroup');
+  if(sg)sg.style.display=c.format==='Carousel'?'':'none';
+  // Fill step 2
+  setVal('inView',c.perf?.view);
+  setVal('inLike',c.perf?.like);
+  setVal('inSave',c.perf?.save);
+  setVal('inComment',c.perf?.comment);
+  setVal('inShare',c.perf?.share);
+  setVal('inFollower',c.perf?.follower);
   backStep1();
   openSheet('sheetAdd');
 }
@@ -1387,13 +1394,116 @@ function switchView(name,btn){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('view'+name).classList.add('active');btn.classList.add('active');
-  document.getElementById('fabBtn').classList.toggle('hidden',name!=='Log'&&name!=='Calendar');
+  document.getElementById('fabBtn').classList.toggle('hidden',name!=='Log');
   if(name==='Insight')renderInsight();
   if(name==='Calendar')renderCalendar();
   if(name==='Compare')renderCompare();
 }
 
 
+
+
+// ===== SAVE DRAFT TO LOG =====
+function saveToLog(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  // Collect all data from current draft form
+  const type=activeDraftTab;
+  // Title — try each format's title field
+  const title=(
+    document.getElementById('draftTitle')?.value.trim()||
+    document.getElementById('videoHook')?.value.trim()||
+    document.getElementById('fotoCaption')?.value.trim()||
+    document.getElementById('postText')?.value.trim()||
+    document.getElementById('threadOpen')?.value.trim()||
+    ''
+  );
+  if(!title){showToast('Isi draft dulu sebelum simpan');return;}
+  // Map activeDraftTab → format chip value
+  const formatMap={carousel:'Carousel',video:'Video',foto:'Foto',post:'Post',thread:'Thread'};
+  const format=formatMap[type]||'—';
+  // Count slides if carousel
+  const slides=type==='carousel'
+    ? document.querySelectorAll('#slidesContainer .slide-inp').length
+    : 0;
+  // Build description from slide contents or body
+  let desc='';
+  if(type==='carousel'){
+    const slideTexts=[...document.querySelectorAll('#slidesContainer .slide-inp')]
+      .map((el,i)=>`Slide ${i+1}: ${el.value.trim()}`).filter(s=>!s.endsWith(': '));
+    desc=slideTexts.join('
+');
+  } else if(type==='video'){
+    desc=[
+      document.getElementById('videoBody')?.value.trim(),
+      document.getElementById('videoCta')?.value.trim()
+    ].filter(Boolean).join('
+');
+  } else if(type==='post'){
+    desc=document.getElementById('postText')?.value.trim()||'';
+  } else if(type==='thread'){
+    desc=[
+      document.getElementById('threadBody')?.value.trim(),
+      document.getElementById('threadClose')?.value.trim()
+    ].filter(Boolean).join('
+');
+  }
+  // Pre-fill openAddSheet with draft data
+  editingId=null;
+  document.getElementById('addSheetTitle').textContent='Simpan ke Log';
+  // Reset
+  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  const dateEl=document.getElementById('inDateHidden');
+  if(dateEl)dateEl.value=new Date().toISOString().split('T')[0];
+  // Fill from draft
+  const setInput=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.value=val;};
+  setInput('inTitle',title);
+  setInput('inDesc',desc);
+  if(slides>0)setInput('inSlides',slides);
+  // Reset and select chips
+  document.querySelectorAll('#sheetAdd .chip').forEach(ch=>ch.classList.remove('selected'));
+  cs={};
+  // Select format chip
+  document.querySelectorAll('#inFmtChips .chip').forEach(ch=>{
+    if(ch.textContent.trim()===format){ch.classList.add('selected');cs['inFmt']=format;}
+  });
+  // Slide group visibility
+  const sg=document.getElementById('slideGroup');
+  if(sg)sg.style.display=format==='Carousel'?'':'none';
+  // Select hook chip
+  const hook=cs['dHook']||cs['dHookV']||cs['dHookP']||cs['dHookT']||'';
+  if(hook){
+    document.querySelectorAll('#inHookChips .chip').forEach(ch=>{
+      if(ch.textContent.trim()===hook){ch.classList.add('selected');cs['inHook']=hook;}
+    });
+  }
+  // Select struct chip
+  const struct=cs['dStruct']||'';
+  if(struct){
+    document.querySelectorAll('#inStructChips .chip').forEach(ch=>{
+      if(ch.textContent.trim()===struct){ch.classList.add('selected');cs['inStruct']=struct;}
+    });
+  }
+  // Select topic chip
+  const topic=cs['dTopic']||cs['dTopicV']||cs['dTopicF']||cs['dTopicP']||cs['dTopicT']||'';
+  if(topic){
+    document.querySelectorAll('#inTopicChips .chip').forEach(ch=>{
+      if(ch.textContent.trim()===topic){ch.classList.add('selected');cs['inTopic']=topic;}
+    });
+  }
+  // Select goal chip
+  const goal=cs['dGoal']||cs['dGoalV']||'';
+  if(goal){
+    document.querySelectorAll('#inGoalChips .chip').forEach(ch=>{
+      if(ch.textContent.trim()===goal){ch.classList.add('selected');cs['inGoal']=goal;}
+    });
+  }
+  // Show step 1, open sheet
+  backStep1();
+  openSheet('sheetAdd');
+  showToast('Draft siap disimpan — cek & sesuaikan dulu');
+}
 
 // ===== COPY =====
 function copyDraftResult(){
@@ -1557,8 +1667,9 @@ function renderCalDetail(dateStr, items){
 }
 
 function openAddSheetWithDate(dateStr){
+  if(!cur){showToast('Pilih akun dulu');return;}
   openAddSheet();
-  setTimeout(()=>{document.getElementById('inDateHidden').value=dateStr;},100);
+  setTimeout(()=>{const el=document.getElementById('inDateHidden');if(el)el.value=dateStr;},150);
 }
 
 function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}calSelected=null;renderCalendar();}
