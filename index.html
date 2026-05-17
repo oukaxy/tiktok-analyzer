@@ -124,7 +124,7 @@
     .platform-btn{padding:14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .15s}
     .platform-btn:hover{border-color:var(--text-3)}
     .platform-btn.selected{border-color:var(--teal);background:var(--teal-bg)}
-    .platform-icon{font-size:24px;margin-bottom:6px}
+    .platform-icon{font-size:24px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;height:28px}
     .platform-name{font-size:11px;font-weight:600;color:var(--text-2)}
     .info-box{background:var(--teal-bg);border:1px solid var(--teal);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--teal);line-height:1.5;margin-bottom:16px}
     hr.div{border:none;border-top:1px solid var(--border);margin:16px 0}
@@ -147,8 +147,13 @@
 
 <!-- ONBOARDING -->
 <div id="onboarding">
+  <div id="obCloseBtn" style="display:none;justify-content:flex-end;margin-bottom:8px">
+    <button onclick="hideOnboarding()" style="width:34px;height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
   <div style="flex:1">
-    <div style="font-size:32px;margin-bottom:20px">📊</div>
+    <div style="margin-bottom:20px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--teal)"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 17V12M12 17V8M16 17v-4"/></svg></div>
     <div class="ob-title">Buat Akun Baru</div>
     <div class="ob-sub">Setup akun konten kamu. Data per akun tersimpan terpisah dan bisa di-export kapan saja.</div>
     <div class="form-group">
@@ -161,10 +166,12 @@
     </div>
     <div class="form-group">
       <label class="form-label">Platform</label>
-      <div class="platform-grid">
-        <div class="platform-btn" onclick="selPlatform('TikTok',this)"><div class="platform-icon">🎵</div><div class="platform-name">TikTok</div></div>
-        <div class="platform-btn" onclick="selPlatform('Instagram',this)"><div class="platform-icon">📸</div><div class="platform-name">Instagram</div></div>
-        <div class="platform-btn" onclick="selPlatform('YouTube',this)"><div class="platform-icon">▶️</div><div class="platform-name">YouTube Shorts</div></div>
+      <div class="platform-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="platform-btn" onclick="selPlatform('TikTok',this)"><div class="platform-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.19 8.19 0 004.79 1.52V6.82a4.85 4.85 0 01-1.02-.13z"/></svg></div><div class="platform-name">TikTok</div></div>
+        <div class="platform-btn" onclick="selPlatform('Instagram',this)"><div class="platform-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></div><div class="platform-name">Instagram</div></div>
+        <div class="platform-btn" onclick="selPlatform('YouTube',this)"><div class="platform-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10,9 10,15 16,12" fill="currentColor" stroke="none"/></svg></div><div class="platform-name">YouTube Shorts</div></div>
+        <div class="platform-btn" onclick="selPlatform('X',this)"><div class="platform-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L2.25 2.25h6.919l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><div class="platform-name">X / Twitter</div></div>
+        <div class="platform-btn" onclick="selPlatform('Threads',this)"><div class="platform-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.5 12.068c0-3.52.85-6.374 2.495-8.424C5.845 1.34 8.598.16 12.179.136h.014c2.64.018 4.963.8 6.637 2.26 1.64 1.429 2.597 3.406 2.819 5.877l-2.004.17c-.179-2.004-.944-3.584-2.274-4.697-1.317-1.1-3.152-1.682-5.178-1.696-2.916.019-5.074.99-6.41 2.89C4.583 6.437 4 8.969 4 12.068c0 3.1.583 5.632 1.783 7.128 1.336 1.9 3.494 2.872 6.41 2.89 2.327-.016 3.93-.636 5.137-1.958 1.348-1.476 1.73-3.648 1.73-5.06 0-.082-.003-.163-.006-.244a5.92 5.92 0 00-2.088-4.266c-.17 2.453-1.14 4.114-2.835 4.91-1.063.5-2.332.733-3.776.695-1.185-.032-2.186-.378-2.899-1.001-.75-.655-1.145-1.574-1.145-2.655 0-2.253 1.734-3.636 4.64-3.739.951-.034 1.876.019 2.762.157a3.914 3.914 0 00-.155-1.058c-.282-.94-1.036-1.486-2.13-1.537-.764-.037-1.476.152-2.04.542l-.94-1.626c.86-.57 1.948-.88 3.146-.823 2.08.1 3.439 1.165 3.878 2.99.127.535.181 1.102.162 1.693 1.274.548 2.257 1.508 2.778 2.805.064.16.12.322.169.487.015-.33.022-.663.022-1 .001-1.785-.45-4.36-2.2-6.13-1.567-1.584-3.68-2.387-6.272-2.387z"/></svg></div><div class="platform-name">Threads</div></div>
       </div>
     </div>
     <div class="form-group" style="margin-top:16px">
@@ -236,7 +243,7 @@
         <button class="add-slide-btn" onclick="addSlide()">+ Tambah Slide</button>
       </div>
       <div class="form-group"><label class="form-label">Tujuan Konten</label><div class="chip-group" id="draftGoalChips"><div class="chip" onclick="selChip(this,'dGoal')">Save tinggi</div><div class="chip" onclick="selChip(this,'dGoal')">Like & engagement</div><div class="chip" onclick="selChip(this,'dGoal')">Jangkauan luas</div><div class="chip" onclick="selChip(this,'dGoal')">Follower growth</div></div></div>
-      <button class="btn-primary" onclick="analyzeDraft('carousel')">🔍 Analisis Draft</button>
+      <button class="btn-primary" onclick="analyzeDraft('carousel')"><span style="display:inline-flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analisis Draft</span></button>
     </div>
     <div id="draftVideo" style="display:none">
       <div class="form-group"><label class="form-label">Hook (0–3 detik pertama)</label><textarea class="form-input" id="videoHook" placeholder="Kalimat/teks pertama..." style="min-height:70px"></textarea></div>
@@ -245,7 +252,7 @@
       <div class="form-group"><label class="form-label">Isi / Tengah Video</label><textarea class="form-input" id="videoBody" placeholder="Poin utama yang disampaikan..." style="min-height:90px"></textarea></div>
       <div class="form-group"><label class="form-label">Penutup / CTA</label><textarea class="form-input" id="videoCta" placeholder="Ajakan di akhir video..." style="min-height:64px"></textarea></div>
       <div class="form-group"><label class="form-label">Tujuan</label><div class="chip-group" id="draftGoalChipsV"><div class="chip" onclick="selChip(this,'dGoalV')">Save tinggi</div><div class="chip" onclick="selChip(this,'dGoalV')">Like & engagement</div><div class="chip" onclick="selChip(this,'dGoalV')">Jangkauan luas</div><div class="chip" onclick="selChip(this,'dGoalV')">Follower growth</div></div></div>
-      <button class="btn-primary" onclick="analyzeDraft('video')">🔍 Analisis Draft</button>
+      <button class="btn-primary" onclick="analyzeDraft('video')"><span style="display:inline-flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analisis Draft</span></button>
     </div>
     <div id="draftResult" style="display:none;margin-top:20px">
       <hr class="div">
@@ -286,13 +293,13 @@
 <div class="sheet-overlay" id="overlayAccounts" onclick="closeSheet('sheetAccounts')"></div>
 <div class="sheet" id="sheetAccounts">
   <div class="sheet-handle"></div>
-  <div class="sheet-hdr"><div class="sheet-title">Akun</div><button class="sheet-close" onclick="closeSheet('sheetAccounts')">✕</button></div>
+  <div class="sheet-hdr"><div class="sheet-title">Akun</div><button class="sheet-close" onclick="closeSheet('sheetAccounts')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="sheet-body">
     <div id="accountsList"></div>
     <button class="btn-secondary" onclick="closeSheet('sheetAccounts');showOnboarding()">+ Tambah Akun Baru</button>
     <hr class="div"/>
-    <button class="btn-secondary" onclick="exportData()">⬇ Export Semua Data (JSON)</button>
-    <button class="btn-secondary" onclick="document.getElementById('importFile').click()">⬆ Import Data</button>
+    <button class="btn-secondary" onclick="exportData()"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Semua Data</span></button>
+    <button class="btn-secondary" onclick="document.getElementById('importFile').click()"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Data</span></button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
   </div>
 </div>
@@ -303,7 +310,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-hdr">
     <div><div class="sheet-title">Tambah Konten</div><div class="sheet-sub" id="addStepLabel">Langkah 1 dari 2 · Identitas</div></div>
-    <button class="sheet-close" onclick="closeSheet('sheetAdd')">✕</button>
+    <button class="sheet-close" onclick="closeSheet('sheetAdd')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div class="sheet-body">
     <div class="step-bar"><div class="step active" id="sb1"></div><div class="step" id="sb2"></div></div>
@@ -323,12 +330,12 @@
     <div id="addStep2" style="display:none">
       <div class="info-box">Isi performa minimal sehari setelah posting. Bisa diupdate kapan saja.</div>
       <div class="grid2">
-        <div class="form-group"><label class="form-label">👁 View</label><input type="number" class="form-input" id="inView" placeholder="0"/></div>
-        <div class="form-group"><label class="form-label">❤️ Like</label><input type="number" class="form-input" id="inLike" placeholder="0"/></div>
-        <div class="form-group"><label class="form-label">🔖 Save</label><input type="number" class="form-input" id="inSave" placeholder="0"/></div>
-        <div class="form-group"><label class="form-label">💬 Komen</label><input type="number" class="form-input" id="inComment" placeholder="0"/></div>
-        <div class="form-group"><label class="form-label">↗️ Share</label><input type="number" class="form-input" id="inShare" placeholder="0"/></div>
-        <div class="form-group"><label class="form-label">👤 Follower Baru</label><input type="number" class="form-input" id="inFollower" placeholder="0"/></div>
+        <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</label><input type="number" class="form-input" id="inView" placeholder="0"/></div>
+        <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg> Like</label><input type="number" class="form-input" id="inLike" placeholder="0"/></div>
+        <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> Save</label><input type="number" class="form-input" id="inSave" placeholder="0"/></div>
+        <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Komen</label><input type="number" class="form-input" id="inComment" placeholder="0"/></div>
+        <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><path d="M10 14L21 3"/><path d="M21 13v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"/></svg> Share</label><input type="number" class="form-input" id="inShare" placeholder="0"/></div>
+        <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Follower Baru</label><input type="number" class="form-input" id="inFollower" placeholder="0"/></div>
       </div>
       <button class="btn-primary" onclick="saveContentFull()">Simpan Konten</button>
       <button class="btn-secondary" onclick="backStep1()">← Kembali</button>
@@ -340,17 +347,17 @@
 <div class="sheet-overlay" id="overlayPerf" onclick="closeSheet('sheetPerf')"></div>
 <div class="sheet" id="sheetPerf">
   <div class="sheet-handle"></div>
-  <div class="sheet-hdr"><div class="sheet-title">Update Performa</div><button class="sheet-close" onclick="closeSheet('sheetPerf')">✕</button></div>
+  <div class="sheet-hdr"><div class="sheet-title">Update Performa</div><button class="sheet-close" onclick="closeSheet('sheetPerf')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="sheet-body">
     <input type="hidden" id="perfId"/>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:16px"><div style="font-size:13px;font-weight:600;color:var(--text)" id="perfTitleLabel">—</div></div>
     <div class="grid2">
-      <div class="form-group"><label class="form-label">👁 View</label><input type="number" class="form-input" id="pView" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">❤️ Like</label><input type="number" class="form-input" id="pLike" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">🔖 Save</label><input type="number" class="form-input" id="pSave" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">💬 Komen</label><input type="number" class="form-input" id="pComment" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">↗️ Share</label><input type="number" class="form-input" id="pShare" placeholder="0"/></div>
-      <div class="form-group"><label class="form-label">👤 Follower Baru</label><input type="number" class="form-input" id="pFollower" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</label><input type="number" class="form-input" id="pView" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg> Like</label><input type="number" class="form-input" id="pLike" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> Save</label><input type="number" class="form-input" id="pSave" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Komen</label><input type="number" class="form-input" id="pComment" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><path d="M10 14L21 3"/><path d="M21 13v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"/></svg> Share</label><input type="number" class="form-input" id="pShare" placeholder="0"/></div>
+      <div class="form-group"><label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Follower Baru</label><input type="number" class="form-input" id="pFollower" placeholder="0"/></div>
     </div>
     <button class="btn-primary" onclick="savePerf()">Simpan Performa</button>
   </div>
@@ -360,7 +367,7 @@
 <div class="sheet-overlay" id="overlayAudience" onclick="closeSheet('sheetAudience')"></div>
 <div class="sheet" id="sheetAudience">
   <div class="sheet-handle"></div>
-  <div class="sheet-hdr"><div class="sheet-title">Data Audiens</div><button class="sheet-close" onclick="closeSheet('sheetAudience')">✕</button></div>
+  <div class="sheet-hdr"><div class="sheet-title">Data Audiens</div><button class="sheet-close" onclick="closeSheet('sheetAudience')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="sheet-body">
     <div class="form-group"><label class="form-label">Periode</label><input type="text" class="form-input" id="audPeriode" placeholder="Misal: 8-14 Mei"/></div>
     <div class="grid2">
@@ -381,7 +388,7 @@
 <div class="sheet-overlay" id="overlaySettings" onclick="closeSheet('sheetSettings')"></div>
 <div class="sheet" id="sheetSettings">
   <div class="sheet-handle"></div>
-  <div class="sheet-hdr"><div class="sheet-title">Pengaturan Akun</div><button class="sheet-close" onclick="closeSheet('sheetSettings')">✕</button></div>
+  <div class="sheet-hdr"><div class="sheet-title">Pengaturan Akun</div><button class="sheet-close" onclick="closeSheet('sheetSettings')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="sheet-body" id="settingsBody"></div>
 </div>
 
@@ -417,7 +424,7 @@ let nicheTimer=null;
 
 const HOOKS=['Pain point','Angka / List','Pertanyaan','Storytelling','Kontroversial','Sebelum & Sesudah'];
 const STRUCTS=['Numbered list','Storytelling','Problem → Solusi','Tips langsung','Edukasi','Listicle'];
-const FMT={TikTok:['Carousel','Video','Foto'],Instagram:['Carousel','Reels','Foto','Story'],YouTube:['Shorts','Video']};
+const FMT={TikTok:['Carousel','Video','Foto'],Instagram:['Carousel','Reels','Foto','Story'],YouTube:['Shorts','Video'],X:['Post','Thread','Video'],Threads:['Post','Thread','Video','Foto']};
 const COLORS=['#3D9B9C','#D4922A','#E05A4A','#4CAF7D','#7B61FF','#E91E8C'];
 
 // ===== INIT =====
@@ -436,12 +443,17 @@ function renderEmptyNoAccount(){
 }
 
 // ===== ONBOARDING =====
-function showOnboarding(){
+async function showOnboarding(){
   document.getElementById('onboarding').classList.add('show');
   obTopics=[];obPlatform='';
   ['obName','obUsername','obNiche'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('obTopicArea').style.display='none';
   document.querySelectorAll('.platform-btn').forEach(b=>b.classList.remove('selected'));
+  // Show close button only if there's already at least 1 account
+  try{
+    const accs=await dbGetAll('accounts');
+    document.getElementById('obCloseBtn').style.display=accs.length?'flex':'none';
+  }catch{document.getElementById('obCloseBtn').style.display='none';}
 }
 function hideOnboarding(){document.getElementById('onboarding').classList.remove('show');}
 function selPlatform(p,el){
@@ -616,13 +628,13 @@ async function renderInsight(){
 function buildPatterns(live){
   const p=[];
   const best=[...live].sort((a,b)=>b.perf.view-a.perf.view)[0];
-  p.push({icon:'🏆',title:'Konten Terbaik',text:`"${best.title||'Tanpa judul'}" — ${fmt(best.perf.view)} view, ${best.perf.save} save. Hook: ${best.hook} · Struktur: ${best.struct}.`});
+  p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 9a6 6 0 006 6 6 6 0 006-6"/><path d="M12 15v4"/><path d="M8 19h8"/></svg>`,title:'Konten Terbaik',text:`"${best.title||'Tanpa judul'}" — ${fmt(best.perf.view)} view, ${best.perf.save} save. Hook: ${best.hook} · Struktur: ${best.struct}.`});
   const bs=[...live].sort((a,b)=>b.perf.save-a.perf.save)[0];
-  if(bs.perf.save>0) p.push({icon:'🔖',title:'Driver Save',text:`Konten save tertinggi: "${bs.title||'—'}" (${bs.perf.save} save). Hook: "${bs.hook}" · Struktur: "${bs.struct}".`});
-  if(live.every(c=>c.perf.comment===0)) p.push({icon:'💬',title:'Zero Komentar',text:`Semua konten belum ada yang trigger komentar. Coba tambahkan pertanyaan di caption atau CTA yang mengundang diskusi.`});
+  if(bs.perf.save>0) p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>`,title:'Driver Save',text:`Konten save tertinggi: "${bs.title||'—'}" (${bs.perf.save} save). Hook: "${bs.hook}" · Struktur: "${bs.struct}".`});
+  if(live.every(c=>c.perf.comment===0)) p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`,title:'Zero Komentar',text:`Semua konten belum ada yang trigger komentar. Coba tambahkan pertanyaan di caption atau CTA yang mengundang diskusi.`});
   const avg=live.reduce((s,c)=>s+c.perf.save,0)/live.length;
   const gs=live.filter(c=>c.goal==='Save tinggi');
-  if(gs.length>0){const gAvg=gs.reduce((s,c)=>s+c.perf.save,0)/gs.length;p.push({icon:'🎯',title:'Tujuan vs Realita',text:gAvg>=avg?`Konten "Save tinggi" rata-rata ${gAvg.toFixed(1)} save — di atas rata-rata (${avg.toFixed(1)}). ✓`:`Konten "Save tinggi" rata-rata ${gAvg.toFixed(1)} save — di bawah rata-rata (${avg.toFixed(1)}). Evaluasi hook dan struktur.`});}
+  if(gs.length>0){const gAvg=gs.reduce((s,c)=>s+c.perf.save,0)/gs.length;p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,title:'Tujuan vs Realita',text:gAvg>=avg?`Konten "Save tinggi" rata-rata ${gAvg.toFixed(1)} save — di atas rata-rata (${avg.toFixed(1)}). ✓`:`Konten "Save tinggi" rata-rata ${gAvg.toFixed(1)} save — di bawah rata-rata (${avg.toFixed(1)}). Evaluasi hook dan struktur.`});}
   return p;
 }
 function buildTable(live,key){
