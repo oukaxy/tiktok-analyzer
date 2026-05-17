@@ -1,4 +1,4 @@
-const CACHE_NAME = 'konten-analyzer-v1';
+const CACHE_NAME = 'konten-analyzer-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
