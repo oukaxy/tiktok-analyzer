@@ -1430,22 +1430,19 @@ function saveToLog(){
   if(type==='carousel'){
     const slideTexts=[...document.querySelectorAll('#slidesContainer .slide-inp')]
       .map((el,i)=>`Slide ${i+1}: ${el.value.trim()}`).filter(s=>!s.endsWith(': '));
-    desc=slideTexts.join('
-');
+    desc=slideTexts.join('\n');
   } else if(type==='video'){
     desc=[
       document.getElementById('videoBody')?.value.trim(),
       document.getElementById('videoCta')?.value.trim()
-    ].filter(Boolean).join('
-');
+    ].filter(Boolean).join('\n');
   } else if(type==='post'){
     desc=document.getElementById('postText')?.value.trim()||'';
   } else if(type==='thread'){
     desc=[
       document.getElementById('threadBody')?.value.trim(),
       document.getElementById('threadClose')?.value.trim()
-    ].filter(Boolean).join('
-');
+    ].filter(Boolean).join('\n');
   }
   // Pre-fill openAddSheet with draft data
   editingId=null;
