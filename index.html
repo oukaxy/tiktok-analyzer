@@ -668,9 +668,10 @@ function renderFilterChips(){
   const formats=[...new Set(allContents.map(c=>c.format).filter(f=>f&&f!=='—'))];
   const topics=[...new Set(allContents.map(c=>c.topic).filter(t=>t&&t!=='—'))];
   const row=document.getElementById('filterRow');
-  const chip=(label,key,val)=>`<div class="filter-chip ${activeFilters[key]===val?'active':''}" onclick="setFilter('${key}','${val}')">${label}</div>`;
+  const isAllActive=activeFilters.status==='all'&&activeFilters.format==='all'&&activeFilters.topic==='all';
+  const chip=(label,key,val)=>`<div class="filter-chip ${activeFilters[key]===val&&!(key==='status'&&val==='all'&&!isAllActive)?'active':''}" onclick="setFilter('${key}','${val}')">${label}</div>`;
   row.innerHTML=[
-    chip('Semua','status','all'),
+    `<div class="filter-chip ${isAllActive?'active':''}" onclick="resetFilters()">Semua</div>`,
     chip('Live','status','live'),
     chip('Draft','status','draft'),
     ...formats.map(f=>chip(f,'format',f)),
@@ -678,8 +679,18 @@ function renderFilterChips(){
   ].join('');
 }
 
+function resetFilters(){
+  activeFilters={status:'all',format:'all',topic:'all'};
+  const si=document.getElementById('searchInput');if(si)si.value='';
+  applyFilter();
+}
 function setFilter(key,val){
-  activeFilters[key]=val;
+  // If same value clicked again → reset that key
+  if(activeFilters[key]===val&&val!=='all'){
+    activeFilters[key]='all';
+  } else {
+    activeFilters[key]=val;
+  }
   applyFilter();
 }
 
@@ -727,10 +738,9 @@ function renderContentList(list, avgView, avgSave){
         const totalSec=Math.round((c.retention.totalWatch||0)*60);
         const wH=Math.floor(totalSec/3600),wM=Math.floor((totalSec%3600)/60),wS=totalSec%60;
         const watchStr=wH>0?`${wH}j ${wM}m ${wS}d`:wM>0?`${wM}m ${wS}d`:`${wS}d`;
-        retRow=`<div class="metrics-row" style="border-top:1px dashed var(--border);margin-top:8px;padding-top:8px">
-          <div class="metric-item"><div class="metric-val hi">${c.retention.slideAvg}/${c.retention.totalSlide||'?'}</div><div class="metric-label">Slide avg</div></div>
-          ${c.retention.totalWatch?`<div class="metric-item"><div class="metric-val" style="font-size:12px">${watchStr}</div><div class="metric-label">Total putar</div></div>`:'<div class="metric-item"></div>'}
-          <div class="metric-item"></div><div class="metric-item"></div><div class="metric-item"></div>
+        retRow=`<div style="display:flex;gap:16px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+          <div><div class="metric-val hi" style="font-size:14px">${c.retention.slideAvg}/${c.retention.totalSlide||'?'}</div><div class="metric-label">SLIDE AVG</div></div>
+          ${c.retention.totalWatch?`<div><div class="metric-val" style="font-size:14px;white-space:nowrap">${watchStr}</div><div class="metric-label">TOTAL PUTAR</div></div>`:''}
         </div>`;
       } else if(['video','reels','shorts'].includes(fmt_)&&(c.retention.watchTime>0||c.retention.compRate>0)){
         retRow=`<div class="metrics-row" style="border-top:1px dashed var(--border);margin-top:8px;padding-top:8px">
@@ -1195,9 +1205,12 @@ async function renderInsight(){
   const chartHtml=buildLineChart(live);
   const avgViewVal=(live.reduce((s,c)=>s+c.perf.view,0)/live.length).toFixed(0);
   const avgSaveVal=(live.reduce((s,c)=>s+c.perf.save,0)/live.length).toFixed(1);
+  const warnings=buildDataWarnings(all,live);
+  const warningHtml=renderWarnings(warnings);
   // Store plain text version for copy
   window._insightText=buildInsightText(live, cur, avgViewVal, avgSaveVal, topFmt);
   document.getElementById('insightBody').innerHTML=`
+    ${warningHtml}
     <div class="copy-bar">
       <span class="sec-title">Tren Performa</span>
       <button class="copy-btn" id="copyInsightBtn" onclick="copyInsightResult()">
@@ -1664,6 +1677,81 @@ function saveToLog(){
   backStep1();
   openSheet('sheetAdd');
   showToast('Draft siap disimpan — cek & sesuaikan dulu');
+}
+
+
+// ===== DATA WARNINGS =====
+function buildDataWarnings(all, live){
+  const warnings=[];
+  // 1. Konten live tanpa topik
+  const noTopic=live.filter(c=>!c.topic||c.topic==='—');
+  if(noTopic.length>0){
+    warnings.push({
+      level:'warn',
+      title:`${noTopic.length} konten tanpa topik`,
+      text:`Pattern per topik tidak akurat. Lengkapi: ${noTopic.slice(0,3).map(c=>'"'+( c.title||'Tanpa judul').substring(0,30)+'"').join(', ')}${noTopic.length>3?` +${noTopic.length-3} lainnya`:''}`,
+      action:`Tap Edit di konten tersebut`
+    });
+  }
+  // 2. Konten live tanpa hook
+  const noHook=live.filter(c=>!c.hook||c.hook==='—');
+  if(noHook.length>0){
+    warnings.push({
+      level:'warn',
+      title:`${noHook.length} konten tanpa tipe hook`,
+      text:`Pattern per hook tidak akurat. ${noHook.slice(0,2).map(c=>'"'+(c.title||'Tanpa judul').substring(0,30)+'"').join(', ')}${noHook.length>2?` +${noHook.length-2} lainnya`:''}`,
+      action:`Tap Edit → pilih Tipe Hook`
+    });
+  }
+  // 3. Konten live tanpa struktur
+  const noStruct=live.filter(c=>!c.struct||c.struct==='—');
+  if(noStruct.length>0){
+    warnings.push({
+      level:'warn',
+      title:`${noStruct.length} konten tanpa struktur`,
+      text:`Pattern per struktur tidak akurat. ${noStruct.slice(0,2).map(c=>'"'+(c.title||'Tanpa judul').substring(0,30)+'"').join(', ')}${noStruct.length>2?` +${noStruct.length-2} lainnya`:''}`,
+      action:`Tap Edit → pilih Struktur Konten`
+    });
+  }
+  // 4. Konten tanpa retention sama sekali
+  const withRet=live.filter(c=>c.retention&&Object.values(c.retention).some(v=>v>0));
+  if(withRet.length===0&&live.length>=3){
+    warnings.push({
+      level:'info',
+      title:'Belum ada data retention',
+      text:'Insight algoritma belum bisa muncul. Isi Avg Watch Time / Completion Rate / Slide Avg di Update Performa.',
+      action:`TikTok Studio → Analytics → pilih konten → Ikhtisar`
+    });
+  }
+  // 5. Konten draft yang lama (>7 hari belum diisi performa)
+  const oldDraft=all.filter(c=>(!c.perf||!c.perf.view)&&c.date&&daysSince(c.date)>=7);
+  if(oldDraft.length>0){
+    warnings.push({
+      level:'info',
+      title:`${oldDraft.length} konten sudah ${oldDraft.length===1?'lama':'lama-lama'} belum diisi performa`,
+      text:`${oldDraft.slice(0,2).map(c=>'"'+(c.title||'Tanpa judul').substring(0,30)+'" ('+daysSince(c.date)+'h)').join(', ')}${oldDraft.length>2?` +${oldDraft.length-2} lainnya`:''}`,
+      action:'Tap Update Performa di Log'
+    });
+  }
+  return warnings;
+}
+
+function renderWarnings(warnings){
+  if(!warnings.length)return'';
+  return`<div style="margin-bottom:16px">
+    ${warnings.map(w=>`
+    <div style="background:${w.level==='warn'?'var(--amber-bg)':'var(--teal-bg)'};border:1px solid ${w.level==='warn'?'var(--amber)':'var(--teal)'};border-radius:var(--radius);padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+        ${w.level==='warn'
+          ?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--amber);flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+          :'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--teal);flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+        }
+        <span style="font-size:12px;font-weight:600;color:${w.level==='warn'?'var(--amber)':'var(--teal)'};font-family:'DM Mono',monospace">${w.title}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:4px">${w.text}</div>
+      <div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">→ ${w.action}</div>
+    </div>`).join('')}
+  </div>`;
 }
 
 // ===== COPY =====
