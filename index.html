@@ -724,9 +724,12 @@ function renderContentList(list, avgView, avgSave){
     let retRow='';
     if(hasRet){
       if(fmt_==='carousel'&&c.retention.slideAvg>0){
+        const totalSec=Math.round((c.retention.totalWatch||0)*60);
+        const wH=Math.floor(totalSec/3600),wM=Math.floor((totalSec%3600)/60),wS=totalSec%60;
+        const watchStr=wH>0?`${wH}j ${wM}m ${wS}d`:wM>0?`${wM}m ${wS}d`:`${wS}d`;
         retRow=`<div class="metrics-row" style="border-top:1px dashed var(--border);margin-top:8px;padding-top:8px">
           <div class="metric-item"><div class="metric-val hi">${c.retention.slideAvg}/${c.retention.totalSlide||'?'}</div><div class="metric-label">Slide avg</div></div>
-          ${c.retention.totalWatch?`<div class="metric-item"><div class="metric-val">${c.retention.totalWatch}mnt</div><div class="metric-label">Total putar</div></div>`:'<div class="metric-item"></div>'}
+          ${c.retention.totalWatch?`<div class="metric-item"><div class="metric-val" style="font-size:12px">${watchStr}</div><div class="metric-label">Total putar</div></div>`:'<div class="metric-item"></div>'}
           <div class="metric-item"></div><div class="metric-item"></div><div class="metric-item"></div>
         </div>`;
       } else if(['video','reels','shorts'].includes(fmt_)&&(c.retention.watchTime>0||c.retention.compRate>0)){
@@ -842,7 +845,11 @@ function backStep1(){
 function buildRetentionFromForm(prefix, format){
   const fmt=(format||'').toLowerCase();
   if(fmt==='carousel'){
-    return{slideAvg:parseFloat(document.getElementById(prefix+'SlideAvg')?.value)||0,totalSlide:parseInt(document.getElementById(prefix+'TotalSlide')?.value)||0,totalWatch:parseFloat(document.getElementById(prefix+'TotalWatch')?.value)||0};
+    const wH=parseInt(document.getElementById(prefix+'WatchH')?.value)||0;
+    const wM=parseInt(document.getElementById(prefix+'WatchM')?.value)||0;
+    const wS=parseInt(document.getElementById(prefix+'WatchS')?.value)||0;
+    const totalWatchMin=(wH*3600+wM*60+wS)/60;
+    return{slideAvg:parseFloat(document.getElementById(prefix+'SlideAvg')?.value)||0,totalSlide:parseInt(document.getElementById(prefix+'TotalSlide')?.value)||0,totalWatch:totalWatchMin||0};
   } else if(['video','reels','shorts'].includes(fmt)){
     return{watchTime:parseFloat(document.getElementById(prefix+'WatchTime')?.value)||0,compRate:parseFloat(document.getElementById(prefix+'CompRate')?.value)||0,rewatchRate:parseFloat(document.getElementById(prefix+'RewatchRate')?.value)||0,duration:parseInt(document.getElementById(prefix+'Duration')?.value)||0};
   }
@@ -894,31 +901,85 @@ function renderRetentionFields(containerId, format, retention, prefix){
   const SVG_REPEAT='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>';
   const SVG_SLIDES='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>';
 
+  // Parse stored totalWatch (minutes float) back to h/m/s for display
+  function toHMS(totalMin){
+    if(!totalMin)return{h:0,m:0,s:0};
+    const totalSec=Math.round(totalMin*60);
+    return{h:Math.floor(totalSec/3600),m:Math.floor((totalSec%3600)/60),s:totalSec%60};
+  }
+
   const fmt=(format||'').toLowerCase();
-  let html='<div class="sec-title" style="margin:14px 0 10px;display:block">Retention <span style="color:var(--teal);font-size:10px;font-weight:600;margin-left:4px">SINYAL ALGORITMA</span></div>';
+  let html=`<div class="sec-title" style="margin:14px 0 10px;display:block">Retention <span style="color:var(--teal);font-size:10px;font-weight:600;margin-left:4px">SINYAL ALGORITMA</span></div>`;
 
   if(fmt==='carousel'){
-    html+=`<div class="info-box" style="font-size:11px;margin-bottom:12px">Ada di TikTok Studio → Analytics → pilih konten → Ikhtisar</div>
-    <div class="grid2">
-      <div class="form-group"><label class="form-label">${SVG_SLIDES} Rata-rata slide dilihat</label><input type="number" step="0.1" class="form-input" id="${prefix}SlideAvg" value="${retention?.slideAvg||''}" placeholder="Misal: 2.1"/></div>
-      <div class="form-group"><label class="form-label">${SVG_SLIDES} Total slide</label><input type="number" class="form-input" id="${prefix}TotalSlide" value="${retention?.totalSlide||''}" placeholder="Misal: 5"/></div>
-      <div class="form-group"><label class="form-label">${SVG_CLOCK} Total waktu putar (mnt)</label><input type="number" step="0.1" class="form-input" id="${prefix}TotalWatch" value="${retention?.totalWatch||''}" placeholder="Misal: 57.15"/></div>
+    const hms=toHMS(retention?.totalWatch);
+    html+=`
+    <div class="info-box" style="font-size:11px;margin-bottom:14px">TikTok Studio → Analytics → pilih konten → Ikhtisar</div>
+    <div class="grid2" style="margin-bottom:14px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" style="white-space:nowrap">${SVG_SLIDES} Avg slide dilihat</label>
+        <input type="number" step="0.1" class="form-input" id="${prefix}SlideAvg" value="${retention?.slideAvg||''}" placeholder="2.2"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" style="white-space:nowrap">${SVG_SLIDES} Total slide</label>
+        <input type="number" class="form-input" id="${prefix}TotalSlide" value="${retention?.totalSlide||''}" placeholder="6"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">${SVG_CLOCK} Total waktu putar</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div>
+          <input type="number" class="form-input" id="${prefix}WatchH" value="${hms.h||''}" placeholder="0" min="0" style="text-align:center"/>
+          <div style="text-align:center;font-size:10px;color:var(--text-3);font-family:'DM Mono',monospace;margin-top:4px">JAM</div>
+        </div>
+        <div>
+          <input type="number" class="form-input" id="${prefix}WatchM" value="${hms.m||''}" placeholder="0" min="0" max="59" style="text-align:center"/>
+          <div style="text-align:center;font-size:10px;color:var(--text-3);font-family:'DM Mono',monospace;margin-top:4px">MENIT</div>
+        </div>
+        <div>
+          <input type="number" class="form-input" id="${prefix}WatchS" value="${hms.s||''}" placeholder="0" min="0" max="59" style="text-align:center"/>
+          <div style="text-align:center;font-size:10px;color:var(--text-3);font-family:'DM Mono',monospace;margin-top:4px">DETIK</div>
+        </div>
+      </div>
     </div>`;
 
   } else if(['video','reels','shorts'].includes(fmt)){
-    html+=`<div class="info-box" style="font-size:11px;margin-bottom:12px">Ada di TikTok Studio → Analytics → pilih konten → Ikhtisar</div>
-    <div class="grid2">
-      <div class="form-group"><label class="form-label">${SVG_CLOCK} Avg Watch Time (detik)</label><input type="number" step="0.1" class="form-input" id="${prefix}WatchTime" value="${retention?.watchTime||''}" placeholder="Misal: 3.1"/></div>
-      <div class="form-group"><label class="form-label">${SVG_CHECK} Completion Rate (%)</label><input type="number" step="0.01" class="form-input" id="${prefix}CompRate" value="${retention?.compRate||''}" placeholder="Misal: 2.32" min="0" max="100"/></div>
-      <div class="form-group"><label class="form-label">${SVG_REPEAT} Re-watch Rate (%)</label><input type="number" step="0.1" class="form-input" id="${prefix}RewatchRate" value="${retention?.rewatchRate||''}" placeholder="0" min="0" max="100"/></div>
-      <div class="form-group"><label class="form-label">${SVG_CLOCK} Durasi video (detik)</label><input type="number" class="form-input" id="${prefix}Duration" value="${retention?.duration||''}" placeholder="Misal: 30"/></div>
+    html+=`
+    <div class="info-box" style="font-size:11px;margin-bottom:14px">TikTok Studio → Analytics → pilih konten → Ikhtisar</div>
+    <div class="grid2" style="margin-bottom:0">
+      <div class="form-group">
+        <label class="form-label" style="white-space:nowrap">${SVG_CLOCK} Avg Watch Time</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" step="0.1" class="form-input" id="${prefix}WatchTime" value="${retention?.watchTime||''}" placeholder="3.1" style="flex:1"/>
+          <span style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;flex-shrink:0">dtk</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="white-space:nowrap">${SVG_CHECK} Completion Rate</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" step="0.01" class="form-input" id="${prefix}CompRate" value="${retention?.compRate||''}" placeholder="2.32" min="0" max="100" style="flex:1"/>
+          <span style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;flex-shrink:0">%</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="white-space:nowrap">${SVG_REPEAT} Re-watch Rate</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" step="0.1" class="form-input" id="${prefix}RewatchRate" value="${retention?.rewatchRate||''}" placeholder="0" min="0" max="100" style="flex:1"/>
+          <span style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;flex-shrink:0">%</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="white-space:nowrap">${SVG_CLOCK} Durasi video</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" class="form-input" id="${prefix}Duration" value="${retention?.duration||''}" placeholder="30" style="flex:1"/>
+          <span style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;flex-shrink:0">dtk</span>
+        </div>
+      </div>
     </div>`;
 
   } else if(['foto','photo'].includes(fmt)){
     html+=`<div style="color:var(--text-3);font-size:12px;padding:6px 0 14px">Format Foto tidak memiliki data retention khusus.</div>`;
-
   } else {
-    // Post, Thread, atau format lain
     html+=`<div style="color:var(--text-3);font-size:12px;padding:6px 0 14px">Format ini tidak memiliki data retention.</div>`;
   }
 
@@ -936,10 +997,14 @@ async function savePerf(){
   };
   const fmt=(c.format||'').toLowerCase();
   if(fmt==='carousel'){
+    const wH=parseInt(document.getElementById('pWatchH')?.value)||0;
+    const wM=parseInt(document.getElementById('pWatchM')?.value)||0;
+    const wS=parseInt(document.getElementById('pWatchS')?.value)||0;
+    const totalWatchMin=(wH*3600+wM*60+wS)/60;
     c.retention={
       slideAvg:parseFloat(document.getElementById('pSlideAvg')?.value)||0,
       totalSlide:parseInt(document.getElementById('pTotalSlide')?.value)||0,
-      totalWatch:parseFloat(document.getElementById('pTotalWatch')?.value)||0,
+      totalWatch:totalWatchMin||0,
     };
   } else if(['video','reels','shorts'].includes(fmt)){
     c.retention={
