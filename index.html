@@ -1452,8 +1452,26 @@ function renderDraftForm(type){
 async function analyzeDraft(type){
   if(!cur){showToast('Pilih akun dulu');return;}
   const live=(await dbByIdx('contents','accountId',cur.id)).filter(c=>c.perf&&c.perf.view>0);
-  const hist=live.length?live.map(c=>`- "${c.title}" | Hook:${c.hook} | Struktur:${c.struct} | View:${c.perf.view} | Save:${c.perf.save} | Like:${c.perf.like}${c.retention?.compRate?` | Completion:${c.retention.compRate}% | Watch:${c.retention.watchTime}s | Rewatch:${c.retention.rewatchRate}%`:''}`).join('\n'):'Belum ada histori.';
-  const base=`Akun: ${cur.username||cur.name}\nPlatform: ${cur.platform}\nNiche: ${cur.niche}\n\nHistori konten:\n${hist}\n\n`;
+  const hist=live.length?live.map(c=>`- "${c.title}" | Hook:${c.hook} | Struktur:${c.struct} | Topik:${c.topic} | View:${c.perf.view} | Save:${c.perf.save} | Like:${c.perf.like} | Komen:${c.perf.comment} | Share:${c.perf.share}${c.retention?.compRate?` | Completion:${c.retention.compRate}% | Watch:${c.retention.watchTime}s | Rewatch:${c.retention.rewatchRate}%`:''}`).join('\n'):'Belum ada histori.';
+
+  // Build pattern summary (aggregated, so AI gets pre-calculated insights)
+  function aggBy(key){
+    const map={};
+    live.forEach(c=>{const k=c[key]||'—';if(!map[k])map[k]={v:0,s:0,l:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].l+=c.perf.like;map[k].n++;});
+    return Object.entries(map).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n))
+      .map(([k,d])=>`  ${k} (${d.n}x): avg view ${Math.round(d.v/d.n)}, avg save ${(d.s/d.n).toFixed(1)}, avg like ${(d.l/d.n).toFixed(1)}`).join('\n');
+  }
+  const avgView=live.length?Math.round(live.reduce((s,c)=>s+c.perf.view,0)/live.length):0;
+  const avgSave=live.length?(live.reduce((s,c)=>s+c.perf.save,0)/live.length).toFixed(1):0;
+  // Retention pattern per hook (for video/carousel)
+  const retByHook={};
+  live.filter(c=>c.retention?.compRate>0).forEach(c=>{const k=c.hook||'—';if(!retByHook[k])retByHook[k]={s:0,n:0};retByHook[k].s+=c.retention.compRate;retByHook[k].n++;});
+  const retHookStr=Object.entries(retByHook).length
+    ?Object.entries(retByHook).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).map(([k,d])=>`  ${k}: avg completion ${(d.s/d.n).toFixed(1)}%`).join('\n')
+    :'  Belum ada data retention.';
+  const patternSummary=live.length>=2?`\nPattern histori akun (pre-calculated):\nRata-rata keseluruhan: ${avgView} view, ${avgSave} save\nPer tipe hook (diurutkan avg save):\n${aggBy('hook')}\nPer struktur:\n${aggBy('struct')}\nPer topik:\n${aggBy('topic')}\nRetention per hook:\n${retHookStr}\n`:'';
+
+  const base=`Akun: ${cur.username||cur.name}\nPlatform: ${cur.platform}\nNiche: ${cur.niche}\n${patternSummary}\nHistori konten (detail):\n${hist}\n\n`;
   const analysisFmt=`\nAnalisis:\n1. **Potensi** — berdasarkan histori akun.\n2. **Kekuatan** — apa yang sudah bagus.\n3. **Yang perlu diperbaiki** — bagian mana yang lemah dan kenapa.\n4. **Rekomendasi spesifik** — saran konkret.\n5. **Prediksi metrik** — berdasarkan histori.\nJujur dan spesifik.`;
   let prompt='';
 
@@ -1490,7 +1508,7 @@ async function analyzeDraft(type){
   result.style.display='';content.innerHTML='<div class="insight-card"><div class="insight-text ai-thinking" style="color:var(--text-3)">AI sedang menganalisis draft kamu...</div></div>';
   result.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
-    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:`Kamu adalah analis konten ${cur.platform} untuk niche "${cur.niche}". Jawab dalam bahasa Indonesia, singkat dan actionable.`,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:`Kamu adalah analis konten ${cur.platform} untuk niche "${cur.niche}". Kamu diberi data histori performa akun ini — gunakan sebagai acuan utama, bukan saran generik. Kalau hook atau struktur di draft ini terbukti lemah di histori, sebut angkanya. Kalau ada yang terbukti kuat, rekomendasikan itu. Jawab dalam bahasa Indonesia, singkat, jujur, dan actionable.`,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const text=(data.text||'Gagal mendapat respons.').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
     content.innerHTML=`<div class="insight-card"><div class="insight-text" style="white-space:pre-wrap;line-height:1.7">${text}</div></div>`;
