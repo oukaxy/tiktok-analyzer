@@ -258,6 +258,13 @@
     .chip-x{font-size:13px;color:var(--text-3);line-height:1;cursor:pointer;margin-left:2px}
     .chip-add{border-style:dashed;color:var(--text-3)}
     .chip-add:hover{border-color:var(--text-2);color:var(--text-2)}
+    .auto-topic-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:var(--teal-bg);border:1px solid var(--teal);border-radius:20px;color:var(--teal);font-size:10px;font-weight:600;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;letter-spacing:.2px}
+    .auto-topic-btn:hover{background:var(--teal);color:#fff}
+    .auto-topic-btn:disabled{opacity:.5;cursor:not-allowed}
+    .auto-topic-btn.loading{opacity:.7;cursor:wait}
+    .bulk-topic-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--teal-bg);border:1px solid var(--teal);border-radius:var(--radius-sm);color:var(--teal);font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s}
+    .bulk-topic-btn:hover{background:var(--teal);color:#fff}
+    .bulk-topic-btn:disabled{opacity:.5;cursor:not-allowed}
   </style>
 </head>
 <body>
@@ -454,7 +461,7 @@
       <div class="form-group" id="slideGroup"><label class="form-label">Jumlah Slide</label><input type="number" class="form-input" id="inSlides" placeholder="Misal: 6" min="1" max="30"/></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="inHookChips"></div></div>
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="inStructChips"></div></div>
-      <div class="form-group"><label class="form-label">Topik Spesifik</label><div class="chip-group" id="inTopicChips"></div></div>
+      <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik Spesifik</label><button class="auto-topic-btn" id="autoTopicBtnAdd" onclick="autoSelectTopic('add')">✦ Auto Topik</button></div><div class="chip-group" id="inTopicChips"></div></div>
       <div class="form-group"><label class="form-label">Tujuan Konten</label><div class="chip-group" id="inGoalChips"><div class="chip" onclick="selChip(this,'inGoal')">Save tinggi</div><div class="chip" onclick="selChip(this,'inGoal')">Like & engagement</div><div class="chip" onclick="selChip(this,'inGoal')">Jangkauan luas</div><div class="chip" onclick="selChip(this,'inGoal')">Follower growth</div></div></div>
       <div class="form-group"><label class="form-label">Catatan Pribadi <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional)</span></label><textarea class="form-input" id="inNotes" placeholder="Misal: konten ini viral karena trending audio, dibuat saat ramadan..." style="min-height:70px"></textarea></div>
       <button class="btn-primary" onclick="goStep2()">Lanjut → Input Performa</button>
@@ -1229,7 +1236,8 @@ async function renderInsight(){
     <div class="sec-hdr"><span class="sec-title">Per Struktur</span></div>
     <div class="card"><div class="card-body">${buildTable(live,'struct')}</div></div>
     <div style="height:4px"></div>
-    <div class="sec-hdr"><span class="sec-title">Per Topik</span></div>
+    <div class="sec-hdr"><span class="sec-title">Per Topik</span><button class="bulk-topic-btn" id="bulkTopicBtn" onclick="bulkAutoTopic()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>✦ Auto Topik Massal</button></div>
+    <div id="bulkTopicStatus" style="display:none;margin-bottom:8px"></div>
     <div class="card"><div class="card-body">${buildTable(live,'topic')}</div></div>`;
 }
 function buildLineChart(live){
@@ -1375,7 +1383,7 @@ function renderDraftForm(type){
       <div class="form-group"><label class="form-label">Judul / Hook Utama</label><input type="text" class="form-input" id="draftTitle" placeholder="Hook yang bikin orang berhenti scroll..."/></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="draftHookChips"></div></div>
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="draftStructChips"></div></div>
-      <div class="form-group"><label class="form-label">Topik</label><div class="chip-group" id="draftTopicChips"></div></div>
+      <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik</label><button class="auto-topic-btn" id="autoTopicBtnDraft" onclick="autoSelectTopic('draft-carousel')">✦ Auto Topik</button></div><div class="chip-group" id="draftTopicChips"></div></div>
       <div class="form-group">
         <label class="form-label">Isi Slide</label>
         <div id="slidesContainer">
@@ -1396,7 +1404,7 @@ function renderDraftForm(type){
     area.innerHTML=`
       <div class="form-group"><label class="form-label">Hook (0–3 detik pertama)</label><textarea class="form-input" id="videoHook" placeholder="Kalimat/teks pertama yang keluar..." style="min-height:70px"></textarea></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="draftHookChipsV"></div></div>
-      <div class="form-group"><label class="form-label">Topik</label><div class="chip-group" id="draftTopicChipsV"></div></div>
+      <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik</label><button class="auto-topic-btn" onclick="autoSelectTopic('draft-video')">✦ Auto Topik</button></div><div class="chip-group" id="draftTopicChipsV"></div></div>
       <div class="form-group"><label class="form-label">Isi / Tengah Video</label><textarea class="form-input" id="videoBody" placeholder="Poin utama yang disampaikan..." style="min-height:90px"></textarea></div>
       <div class="form-group"><label class="form-label">Penutup / CTA</label><textarea class="form-input" id="videoCta" placeholder="Ajakan di akhir video..." style="min-height:64px"></textarea></div>
       <div class="form-group"><label class="form-label">Tujuan</label>${GOAL_CHIPS}</div>
@@ -1407,7 +1415,7 @@ function renderDraftForm(type){
   } else if(type==='foto'){
     area.innerHTML=`
       <div class="form-group"><label class="form-label">Caption Utama</label><textarea class="form-input" id="fotoCaption" placeholder="Caption yang menarik perhatian di detik pertama..." style="min-height:90px"></textarea></div>
-      <div class="form-group"><label class="form-label">Topik</label><div class="chip-group" id="draftTopicChipsF"></div></div>
+      <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik</label><button class="auto-topic-btn" onclick="autoSelectTopic('draft-foto')">✦ Auto Topik</button></div><div class="chip-group" id="draftTopicChipsF"></div></div>
       <div class="form-group"><label class="form-label">Deskripsi Visual</label><textarea class="form-input" id="fotoVisual" placeholder="Gambar/foto apa yang dipakai? Bagaimana visualnya?" style="min-height:70px"></textarea></div>
       <div class="form-group"><label class="form-label">CTA di Caption</label><input type="text" class="form-input" id="fotoCta" placeholder="Misal: Save buat referensi nanti..."/></div>
       <div class="form-group"><label class="form-label">Hashtag</label><textarea class="form-input" id="fotoHashtag" placeholder="#skincare #tutorial..." style="min-height:60px"></textarea></div>
@@ -1421,7 +1429,7 @@ function renderDraftForm(type){
     area.innerHTML=`
       <div class="form-group"><label class="form-label">${platLabel} <span style="font-weight:400;color:var(--text-3)">${charLimit}</span></label><textarea class="form-input" id="postText" placeholder="Tulis post kamu di sini..." style="min-height:100px"></textarea><div id="postCharCount" style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace;margin-top:5px;text-align:right">0 karakter</div></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="draftHookChipsP"></div></div>
-      <div class="form-group"><label class="form-label">Topik</label><div class="chip-group" id="draftTopicChipsP"></div></div>
+      <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik</label><button class="auto-topic-btn" onclick="autoSelectTopic('draft-post')">✦ Auto Topik</button></div><div class="chip-group" id="draftTopicChipsP"></div></div>
       <div class="form-group"><label class="form-label">Ada Media?</label><div class="chip-group" id="postMediaChips"><div class="chip" onclick="selChip(this,'dMedia')">Tanpa media</div><div class="chip" onclick="selChip(this,'dMedia')">Foto</div><div class="chip" onclick="selChip(this,'dMedia')">Video</div><div class="chip" onclick="selChip(this,'dMedia')">GIF</div></div></div>
       <div class="form-group"><label class="form-label">Tujuan</label>${GOAL_CHIPS}</div>
       ${ANALYZE_BTN}`;
@@ -1439,7 +1447,7 @@ function renderDraftForm(type){
     area.innerHTML=`
       <div class="form-group"><label class="form-label">Opening Tweet / Post Pertama</label><textarea class="form-input" id="threadOpen" placeholder="Tweet pembuka yang hook banget — ini yang paling penting..." style="min-height:90px"></textarea></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="draftHookChipsT"></div></div>
-      <div class="form-group"><label class="form-label">Topik</label><div class="chip-group" id="draftTopicChipsT"></div></div>
+      <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik</label><button class="auto-topic-btn" onclick="autoSelectTopic('draft-thread')">✦ Auto Topik</button></div><div class="chip-group" id="draftTopicChipsT"></div></div>
       <div class="form-group"><label class="form-label">Isi Thread (ringkasan poin utama)</label><textarea class="form-input" id="threadBody" placeholder="Poin-poin utama yang akan dibahas di thread ini..." style="min-height:100px"></textarea></div>
       <div class="form-group"><label class="form-label">Closing Tweet / CTA</label><textarea class="form-input" id="threadClose" placeholder="Tweet penutup + ajakan like, retweet, atau follow..." style="min-height:70px"></textarea></div>
       <div class="form-group"><label class="form-label">Tujuan</label>${GOAL_CHIPS}</div>
@@ -2060,6 +2068,170 @@ function closeSheet(id){
 // ===== UTILS =====
 function fmt(n){if(!n)return'0';if(n>=1000000)return(n/1000000).toFixed(1).replace('.0','')+'M';if(n>=1000)return(n/1000).toFixed(1).replace('.0','')+'K';return String(n);}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ===== AUTO TOPIC =====
+function getContentTextForTopic(context){
+  // Returns {title, body} based on context
+  if(context==='add'){
+    return {
+      title: document.getElementById('inTitle')?.value.trim()||'',
+      body: document.getElementById('inDesc')?.value.trim()||''
+    };
+  }
+  if(context==='draft-carousel'){
+    const slides=[...document.querySelectorAll('#slidesContainer .slide-inp')].map(el=>el.value.trim()).filter(Boolean).join(' ');
+    return {title: document.getElementById('draftTitle')?.value.trim()||'', body: slides};
+  }
+  if(context==='draft-video'){
+    return {
+      title: document.getElementById('videoHook')?.value.trim()||'',
+      body: [document.getElementById('videoBody')?.value.trim(), document.getElementById('videoCta')?.value.trim()].filter(Boolean).join(' ')
+    };
+  }
+  if(context==='draft-foto'){
+    return {title: document.getElementById('fotoCaption')?.value.trim()||'', body: document.getElementById('fotoVisual')?.value.trim()||''};
+  }
+  if(context==='draft-post'){
+    return {title: document.getElementById('postText')?.value.trim()||'', body:''};
+  }
+  if(context==='draft-thread'){
+    return {
+      title: document.getElementById('threadOpen')?.value.trim()||'',
+      body: [document.getElementById('threadBody')?.value.trim(), document.getElementById('threadClose')?.value.trim()].filter(Boolean).join(' ')
+    };
+  }
+  return {title:'',body:''};
+}
+
+function getTopicChipsId(context){
+  const map={
+    'add':'inTopicChips',
+    'draft-carousel':'draftTopicChips',
+    'draft-video':'draftTopicChipsV',
+    'draft-foto':'draftTopicChipsF',
+    'draft-post':'draftTopicChipsP',
+    'draft-thread':'draftTopicChipsT'
+  };
+  return map[context]||'inTopicChips';
+}
+
+function getChipGroupKey(context){
+  return context==='add'?'inTopic':'dTopic';
+}
+
+async function autoSelectTopic(context){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const topics=cur.topics||[];
+  if(!topics.length){showToast('Belum ada topik di akun ini');return;}
+
+  const {title,body}=getContentTextForTopic(context);
+  if(!title&&!body){showToast('Isi judul atau konten dulu');return;}
+
+  // Find the button to show loading state
+  const btnId=context==='add'?'autoTopicBtnAdd':'autoTopicBtnDraft';
+  const btn=document.querySelector(`[onclick="autoSelectTopic('${context}')"]`)||document.getElementById(btnId);
+  if(btn){btn.classList.add('loading');btn.disabled=true;btn.textContent='⟳ Loading...';}
+
+  const contentText=[title,body].filter(Boolean).join('\n');
+  const topicList=topics.map((t,i)=>`${i+1}. ${t}`).join('\n');
+  const prompt=`Kamu adalah asisten content strategy.\n\nNiche akun: ${cur.niche}\nPlatform: ${cur.platform}\n\nDaftar topik yang tersedia:\n${topicList}\n\nKonten:\n${contentText}\n\nTugasmu: pilih SATU topik dari daftar yang paling relevan dengan konten di atas.\nJika tidak ada yang relevan, sarankan topik baru yang singkat dan sesuai niche.\n\nJawab HANYA dengan format JSON ini (tanpa markdown, tanpa teks lain):\n{"matched": true, "topic": "nama topik dari daftar"}\natau jika tidak ada yang cocok:\n{"matched": false, "topic": "topik baru yang disarankan"}`;
+
+  try{
+    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'Kamu adalah asisten pemilih topik konten. Jawab hanya dengan JSON.',messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const rawText=(data.text||'').trim().replace(/```json|```/g,'').trim();
+    let parsed;
+    try{parsed=JSON.parse(rawText);}catch{showToast('Gagal parse respons AI');return;}
+
+    const chipsId=getTopicChipsId(context);
+    const groupKey=getChipGroupKey(context);
+
+    if(parsed.matched){
+      // Select existing chip
+      const chips=document.querySelectorAll(`#${chipsId} .chip`);
+      let found=false;
+      chips.forEach(chip=>{
+        chip.classList.remove('selected');
+        if(chip.textContent.trim()===parsed.topic){chip.classList.add('selected');cs[groupKey]=parsed.topic;found=true;}
+      });
+      showToast(found?`Topik dipilih: ${parsed.topic}`:`Topik tidak ditemukan di chip`);
+    } else {
+      // Suggest new topic
+      const add=confirm(`Topik yang ada kurang relevan.\n\nAI menyarankan topik baru:\n"${parsed.topic}"\n\nTambahkan ke daftar topik akun?`);
+      if(add){
+        cur.topics=cur.topics||[];
+        cur.topics.push(parsed.topic);
+        await dbPut('accounts',cur);
+        // Re-render chips
+        mkChips(chipsId,cur.topics,groupKey);
+        // Auto-select the new one
+        setTimeout(()=>{
+          const chips=document.querySelectorAll(`#${chipsId} .chip`);
+          chips.forEach(chip=>{if(chip.textContent.trim()===parsed.topic){chip.classList.add('selected');cs[groupKey]=parsed.topic;}});
+        },50);
+        showToast(`Topik baru ditambahkan: ${parsed.topic}`);
+      }
+    }
+  }catch{
+    showToast('Gagal terhubung ke AI');
+  }finally{
+    if(btn){btn.classList.remove('loading');btn.disabled=false;btn.textContent='✦ Auto Topik';}
+  }
+}
+
+async function bulkAutoTopic(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const topics=cur.topics||[];
+  if(!topics.length){showToast('Belum ada topik di akun ini');return;}
+
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const noTopic=all.filter(c=>c.perf&&c.perf.view>0&&(!c.topic||c.topic==='—'));
+
+  if(!noTopic.length){showToast('Semua konten live sudah punya topik ✓');return;}
+
+  const btn=document.getElementById('bulkTopicBtn');
+  const statusEl=document.getElementById('bulkTopicStatus');
+  if(btn){btn.disabled=true;btn.textContent='⟳ Memproses...';}
+  if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<div class="info-box">Memproses ${noTopic.length} konten... <span id="bulkProgress">0/${noTopic.length}</span></div>`;}
+
+  const topicList=topics.map((t,i)=>`${i+1}. ${t}`).join('\n');
+  let updated=0;
+
+  for(let i=0;i<noTopic.length;i++){
+    const c=noTopic[i];
+    const contentText=[c.title,c.description].filter(Boolean).join('\n');
+    const prompt=`Niche: ${cur.niche}\nPlatform: ${cur.platform}\n\nDaftar topik:\n${topicList}\n\nKonten: ${contentText}\n\nPilih SATU topik paling relevan dari daftar.\nJika tidak ada yang relevan, sarankan topik baru.\n\nJawab hanya JSON:\n{"matched": true, "topic": "topik dari daftar"}\natau\n{"matched": false, "topic": "topik baru"}`;
+
+    try{
+      const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'Jawab hanya dengan JSON.',messages:[{role:'user',content:prompt}]})});
+      const data=await res.json();
+      const rawText=(data.text||'').trim().replace(/```json|```/g,'').trim();
+      let parsed;
+      try{parsed=JSON.parse(rawText);}catch{continue;}
+
+      let assignedTopic=parsed.topic;
+
+      if(!parsed.matched){
+        // Auto-add new topic to account if not duplicate
+        if(!cur.topics.includes(parsed.topic)){
+          cur.topics.push(parsed.topic);
+          await dbPut('accounts',cur);
+        }
+      }
+
+      c.topic=assignedTopic;
+      await dbPut('contents',c);
+      updated++;
+      document.getElementById('bulkProgress').textContent=`${i+1}/${noTopic.length}`;
+    }catch{
+      // skip this content on error
+    }
+  }
+
+  // Re-render insight
+  await renderInsight();
+  showToast(`${updated} konten berhasil di-assign topik ✓`);
+}
 
 init();
 
