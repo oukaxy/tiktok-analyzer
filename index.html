@@ -1126,6 +1126,21 @@ function ttStripBOM(text){
   return text.replace(/^\uFEFF/,'').replace(/^\ufffd*ï»¿/,'').replace(/^ï»¿/,'');
 }
 
+// Reads a File as text using the legacy FileReader API instead of file.text().
+// file.text()/Blob.text() is implemented internally via the fetch pipeline in
+// Chromium, which can be intercepted (and broken) by an active Service Worker,
+// producing "NotReadableError: ... permission problems ... reference to a file
+// was acquired". FileReader does not go through fetch, so it sidesteps that.
+function ttReadFileAsText(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(reader.error||new Error('FileReader error'));
+    reader.onabort=()=>reject(new Error('File read aborted'));
+    reader.readAsText(file,'UTF-8');
+  });
+}
+
 // Minimal RFC4180-ish CSV parser: handles quoted fields (incl. embedded commas,
 // newlines, and doubled "" escapes) without relying on naive split(',').
 function ttParseCSV(text){
@@ -1207,7 +1222,7 @@ async function handleTtCsvUpload(e){
   const file=e.target.files[0];
   if(!file||!cur){e.target.value='';return;}
   try{
-    const raw=ttStripBOM(await file.text());
+    const raw=ttStripBOM(await ttReadFileAsText(file));
     const table=ttParseCSV(raw);
     if(!table.length){showToast('File CSV kosong atau tidak terbaca');return;}
     const header=ttParseHeader(table[0]);

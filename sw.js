@@ -1,4 +1,4 @@
-const CACHE_NAME = 'konten-analyzer-v3';
+const CACHE_NAME = 'konten-analyzer-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -31,6 +31,16 @@ self.addEventListener('activate', e => {
 // - Everything else → network first, fallback to cache
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+
+  // Only handle same-scheme http(s) GET requests. Browsers can fire internal
+  // 'fetch' events for non-http schemes (e.g. blob:, filesystem:) — for
+  // example when reading a local file via file.text()/Blob.text() during a
+  // CSV import. A service worker must not try to respondWith() those; doing
+  // so breaks the underlying read with a NotReadableError. Let anything else
+  // fall through to normal browser handling untouched.
+  if (!url.protocol.startsWith('http') || e.request.method !== 'GET') {
+    return;
+  }
 
   // API — always network
   if (url.pathname.startsWith('/api/')) {
