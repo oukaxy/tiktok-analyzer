@@ -1205,8 +1205,7 @@ function ttParseHeader(headerRow){
 
 async function handleTtCsvUpload(e){
   const file=e.target.files[0];
-  e.target.value='';
-  if(!file||!cur)return;
+  if(!file||!cur){e.target.value='';return;}
   try{
     const raw=ttStripBOM(await file.text());
     const table=ttParseCSV(raw);
@@ -1251,6 +1250,8 @@ async function handleTtCsvUpload(e){
   }catch(err){
     console.error('CSV import error:',err);
     showToast('Gagal membaca file CSV: '+(err&&err.message?err.message:String(err)));
+  }finally{
+    e.target.value='';
   }
 }
 
