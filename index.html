@@ -265,6 +265,34 @@
     .bulk-topic-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--teal-bg);border:1px solid var(--teal);border-radius:var(--radius-sm);color:var(--teal);font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s}
     .bulk-topic-btn:hover{background:var(--teal);color:#fff}
     .bulk-topic-btn:disabled{opacity:.5;cursor:not-allowed}
+
+    /* TIKTOK CSV IMPORT */
+    .tt-import-banner{display:flex;align-items:center;gap:10px;background:var(--teal-bg);border:1px solid var(--teal);border-radius:var(--radius);padding:11px 14px;margin-bottom:14px;cursor:pointer;transition:opacity .15s}
+    .tt-import-banner:hover{opacity:.85}
+    .tt-import-icon{color:var(--teal);flex-shrink:0;display:flex}
+    .tt-import-text{flex:1;min-width:0}
+    .tt-import-title{font-size:13px;font-weight:600;color:var(--teal)}
+    .tt-import-sub{font-size:11px;color:var(--text-2);margin-top:1px}
+    .tt-group-hdr{display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px}
+    .tt-group-hdr:first-child{margin-top:0}
+    .tt-group-title{font-size:12px;font-weight:600;color:var(--text-2)}
+    .tt-group-count{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:var(--surface2);color:var(--text-3)}
+    .tt-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px}
+    .tt-row-title{font-size:13px;font-weight:500;line-height:1.4;margin-bottom:4px}
+    .tt-row-sub{font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace}
+    .tt-row-match{font-size:12px;color:var(--text-2);margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)}
+    .tt-row-score{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--teal-bg);color:var(--teal);margin-left:6px}
+    .tt-row-actions{display:flex;gap:6px;margin-top:8px}
+    .tt-btn{flex:1;padding:7px;font-size:11px;font-weight:600;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+    .tt-btn.confirm{border-color:var(--teal);color:var(--teal);background:var(--teal-bg)}
+    .tt-btn.confirm.active{background:var(--teal);color:#fff}
+    .tt-btn.reject.active{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+    .tt-row-select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;margin-top:6px}
+    .tt-empty-group{font-size:12px;color:var(--text-3);padding:6px 0 2px}
+    .tt-fail-box{background:var(--red-bg);border:1px solid var(--red);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:16px;font-size:12px;color:var(--red);line-height:1.6}
+    .retain-badge{font-size:10px;font-weight:700;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;letter-spacing:.2px}
+    .retain-up{background:#0a1a12;color:#4CAF7D}
+    .retain-down{background:#1f1210;color:#E05A4A}
   </style>
 </head>
 <body>
@@ -339,6 +367,15 @@
 
 <!-- VIEWS -->
 <div class="view active" id="viewLog">
+  <div class="tt-import-banner" id="ttImportBanner" style="display:none" onclick="document.getElementById('ttCsvFile').click()">
+    <div class="tt-import-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+    <div class="tt-import-text">
+      <div class="tt-import-title">Import Performa (CSV)</div>
+      <div class="tt-import-sub">Upload Content.csv dari TikTok Studio</div>
+    </div>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--teal);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>
+  <input type="file" id="ttCsvFile" accept=".csv" style="display:none" onchange="handleTtCsvUpload(event)"/>
   <div class="log-toolbar">
     <div class="search-wrap">
       <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -462,7 +499,7 @@
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="inHookChips"></div></div>
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="inStructChips"></div></div>
       <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik Spesifik</label><button class="auto-topic-btn" id="autoTopicBtnAdd" onclick="autoSelectTopic('add')">✦ Auto Topik</button></div><div class="chip-group" id="inTopicChips"></div></div>
-      <div class="form-group"><label class="form-label">Tujuan Konten</label><div class="chip-group" id="inGoalChips"><div class="chip" onclick="selChip(this,'inGoal')">Save tinggi</div><div class="chip" onclick="selChip(this,'inGoal')">Like & engagement</div><div class="chip" onclick="selChip(this,'inGoal')">Jangkauan luas</div><div class="chip" onclick="selChip(this,'inGoal')">Follower growth</div></div></div>
+      <div class="form-group"><label class="form-label">Tujuan Konten</label><div class="chip-group" id="inGoalChips"></div></div>
       <div class="form-group"><label class="form-label">Catatan Pribadi <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional)</span></label><textarea class="form-input" id="inNotes" placeholder="Misal: konten ini viral karena trending audio, dibuat saat ramadan..." style="min-height:70px"></textarea></div>
       <button class="btn-primary" onclick="goStep2()">Lanjut → Input Performa</button>
       <button class="btn-secondary" onclick="saveAsDraft()">Simpan Dulu (Belum Ada Performa)</button>
@@ -514,6 +551,17 @@
   <div class="sheet-body" id="settingsBody"></div>
 </div>
 
+<!-- SHEET: TIKTOK CSV IMPORT REVIEW -->
+<div class="sheet-overlay" id="overlayTtImport" onclick="closeSheet('sheetTtImport')"></div>
+<div class="sheet" id="sheetTtImport">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div><div class="sheet-title">Review Import TikTok</div><div class="sheet-sub" id="ttImportSub">—</div></div>
+    <button class="sheet-close" onclick="closeSheet('sheetTtImport')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body" id="ttImportBody"></div>
+</div>
+
 <script>
 // ===== INDEXEDDB =====
 let db;
@@ -548,6 +596,7 @@ let nicheTimer=null;
 const HOOKS=['Pain point','Angka / List','Pertanyaan','Storytelling','Kontroversial','Sebelum & Sesudah'];
 const STRUCTS=['Numbered list','Storytelling','Problem → Solusi','Tips langsung','Edukasi','Listicle'];
 const FMT={TikTok:['Carousel','Video','Foto'],Instagram:['Carousel','Reels','Foto','Story'],YouTube:['Shorts','Video'],X:['Post','Thread','Video'],Threads:['Post','Thread','Video','Foto']};
+const GOALS=['Save tinggi','Like & engagement','Jangkauan luas','Follower growth'];
 const COLORS=['#3D9B9C','#D4922A','#E05A4A','#4CAF7D','#7B61FF','#E91E8C'];
 
 // ===== INIT =====
@@ -613,7 +662,7 @@ async function saveNewAccount(){
   if(!name){showToast('Isi nama akun dulu');return;}
   if(!obPlatform){showToast('Pilih platform dulu');return;}
   if(!niche){showToast('Isi niche dulu');return;}
-  const acc={id:Date.now().toString(),name,username,platform:obPlatform,niche,topics:obTopics.length?[...obTopics]:[niche],color:COLORS[Math.floor(Math.random()*COLORS.length)],createdAt:new Date().toISOString()};
+  const acc={id:Date.now().toString(),name,username,platform:obPlatform,niche,topics:obTopics.length?[...obTopics]:[niche],formats:[...(FMT[obPlatform]||['Carousel','Video','Foto'])],hooks:[...HOOKS],structs:[...STRUCTS],goals:[...GOALS],color:COLORS[Math.floor(Math.random()*COLORS.length)],createdAt:new Date().toISOString()};
   await dbPut('accounts',acc);
   hideOnboarding();
   await switchAccount(acc);
@@ -623,6 +672,14 @@ async function saveNewAccount(){
 // ===== SWITCH ACCOUNT =====
 async function switchAccount(acc){
   cur=acc;
+  // Lazy-migrate accounts created before format/hook/struct/goal became
+  // per-account editable lists — backfill from the old global defaults once.
+  let migrated=false;
+  if(!cur.formats||!cur.formats.length){cur.formats=[...(FMT[cur.platform]||['Carousel','Video','Foto'])];migrated=true;}
+  if(!cur.hooks||!cur.hooks.length){cur.hooks=[...HOOKS];migrated=true;}
+  if(!cur.structs||!cur.structs.length){cur.structs=[...STRUCTS];migrated=true;}
+  if(!cur.goals||!cur.goals.length){cur.goals=[...GOALS];migrated=true;}
+  if(migrated)await dbPut('accounts',cur);
   localStorage.setItem('ka_activeAcc',acc.id);
   document.getElementById('topAvatar').textContent=(acc.name||'?')[0].toUpperCase();
   document.getElementById('topAvatar').style.background=acc.color||'var(--teal)';
@@ -631,6 +688,8 @@ async function switchAccount(acc){
   document.getElementById('draftInfoBox').style.display='none';
   document.getElementById('draftMain').style.display='';
   renderDraftChips();renderAddChips();
+  const ttBanner=document.getElementById('ttImportBanner');
+  if(ttBanner)ttBanner.style.display=(acc.platform==='TikTok')?'flex':'none';
   await renderLog();await renderInsight();
   closeSheet('sheetAccounts');
 }
@@ -644,9 +703,10 @@ function renderDraftChips(){
   renderDraftTabs();
 }
 function renderAddChips(){
-  const fmts=FMT[cur.platform]||['Carousel','Video','Foto'];
-  mkChips('inFmtChips',fmts,'inFmt');mkChips('inHookChips',HOOKS,'inHook');
-  mkChips('inStructChips',STRUCTS,'inStruct');mkChips('inTopicChips',cur.topics||[],'inTopic');
+  const fmts=cur.formats||FMT[cur.platform]||['Carousel','Video','Foto'];
+  mkChips('inFmtChips',fmts,'inFmt');mkChips('inHookChips',cur.hooks||HOOKS,'inHook');
+  mkChips('inStructChips',cur.structs||STRUCTS,'inStruct');mkChips('inTopicChips',cur.topics||[],'inTopic');
+  mkChips('inGoalChips',cur.goals||GOALS,'inGoal');
 }
 function selChip(el,group){
   el.closest('.chip-group').querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
@@ -668,26 +728,28 @@ async function renderLog(){
   renderFilterChips();
   document.getElementById('logCount').textContent=allContents.length+' konten';
   if(!allContents.length){document.getElementById('contentList').innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg><div class="empty-title">Belum ada konten</div><p>Tap + untuk mulai catat.<br>Makin banyak data, makin akurat analisisnya.</p></div>';return;}
-  renderContentList(allContents, avgView, avgSave);
+  renderContentList(allContents, avgView, avgSave, ttEngagementStats(allContents));
 }
 
 function renderFilterChips(){
   const formats=[...new Set(allContents.map(c=>c.format).filter(f=>f&&f!=='—'))];
   const topics=[...new Set(allContents.map(c=>c.topic).filter(t=>t&&t!=='—'))];
+  const incompleteCount=allContents.filter(c=>c.perf&&c.perf.view>0&&(!c.format||c.format==='—')).length;
   const row=document.getElementById('filterRow');
-  const isAllActive=activeFilters.status==='all'&&activeFilters.format==='all'&&activeFilters.topic==='all';
+  const isAllActive=activeFilters.status==='all'&&activeFilters.format==='all'&&activeFilters.topic==='all'&&activeFilters.incomplete==='all';
   const chip=(label,key,val)=>`<div class="filter-chip ${activeFilters[key]===val&&!(key==='status'&&val==='all'&&!isAllActive)?'active':''}" onclick="setFilter('${key}','${val}')">${label}</div>`;
   row.innerHTML=[
     `<div class="filter-chip ${isAllActive?'active':''}" onclick="resetFilters()">Semua</div>`,
     chip('Live','status','live'),
     chip('Draft','status','draft'),
+    incompleteCount?chip(`✎ Perlu Dilengkapi (${incompleteCount})`,'incomplete','yes'):'',
     ...formats.map(f=>chip(f,'format',f)),
     ...topics.map(t=>chip(t,'topic',t)),
   ].join('');
 }
 
 function resetFilters(){
-  activeFilters={status:'all',format:'all',topic:'all'};
+  activeFilters={status:'all',format:'all',topic:'all',incomplete:'all'};
   const si=document.getElementById('searchInput');if(si)si.value='';
   applyFilter();
 }
@@ -712,6 +774,7 @@ function applyFilter(){
     if(activeFilters.status==='draft'&&(c.perf&&c.perf.view>0))return false;
     if(activeFilters.format!=='all'&&c.format!==activeFilters.format)return false;
     if(activeFilters.topic!=='all'&&c.topic!==activeFilters.topic)return false;
+    if(activeFilters.incomplete==='yes'&&!(c.perf&&c.perf.view>0&&(!c.format||c.format==='—')))return false;
     return true;
   });
   renderFilterChips();
@@ -720,7 +783,7 @@ function applyFilter(){
     document.getElementById('contentList').innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><div class="empty-title">Tidak ditemukan</div><p>Coba kata kunci atau filter lain.</p></div>';
     return;
   }
-  renderContentList(filtered, avgView, avgSave);
+  renderContentList(filtered, avgView, avgSave, ttEngagementStats(allContents));
 }
 
 function getPerfBadge(c, avgView, avgSave){
@@ -732,7 +795,7 @@ function getPerfBadge(c, avgView, avgSave){
   return'';
 }
 
-function renderContentList(list, avgView, avgSave){
+function renderContentList(list, avgView, avgSave, retStats){
   const listEl=document.getElementById('contentList');
   listEl.innerHTML=list.map(c=>{
     const hp=c.perf&&c.perf.view>0;
@@ -760,6 +823,9 @@ function renderContentList(list, avgView, avgSave){
     }
     const perf=hp?`<div class="metrics-row"><div class="metric-item"><div class="metric-val">${fmt(c.perf.view)}</div><div class="metric-label">View</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.like)}</div><div class="metric-label">Like</div></div><div class="metric-item"><div class="metric-val hi">${fmt(c.perf.save)}</div><div class="metric-label">Save</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.comment)}</div><div class="metric-label">Komen</div></div><div class="metric-item"><div class="metric-val">${fmt(c.perf.share)}</div><div class="metric-label">Share</div></div></div>${retRow}`:'';
     const perfBadge=getPerfBadge(c,avgView,avgSave);
+    const retBadge=retStats?getRetentionBadge(c,retStats):'';
+    const isIncomplete=hp&&(!c.format||c.format==='—');
+    const incompleteBadge=isIncomplete?'<span class="reminder-badge" style="background:var(--amber-bg);color:var(--amber)" title="Dibuat dari import CSV — lengkapi format/hook/struktur">✎ Lengkapi Detail</span>':'';
     const needsPerf=!hp&&c.date&&daysSince(c.date)>=1;
     const reminderBadge=needsPerf?`<span class="reminder-badge"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Input performa</span>`:'';
     const phaseBadge=`<span class="phase-tag ${hp?'phase-live':'phase-draft'}">${hp?'● Live':'◌ Draft'}</span>`;
@@ -769,7 +835,7 @@ function renderContentList(list, avgView, avgSave){
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <div class="card-title" style="flex:none;max-width:100%">${c.title||'(Tanpa judul)'}</div>
-            ${perfBadge}${reminderBadge}
+            ${perfBadge}${retBadge}${incompleteBadge}${reminderBadge}
           </div>
           <div class="card-meta">${dt} · ${c.format||'—'}${c.slides>0?' · '+c.slides+' slide':''}</div>
         </div>
@@ -1037,12 +1103,364 @@ async function savePerf(){
 }
 async function delContent(id){if(!confirm('Hapus konten ini?'))return;await dbDel('contents',id);await renderLog();await renderInsight();showToast('Dihapus');}
 
+// ===== TIKTOK CSV IMPORT =====
+const TT_MONTHS={
+  jan:0,januari:0,january:0,
+  feb:1,februari:1,february:1,
+  mar:2,maret:2,march:2,
+  apr:3,april:3,
+  mei:4,may:4,
+  jun:5,juni:5,june:5,
+  jul:6,juli:6,july:6,
+  agu:7,agt:7,agustus:7,aug:7,august:7,
+  sep:8,september:8,sept:8,
+  okt:9,oktober:9,oct:9,october:9,
+  nov:10,november:10,
+  des:11,desember:11,dec:11,december:11
+};
+let ttImportRows=[]; // parsed+matched rows for current review session
+let ttImportFailed=[]; // rows that failed to parse
+
+function ttStripBOM(text){
+  // Real BOM char, or the mis-decoded 3-byte sequence shown as "ï»¿"
+  return text.replace(/^\uFEFF/,'').replace(/^\ufffd*ï»¿/,'').replace(/^ï»¿/,'');
+}
+
+// Minimal RFC4180-ish CSV parser: handles quoted fields (incl. embedded commas,
+// newlines, and doubled "" escapes) without relying on naive split(',').
+function ttParseCSV(text){
+  const rows=[];
+  let row=[],field='',i=0,inQuotes=false;
+  const len=text.length;
+  while(i<len){
+    const ch=text[i];
+    if(inQuotes){
+      if(ch==='"'){
+        if(text[i+1]==='"'){field+='"';i+=2;continue;}
+        inQuotes=false;i++;continue;
+      }
+      field+=ch;i++;continue;
+    } else {
+      if(ch==='"'){inQuotes=true;i++;continue;}
+      if(ch===','){row.push(field);field='';i++;continue;}
+      if(ch==='\r'){i++;continue;}
+      if(ch==='\n'){row.push(field);rows.push(row);row=[];field='';i++;continue;}
+      field+=ch;i++;continue;
+    }
+  }
+  // last field/row (if file doesn't end with newline)
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  return rows.filter(r=>!(r.length===1&&r[0]===''));
+}
+
+function ttExtractVideoId(link){
+  if(!link)return null;
+  const m=String(link).match(/\/video\/(\d+)/);
+  return m?m[1]:null;
+}
+
+// "24 Mei" (no year) -> ISO date string, assuming current year unless the
+// month is later than the current month (then assume last year).
+function ttParsePostTime(str){
+  if(!str)return null;
+  const parts=str.trim().toLowerCase().split(/\s+/);
+  if(parts.length<2)return null;
+  const day=parseInt(parts[0]);
+  const monKey=parts[1].replace('.','');
+  const mon=TT_MONTHS[monKey]??TT_MONTHS[monKey.slice(0,3)];
+  if(isNaN(day)||mon===undefined)return null;
+  const now=new Date();
+  let year=now.getFullYear();
+  if(mon>now.getMonth())year-=1;
+  const d=new Date(year,mon,day);
+  if(isNaN(d.getTime()))return null;
+  return d.toISOString().split('T')[0];
+}
+
+// Cheap, local (no AI) text-similarity: normalized token Dice coefficient.
+function ttSimilarity(a,b){
+  const norm=s=>(s||'').toLowerCase().replace(/[#@]/g,' ').replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(Boolean);
+  const ta=norm(a),tb=norm(b);
+  if(!ta.length||!tb.length)return 0;
+  const setA=new Set(ta),setB=new Set(tb);
+  let inter=0;
+  setA.forEach(t=>{if(setB.has(t))inter++;});
+  return (2*inter)/(setA.size+setB.size);
+}
+
+function ttParseHeader(headerRow){
+  const idx={};
+  headerRow.forEach((h,i)=>{
+    const key=ttStripBOM(h).trim().toLowerCase();
+    if(key==='video title')idx.title=i;
+    else if(key==='video link')idx.link=i;
+    else if(key==='post time')idx.postTime=i;
+    else if(key==='total likes')idx.likes=i;
+    else if(key==='total comments')idx.comments=i;
+    else if(key==='total shares')idx.shares=i;
+    else if(key==='total views')idx.views=i;
+  });
+  return idx;
+}
+
+async function handleTtCsvUpload(e){
+  const file=e.target.files[0];
+  e.target.value='';
+  if(!file||!cur)return;
+  try{
+    const raw=ttStripBOM(await file.text());
+    const table=ttParseCSV(raw);
+    if(!table.length){showToast('File CSV kosong atau tidak terbaca');return;}
+    const header=ttParseHeader(table[0]);
+    if(header.title===undefined||header.link===undefined||header.views===undefined){
+      showToast('Format CSV tidak dikenali. Pastikan file dari TikTok Studio.');
+      return;
+    }
+    const parsed=[];
+    ttImportFailed=[];
+    for(let r=1;r<table.length;r++){
+      const row=table[r];
+      const need=Math.max(header.title,header.link,header.postTime||0,header.likes||0,header.comments||0,header.shares||0,header.views)+1;
+      if(!row||row.length<need){
+        ttImportFailed.push({rowNum:r+1,raw:(row||[]).join(', ')});
+        continue;
+      }
+      const title=(row[header.title]||'').trim();
+      const link=(row[header.link]||'').trim();
+      const tiktokId=ttExtractVideoId(link);
+      if(!title&&!tiktokId){
+        ttImportFailed.push({rowNum:r+1,raw:row.join(', ')});
+        continue;
+      }
+      parsed.push({
+        rowNum:r+1,
+        title,
+        link,
+        tiktokId,
+        postTime:header.postTime!==undefined?ttParsePostTime(row[header.postTime]):null,
+        likes:parseInt(row[header.likes])||0,
+        comments:parseInt(row[header.comments])||0,
+        shares:parseInt(row[header.shares])||0,
+        views:parseInt(row[header.views])||0
+      });
+    }
+    if(!parsed.length&&!ttImportFailed.length){showToast('Tidak ada baris data ditemukan di CSV');return;}
+    await ttMatchRows(parsed);
+    renderTtImportReview();
+    openSheet('sheetTtImport');
+  }catch(err){
+    console.error('CSV import error:',err);
+    showToast('Gagal membaca file CSV');
+  }
+}
+
+async function ttMatchRows(parsed){
+  const drafts=await dbByIdx('contents','accountId',cur.id);
+  const SIM_THRESHOLD=0.85;
+  const usedContentIds=new Set();
+  // Pass 1: exact match by stored tiktokId
+  const rows=parsed.map(row=>{
+    if(row.tiktokId){
+      const exact=drafts.find(d=>d.tiktokId&&d.tiktokId===row.tiktokId);
+      if(exact){
+        usedContentIds.add(exact.id);
+        return{...row,group:'auto',contentId:exact.id,contentTitle:exact.title,score:1};
+      }
+    }
+    return row;
+  });
+  // Pass 2: fuzzy text match against drafts without a tiktokId (or not yet claimed)
+  const candidates=drafts.filter(d=>!d.tiktokId);
+  for(const row of rows){
+    if(row.group)continue; // already auto-matched
+    let best=null,bestScore=0;
+    for(const d of candidates){
+      if(usedContentIds.has(d.id))continue;
+      const score=ttSimilarity(row.title,d.title);
+      if(score>bestScore){bestScore=score;best=d;}
+    }
+    if(best&&bestScore>=SIM_THRESHOLD){
+      row.group='suggest';row.contentId=best.id;row.contentTitle=best.title;row.score=bestScore;
+      row.decision=null; // 'confirm' | 'reject' set by user
+      usedContentIds.add(best.id);
+    } else {
+      row.group='notfound';row.contentId=null;row.contentTitle=null;row.score=bestScore;
+      row.manualId='__new__'; // default: create a new draft from this CSV row
+    }
+  }
+  ttImportRows=rows;
+  ttImportRows._allDrafts=drafts; // stash for dropdown building
+}
+
+function ttGroupCounts(){
+  const auto=ttImportRows.filter(r=>r.group==='auto').length;
+  const suggest=ttImportRows.filter(r=>r.group==='suggest').length;
+  const notfound=ttImportRows.filter(r=>r.group==='notfound').length;
+  return{auto,suggest,notfound};
+}
+
+function renderTtImportReview(){
+  const {auto,suggest,notfound}=ttGroupCounts();
+  document.getElementById('ttImportSub').textContent=`${ttImportRows.length} baris terbaca${ttImportFailed.length?`, ${ttImportFailed.length} gagal dibaca`:''}`;
+  const drafts=ttImportRows._allDrafts||[];
+  const draftOptions=(selectedId)=>`<option value="__new__" ${selectedId==='__new__'?'selected':''}>+ Buat Draft Baru dari CSV</option><option value="" ${selectedId===''?'selected':''}>— Abaikan baris ini —</option>`+drafts.map(d=>`<option value="${d.id}" ${d.id===selectedId?'selected':''}>${(d.title||'(Tanpa judul)').slice(0,60)}</option>`).join('');
+
+  let html='';
+
+  if(ttImportFailed.length){
+    html+=`<div class="tt-fail-box"><strong>${ttImportFailed.length} baris gagal dibaca</strong> (format kolom tidak sesuai, dilewati): baris ${ttImportFailed.map(f=>f.rowNum).join(', ')}.</div>`;
+  }
+
+  // GROUP: AUTO-UPDATE
+  html+=`<div class="tt-group-hdr"><span class="tt-group-title">✓ Auto-update (by ID)</span><span class="tt-group-count">${auto}</span></div>`;
+  const autoRows=ttImportRows.filter(r=>r.group==='auto');
+  html+=autoRows.length?autoRows.map(r=>`
+    <div class="tt-row">
+      <div class="tt-row-title">${r.contentTitle||'(Tanpa judul)'}</div>
+      <div class="tt-row-sub">${fmt(r.views)} view · ${fmt(r.likes)} like · ID cocok otomatis</div>
+    </div>`).join(''):`<div class="tt-empty-group">Belum ada video yang sudah pernah di-link.</div>`;
+
+  // GROUP: SARAN MATCH
+  html+=`<div class="tt-group-hdr"><span class="tt-group-title">◐ Saran Match</span><span class="tt-group-count">${suggest}</span></div>`;
+  const suggestRows=ttImportRows.filter(r=>r.group==='suggest');
+  html+=suggestRows.length?suggestRows.map((r,i)=>{
+    const idx=ttImportRows.indexOf(r);
+    return `
+    <div class="tt-row">
+      <div class="tt-row-title">${r.title||'(Caption kosong)'}</div>
+      <div class="tt-row-sub">${fmt(r.views)} view · ${fmt(r.likes)} like</div>
+      <div class="tt-row-match">Disarankan: <strong>${r.contentTitle||'—'}</strong><span class="tt-row-score">${Math.round(r.score*100)}%</span></div>
+      <div class="tt-row-actions">
+        <button class="tt-btn confirm ${r.decision==='confirm'?'active':''}" onclick="ttDecide(${idx},'confirm')">✓ Konfirmasi</button>
+        <button class="tt-btn reject ${r.decision==='reject'?'active':''}" onclick="ttDecide(${idx},'reject')">✕ Bukan Ini</button>
+      </div>
+    </div>`;
+  }).join(''):`<div class="tt-empty-group">Tidak ada kandidat yang perlu dikonfirmasi.</div>`;
+
+  // GROUP: TIDAK KETEMU
+  html+=`<div class="tt-group-hdr"><span class="tt-group-title">✕ Tidak Ketemu</span><span class="tt-group-count">${notfound}</span></div>`;
+  const notfoundRows=ttImportRows.filter(r=>r.group==='notfound');
+  if(notfoundRows.length){
+    html+=`<div class="tt-empty-group" style="margin-bottom:8px">Default: draft baru dibuat otomatis (format/hook/struktur perlu dilengkapi manual). Ganti pilihan kalau ini sebenarnya video lama, atau pilih Abaikan.</div>`;
+  }
+  html+=notfoundRows.length?notfoundRows.map(r=>{
+    const idx=ttImportRows.indexOf(r);
+    return `
+    <div class="tt-row">
+      <div class="tt-row-title">${r.title||'(Caption kosong)'}</div>
+      <div class="tt-row-sub">${fmt(r.views)} view · ${fmt(r.likes)} like</div>
+      <select class="tt-row-select" onchange="ttManualSelect(${idx},this.value)">${draftOptions(r.manualId)}</select>
+    </div>`;
+  }).join(''):`<div class="tt-empty-group">Semua baris berhasil dicocokkan.</div>`;
+
+  html+=`<button class="btn-primary" style="margin-top:10px" onclick="applyTtImport()">Terapkan Semua</button>
+  <button class="btn-secondary" onclick="closeSheet('sheetTtImport')">Batal</button>`;
+
+  document.getElementById('ttImportBody').innerHTML=html;
+}
+
+function ttDecide(idx,decision){
+  const row=ttImportRows[idx];
+  if(!row)return;
+  row.decision=row.decision===decision?null:decision;
+  renderTtImportReview();
+}
+function ttManualSelect(idx,val){
+  const row=ttImportRows[idx];
+  if(!row)return;
+  row.manualId=val;
+}
+
+async function applyTtImport(){
+  let updated=0,newlyLinked=0,newDrafts=0,skipped=0;
+  for(const row of ttImportRows){
+    let contentId=null,isNewLink=false,isNewDraft=false;
+    if(row.group==='auto'){
+      contentId=row.contentId;
+    } else if(row.group==='suggest'&&row.decision==='confirm'){
+      contentId=row.contentId;isNewLink=true;
+    } else if(row.group==='notfound'&&row.manualId==='__new__'){
+      isNewDraft=true;isNewLink=true;
+    } else if(row.group==='notfound'&&row.manualId){
+      contentId=row.manualId;isNewLink=true;
+    } else {
+      skipped++;continue;
+    }
+    let c;
+    if(isNewDraft){
+      c={
+        id:Date.now().toString()+'_'+row.rowNum,
+        accountId:cur.id,
+        title:row.title||'(Tanpa judul)',
+        desc:'',
+        date:row.postTime||new Date().toISOString().split('T')[0],
+        format:'—',
+        slides:0,
+        hook:'—',
+        struct:'—',
+        topic:'—',
+        goal:'—',
+        notes:null,
+        retention:{},
+        perf:null,
+        createdAt:new Date().toISOString()
+      };
+    } else {
+      c=await dbGet('contents',contentId);
+      if(!c){skipped++;continue;}
+    }
+    c.perf={
+      view:row.views,
+      like:row.likes,
+      save:c.perf?.save||0,
+      comment:row.comments,
+      share:row.shares,
+      follower:c.perf?.follower||0
+    };
+    if(isNewLink&&row.tiktokId)c.tiktokId=row.tiktokId;
+    else if(!c.tiktokId&&row.tiktokId)c.tiktokId=row.tiktokId;
+    c.lastSyncAt=new Date().toISOString();
+    await dbPut('contents',c);
+    updated++;
+    if(isNewDraft)newDrafts++;
+    else if(isNewLink)newlyLinked++;
+  }
+  closeSheet('sheetTtImport');
+  await renderLog();await renderInsight();
+  showToast(`${updated} performa diperbarui, ${newlyLinked} video baru dikenali, ${newDrafts} draft baru dibuat, ${skipped} diabaikan.`);
+}
+
+// ===== RETENTION PRIORITY (from engagement rate) =====
+// engagementRate is a signal for *which* videos to check retention on first —
+// it does NOT replace retention data (watch time / completion rate), which
+// stays manual. See section 6a of the feature plan.
+function ttEngagementStats(live){
+  const withRate=live.filter(c=>c.perf&&c.perf.view>0).map(c=>({
+    c,rate:(c.perf.like+c.perf.comment+c.perf.share)/c.perf.view
+  }));
+  const avgView=withRate.length?withRate.reduce((s,x)=>s+x.c.perf.view,0)/withRate.length:0;
+  const avgRate=withRate.length?withRate.reduce((s,x)=>s+x.rate,0)/withRate.length:0;
+  return{avgView,avgRate,byId:Object.fromEntries(withRate.map(x=>[x.c.id,x.rate]))};
+}
+function getRetentionBadge(c,stats){
+  if(!c.perf||!c.perf.view||!stats.avgView)return'';
+  const hasRet=c.retention&&Object.values(c.retention).some(v=>v>0);
+  if(hasRet)return''; // already checked — no need to flag priority anymore
+  const rate=stats.byId[c.id]||0;
+  const viewUp=c.perf.view>=stats.avgView*1.3;
+  const rateUp=rate>=stats.avgRate*1.3;
+  const viewDown=c.perf.view<stats.avgView*0.6;
+  if(viewUp||rateUp)return'<span class="retain-badge retain-up" title="Jauh di atas rata-rata — cek pola yang bikin menang">↑ Cek Retention</span>';
+  if(viewDown)return'<span class="retain-badge retain-down" title="Jauh di bawah rata-rata — kemungkinan retention jelek di awal">↓ Cek Retention</span>';
+  return'';
+}
+
 // ===== AUDIENCE — removed =====
 
 
 // ===== DRAG & DROP =====
 let dragSrcId=null;
-let activeFilters={status:'all',format:'all',topic:'all'};
+let activeFilters={status:'all',format:'all',topic:'all',incomplete:'all'};
 let allContents=[];
 // Touch drag state
 let touchDragId=null,touchStartX=0,touchStartY=0,touchMoved=false,touchLongPressTimer=null,touchClone=null,touchOffsetY=0;
@@ -1376,7 +1794,7 @@ function switchDraftTab(type, btn){
 function renderDraftForm(type){
   const area=document.getElementById('draftFormArea');
   const ANALYZE_BTN=`<button class="btn-primary" onclick="analyzeDraft('${type}')"><span style="display:inline-flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analisis Draft</span></button>`;
-  const GOAL_CHIPS=`<div class="chip-group" id="draftGoalChips"><div class="chip" onclick="selChip(this,'dGoal')">Save tinggi</div><div class="chip" onclick="selChip(this,'dGoal')">Like & engagement</div><div class="chip" onclick="selChip(this,'dGoal')">Jangkauan luas</div><div class="chip" onclick="selChip(this,'dGoal')">Follower growth</div></div>`;
+  const GOAL_CHIPS=`<div class="chip-group" id="draftGoalChips"></div>`;
 
   if(type==='carousel'){
     area.innerHTML=`
@@ -1395,9 +1813,10 @@ function renderDraftForm(type){
       </div>
       <div class="form-group"><label class="form-label">Tujuan Konten</label>${GOAL_CHIPS}</div>
       ${ANALYZE_BTN}`;
-    mkChips('draftHookChips',HOOKS,'dHook');
-    mkChips('draftStructChips',STRUCTS,'dStruct');
+    mkChips('draftHookChips',cur.hooks||HOOKS,'dHook');
+    mkChips('draftStructChips',cur.structs||STRUCTS,'dStruct');
     mkChips('draftTopicChips',cur.topics||[],'dTopic');
+    mkChips('draftGoalChips',cur.goals||GOALS,'dGoal');
     slideCount=3;
 
   } else if(type==='video'){
@@ -1409,8 +1828,9 @@ function renderDraftForm(type){
       <div class="form-group"><label class="form-label">Penutup / CTA</label><textarea class="form-input" id="videoCta" placeholder="Ajakan di akhir video..." style="min-height:64px"></textarea></div>
       <div class="form-group"><label class="form-label">Tujuan</label>${GOAL_CHIPS}</div>
       ${ANALYZE_BTN}`;
-    mkChips('draftHookChipsV',HOOKS,'dHook');
+    mkChips('draftHookChipsV',cur.hooks||HOOKS,'dHook');
     mkChips('draftTopicChipsV',cur.topics||[],'dTopic');
+    mkChips('draftGoalChips',cur.goals||GOALS,'dGoal');
 
   } else if(type==='foto'){
     area.innerHTML=`
@@ -1422,6 +1842,7 @@ function renderDraftForm(type){
       <div class="form-group"><label class="form-label">Tujuan</label>${GOAL_CHIPS}</div>
       ${ANALYZE_BTN}`;
     mkChips('draftTopicChipsF',cur.topics||[],'dTopic');
+    mkChips('draftGoalChips',cur.goals||GOALS,'dGoal');
 
   } else if(type==='post'){
     const platLabel = cur.platform==='X' ? 'Tweet / Post X' : 'Post Threads';
@@ -1433,8 +1854,9 @@ function renderDraftForm(type){
       <div class="form-group"><label class="form-label">Ada Media?</label><div class="chip-group" id="postMediaChips"><div class="chip" onclick="selChip(this,'dMedia')">Tanpa media</div><div class="chip" onclick="selChip(this,'dMedia')">Foto</div><div class="chip" onclick="selChip(this,'dMedia')">Video</div><div class="chip" onclick="selChip(this,'dMedia')">GIF</div></div></div>
       <div class="form-group"><label class="form-label">Tujuan</label>${GOAL_CHIPS}</div>
       ${ANALYZE_BTN}`;
-    mkChips('draftHookChipsP',HOOKS,'dHook');
+    mkChips('draftHookChipsP',cur.hooks||HOOKS,'dHook');
     mkChips('draftTopicChipsP',cur.topics||[],'dTopic');
+    mkChips('draftGoalChips',cur.goals||GOALS,'dGoal');
     // char counter
     setTimeout(()=>{
       const ta=document.getElementById('postText');
@@ -1452,8 +1874,9 @@ function renderDraftForm(type){
       <div class="form-group"><label class="form-label">Closing Tweet / CTA</label><textarea class="form-input" id="threadClose" placeholder="Tweet penutup + ajakan like, retweet, atau follow..." style="min-height:70px"></textarea></div>
       <div class="form-group"><label class="form-label">Tujuan</label>${GOAL_CHIPS}</div>
       ${ANALYZE_BTN}`;
-    mkChips('draftHookChipsT',HOOKS,'dHook');
+    mkChips('draftHookChipsT',cur.hooks||HOOKS,'dHook');
     mkChips('draftTopicChipsT',cur.topics||[],'dTopic');
+    mkChips('draftGoalChips',cur.goals||GOALS,'dGoal');
   }
 }
 
@@ -1540,6 +1963,7 @@ function switchAccountFromSheet(acc){switchAccount(acc);}
 // ===== SETTINGS =====
 async function renderSettings(){
   if(!cur){document.getElementById('settingsBody').innerHTML='<div class="empty-state"><p>Pilih akun dulu.</p></div>';return;}
+  const editChips=(arr,removeFn,addFn)=>`${(arr||[]).map((t,i)=>`<div class="chip removable selected">${t}<span class="chip-x" onclick="${removeFn}(${i})">×</span></div>`).join('')}<div class="chip chip-add" onclick="${addFn}()">+ Tambah</div>`;
   document.getElementById('settingsBody').innerHTML=`
     <div class="form-group"><label class="form-label">Nama Akun</label><input type="text" class="form-input" id="editName" value="${cur.name}"/></div>
     <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="editUsername" value="${cur.username||''}"/></div>
@@ -1547,13 +1971,37 @@ async function renderSettings(){
     <div class="form-group"><label class="form-label">Niche</label><input type="text" class="form-input" id="editNiche" value="${cur.niche}"/></div>
     <div class="form-group">
       <label class="form-label">Topik Konten</label>
-      <div class="chip-group" id="editTopicChips">${(cur.topics||[]).map((t,i)=>`<div class="chip removable selected">${t}<span class="chip-x" onclick="rmEditTopic(${i})">×</span></div>`).join('')}<div class="chip chip-add" onclick="addEditTopic()">+ Tambah</div></div>
+      <div class="chip-group" id="editTopicChips">${editChips(cur.topics,'rmEditTopic','addEditTopic')}</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Format Konten</label>
+      <div class="chip-group" id="editFmtChips">${editChips(cur.formats,'rmEditFmt','addEditFmt')}</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipe Hook</label>
+      <div class="chip-group" id="editHookChips">${editChips(cur.hooks,'rmEditHook','addEditHook')}</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Struktur Konten</label>
+      <div class="chip-group" id="editStructChips">${editChips(cur.structs,'rmEditStruct','addEditStruct')}</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tujuan Konten</label>
+      <div class="chip-group" id="editGoalChips">${editChips(cur.goals,'rmEditGoal','addEditGoal')}</div>
     </div>
     <button class="btn-primary" onclick="saveSettings()">Simpan Perubahan</button>
     <button class="btn-danger" onclick="deleteAccount()">Hapus Akun Ini</button>`;
 }
 function rmEditTopic(i){cur.topics.splice(i,1);renderSettings();}
 function addEditTopic(){const v=prompt('Nama topik baru:');if(!v)return;cur.topics=cur.topics||[];cur.topics.push(v.trim());renderSettings();}
+function rmEditFmt(i){cur.formats.splice(i,1);renderSettings();}
+function addEditFmt(){const v=prompt('Nama format baru:');if(!v)return;cur.formats=cur.formats||[];cur.formats.push(v.trim());renderSettings();}
+function rmEditHook(i){cur.hooks.splice(i,1);renderSettings();}
+function addEditHook(){const v=prompt('Nama tipe hook baru:');if(!v)return;cur.hooks=cur.hooks||[];cur.hooks.push(v.trim());renderSettings();}
+function rmEditStruct(i){cur.structs.splice(i,1);renderSettings();}
+function addEditStruct(){const v=prompt('Nama struktur konten baru:');if(!v)return;cur.structs=cur.structs||[];cur.structs.push(v.trim());renderSettings();}
+function rmEditGoal(i){cur.goals.splice(i,1);renderSettings();}
+function addEditGoal(){const v=prompt('Nama tujuan konten baru:');if(!v)return;cur.goals=cur.goals||[];cur.goals.push(v.trim());renderSettings();}
 async function saveSettings(){
   cur.name=document.getElementById('editName').value.trim();cur.username=document.getElementById('editUsername').value.trim();
   cur.platform=document.getElementById('editPlatform').value;cur.niche=document.getElementById('editNiche').value.trim();
