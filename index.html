@@ -1250,7 +1250,7 @@ async function handleTtCsvUpload(e){
     openSheet('sheetTtImport');
   }catch(err){
     console.error('CSV import error:',err);
-    showToast('Gagal membaca file CSV');
+    showToast('Gagal membaca file CSV: '+(err&&err.message?err.message:String(err)));
   }
 }
 
