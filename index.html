@@ -370,12 +370,12 @@
   <div class="tt-import-banner" id="ttImportBanner" style="display:none" onclick="document.getElementById('ttCsvFile').click()">
     <div class="tt-import-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
     <div class="tt-import-text">
-      <div class="tt-import-title">Import Performa (CSV)</div>
-      <div class="tt-import-sub">Upload Content.csv dari TikTok Studio</div>
+      <div class="tt-import-title">Import Performa (CSV/XLSX)</div>
+      <div class="tt-import-sub">Upload Content.csv atau Content.xlsx dari TikTok Studio</div>
     </div>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--teal);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
   </div>
-  <input type="file" id="ttCsvFile" accept=".csv" style="display:none" onchange="handleTtCsvUpload(event)"/>
+  <input type="file" id="ttCsvFile" accept=".csv,.xlsx" style="display:none" onchange="handleTtCsvUpload(event)"/>
   <div class="log-toolbar">
     <div class="search-wrap">
       <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -1141,6 +1141,146 @@ function ttReadFileAsText(file){
   });
 }
 
+function ttReadFileAsArrayBuffer(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(reader.error||new Error('FileReader error'));
+    reader.onabort=()=>reject(new Error('File read aborted'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ---- Minimal dependency-free XLSX reader ----
+// .xlsx is a ZIP archive of XML files. Rather than pull in an external
+// library (e.g. SheetJS from a CDN), which would need network access and
+// risks the same class of bug we just fixed with the service worker, this
+// reads just enough of the ZIP + XML structure to get the first sheet as a
+// table of strings — using the browser's built-in DecompressionStream for
+// the DEFLATE-compressed entries (no library needed).
+function ttZipReadEOCD(buf){
+  const dv=new DataView(buf);
+  const len=buf.byteLength;
+  const maxScan=Math.min(len,65558);
+  for(let i=len-22;i>=len-maxScan&&i>=0;i--){
+    if(dv.getUint32(i,true)===0x06054b50){
+      return{cdOffset:dv.getUint32(i+16,true),entryCount:dv.getUint16(i+10,true)};
+    }
+  }
+  throw new Error('Bukan file ZIP/XLSX yang valid');
+}
+
+function ttZipReadCentralDir(buf,eocd){
+  const dv=new DataView(buf);
+  const bytes=new Uint8Array(buf);
+  const decoder=new TextDecoder('utf-8');
+  let offset=eocd.cdOffset;
+  const entries=[];
+  for(let i=0;i<eocd.entryCount;i++){
+    if(dv.getUint32(offset,true)!==0x02014b50)break;
+    const compMethod=dv.getUint16(offset+10,true);
+    const compSize=dv.getUint32(offset+20,true);
+    const nameLen=dv.getUint16(offset+28,true);
+    const extraLen=dv.getUint16(offset+30,true);
+    const commentLen=dv.getUint16(offset+32,true);
+    const localHeaderOffset=dv.getUint32(offset+42,true);
+    const nameStart=offset+46;
+    const name=decoder.decode(bytes.subarray(nameStart,nameStart+nameLen));
+    entries.push({name,compMethod,compSize,localHeaderOffset});
+    offset=nameStart+nameLen+extraLen+commentLen;
+  }
+  return entries;
+}
+
+async function ttZipExtractEntry(buf,entry){
+  const dv=new DataView(buf);
+  const bytes=new Uint8Array(buf);
+  const off=entry.localHeaderOffset;
+  if(dv.getUint32(off,true)!==0x04034b50)throw new Error('Local file header XLSX tidak valid');
+  const nameLen=dv.getUint16(off+26,true);
+  const extraLen=dv.getUint16(off+28,true);
+  const dataStart=off+30+nameLen+extraLen;
+  const raw=bytes.subarray(dataStart,dataStart+entry.compSize);
+  if(entry.compMethod===0)return raw.slice();
+  if(entry.compMethod===8){
+    if(typeof DecompressionStream==='undefined'){
+      throw new Error('Browser ini belum mendukung baca XLSX. Coba update browser, atau pakai CSV.');
+    }
+    const stream=new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  throw new Error('Metode kompresi XLSX tidak didukung');
+}
+
+async function ttParseXLSX(arrayBuffer){
+  const eocd=ttZipReadEOCD(arrayBuffer);
+  const entries=ttZipReadCentralDir(arrayBuffer,eocd);
+  const byName={};
+  entries.forEach(e=>byName[e.name]=e);
+  const decoder=new TextDecoder('utf-8');
+
+  // Resolve the first sheet's XML path via workbook.xml + its rels.
+  let sheetPath='xl/worksheets/sheet1.xml';
+  const workbookEntry=byName['xl/workbook.xml'];
+  const relsEntry=byName['xl/_rels/workbook.xml.rels'];
+  if(workbookEntry&&relsEntry){
+    try{
+      const wbDoc=new DOMParser().parseFromString(decoder.decode(await ttZipExtractEntry(arrayBuffer,workbookEntry)),'application/xml');
+      const relsDoc=new DOMParser().parseFromString(decoder.decode(await ttZipExtractEntry(arrayBuffer,relsEntry)),'application/xml');
+      const firstSheetEl=wbDoc.querySelector('sheets sheet');
+      const rId=firstSheetEl&&(firstSheetEl.getAttribute('r:id')||firstSheetEl.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id'));
+      const relEl=rId&&[...relsDoc.getElementsByTagName('Relationship')].find(r=>r.getAttribute('Id')===rId);
+      if(relEl){
+        const target=relEl.getAttribute('Target');
+        sheetPath='xl/'+target.replace(/^\.?\//,'');
+      }
+    }catch(err){
+      console.warn('XLSX: gagal resolve path sheet, pakai default',err);
+    }
+  }
+  const sheetEntry=byName[sheetPath]||byName['xl/worksheets/sheet1.xml'];
+  if(!sheetEntry)throw new Error('Tidak menemukan sheet di dalam file XLSX');
+
+  let sharedStrings=[];
+  const sstEntry=byName['xl/sharedStrings.xml'];
+  if(sstEntry){
+    const sstDoc=new DOMParser().parseFromString(decoder.decode(await ttZipExtractEntry(arrayBuffer,sstEntry)),'application/xml');
+    sharedStrings=[...sstDoc.getElementsByTagName('si')].map(si=>[...si.getElementsByTagName('t')].map(t=>t.textContent).join(''));
+  }
+
+  const sheetDoc=new DOMParser().parseFromString(decoder.decode(await ttZipExtractEntry(arrayBuffer,sheetEntry)),'application/xml');
+  const colToIdx=ref=>{
+    const letters=ref.match(/^[A-Z]+/)[0];
+    let idx=0;
+    for(let i=0;i<letters.length;i++)idx=idx*26+(letters.charCodeAt(i)-64);
+    return idx-1;
+  };
+  const table=[...sheetDoc.getElementsByTagName('row')].map(rowEl=>{
+    const rowArr=[];
+    [...rowEl.getElementsByTagName('c')].forEach(c=>{
+      const ref=c.getAttribute('r')||'';
+      const colLetters=ref.match(/^[A-Z]+/);
+      const colIdx=colLetters?colToIdx(colLetters[0]):rowArr.length;
+      const type=c.getAttribute('t');
+      const vEl=c.getElementsByTagName('v')[0];
+      let value='';
+      if(type==='s'){
+        const sIdx=vEl?parseInt(vEl.textContent,10):-1;
+        value=sharedStrings[sIdx]!==undefined?sharedStrings[sIdx]:'';
+      }else if(type==='inlineStr'){
+        const tEl=c.getElementsByTagName('t')[0];
+        value=tEl?tEl.textContent:'';
+      }else{
+        value=vEl?vEl.textContent:'';
+      }
+      while(rowArr.length<colIdx)rowArr.push('');
+      rowArr[colIdx]=value;
+    });
+    return rowArr;
+  });
+  return table;
+}
+
 // Minimal RFC4180-ish CSV parser: handles quoted fields (incl. embedded commas,
 // newlines, and doubled "" escapes) without relying on naive split(',').
 function ttParseCSV(text){
@@ -1222,9 +1362,11 @@ async function handleTtCsvUpload(e){
   const file=e.target.files[0];
   if(!file||!cur){e.target.value='';return;}
   try{
-    const raw=ttStripBOM(await ttReadFileAsText(file));
-    const table=ttParseCSV(raw);
-    if(!table.length){showToast('File CSV kosong atau tidak terbaca');return;}
+    const isXlsx=/\.xlsx$/i.test(file.name);
+    const table=isXlsx
+      ?await ttParseXLSX(await ttReadFileAsArrayBuffer(file))
+      :ttParseCSV(ttStripBOM(await ttReadFileAsText(file)));
+    if(!table.length){showToast('File kosong atau tidak terbaca');return;}
     const header=ttParseHeader(table[0]);
     if(header.title===undefined||header.link===undefined||header.views===undefined){
       showToast('Format CSV tidak dikenali. Pastikan file dari TikTok Studio.');
@@ -1263,8 +1405,8 @@ async function handleTtCsvUpload(e){
     renderTtImportReview();
     openSheet('sheetTtImport');
   }catch(err){
-    console.error('CSV import error:',err);
-    showToast('Gagal membaca file CSV: '+(err&&err.message?err.message:String(err)));
+    console.error('Import error:',err);
+    showToast('Gagal membaca file: '+(err&&err.message?err.message:String(err)));
   }finally{
     e.target.value='';
   }
