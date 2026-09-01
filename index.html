@@ -367,6 +367,14 @@
 
 <!-- VIEWS -->
 <div class="view active" id="viewLog">
+  <div class="tt-import-banner" id="ttConnectBanner" style="display:none" onclick="ttConnectAccount()">
+    <div class="tt-import-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.66 6.63c-2.11.11-4.28-.62-5.84-2.18a7.6 7.6 0 01-2.18-4.45h-3.6v14.75a2.9 2.9 0 11-2.9-2.9c.3 0 .58.04.85.11V8.02a6.4 6.4 0 00-.85-.06 6.44 6.44 0 106.44 6.44V9.28c1.5.94 3.27 1.44 5.08 1.4V6.63z"/></svg></div>
+    <div class="tt-import-text">
+      <div class="tt-import-title">Hubungkan Akun TikTok</div>
+      <div class="tt-import-sub" id="ttConnectSub">Tarik data video & statistik otomatis lewat TikTok API</div>
+    </div>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--teal);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>
   <div class="tt-import-banner" id="ttImportBanner" style="display:none" onclick="document.getElementById('ttCsvFile').click()">
     <div class="tt-import-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
     <div class="tt-import-text">
@@ -690,6 +698,11 @@ async function switchAccount(acc){
   renderDraftChips();renderAddChips();
   const ttBanner=document.getElementById('ttImportBanner');
   if(ttBanner)ttBanner.style.display=(acc.platform==='TikTok')?'flex':'none';
+  const ttConnBanner=document.getElementById('ttConnectBanner');
+  if(ttConnBanner){
+    ttConnBanner.style.display=(acc.platform==='TikTok')?'flex':'none';
+    ttUpdateConnectBanner();
+  }
   await renderLog();await renderInsight();
   closeSheet('sheetAccounts');
 }
@@ -1131,6 +1144,75 @@ function ttStripBOM(text){
 // Chromium, which can be intercepted (and broken) by an active Service Worker,
 // producing "NotReadableError: ... permission problems ... reference to a file
 // was acquired". FileReader does not go through fetch, so it sidesteps that.
+// ===== TIKTOK OAUTH CONNECT =====
+// client_key & redirect_uri are fetched from /api/config (backed by Vercel
+// env vars) instead of being hardcoded here — makes it easy to point this
+// app at a different TikTok app/account later without editing this file.
+const TT_SCOPES = 'user.info.basic,user.info.stats,video.list';
+let ttConfigCache=null;
+
+async function ttGetConfig(){
+  if(ttConfigCache)return ttConfigCache;
+  const resp=await fetch('/api/config');
+  const data=await resp.json();
+  if(!resp.ok||data.error)throw new Error(data.error||'Gagal ambil konfigurasi TikTok dari server');
+  ttConfigCache=data;
+  return data;
+}
+
+function ttGenerateState(){
+  const bytes=new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function ttConnectAccount(){
+  try{
+    const {clientKey,redirectUri}=await ttGetConfig();
+    const state=ttGenerateState();
+    sessionStorage.setItem('tt_oauth_state',state);
+    const url='https://www.tiktok.com/v2/auth/authorize/'
+      +'?client_key='+encodeURIComponent(clientKey)
+      +'&scope='+encodeURIComponent(TT_SCOPES)
+      +'&response_type=code'
+      +'&redirect_uri='+encodeURIComponent(redirectUri)
+      +'&state='+encodeURIComponent(state);
+    window.location.href=url;
+  }catch(err){
+    showToast('Gagal memulai login TikTok: '+err.message);
+  }
+}
+
+function ttGetStoredToken(){
+  try{
+    const raw=localStorage.getItem('tt_oauth_token');
+    return raw?JSON.parse(raw):null;
+  }catch{return null;}
+}
+
+function ttIsTokenConnected(){
+  return !!ttGetStoredToken();
+}
+
+function ttDisconnectAccount(){
+  localStorage.removeItem('tt_oauth_token');
+  ttUpdateConnectBanner();
+  showToast('Akun TikTok diputuskan');
+}
+
+function ttUpdateConnectBanner(){
+  const banner=document.getElementById('ttConnectBanner');
+  const sub=document.getElementById('ttConnectSub');
+  if(!banner)return;
+  if(ttIsTokenConnected()){
+    sub.textContent='Terhubung — klik untuk putuskan koneksi';
+    banner.onclick=()=>{if(confirm('Putuskan koneksi akun TikTok?'))ttDisconnectAccount();};
+  }else{
+    sub.textContent='Tarik data video & statistik otomatis lewat TikTok API';
+    banner.onclick=ttConnectAccount;
+  }
+}
+
 function ttReadFileAsText(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();

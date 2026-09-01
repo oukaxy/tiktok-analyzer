@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menghubungkan ke TikTok...</title>
+<style>
+  :root{ --bg:#0f1115; --text:#e7e9ee; --sub:#9aa1ad; --teal:#2dd4bf; --red:#ef4444; }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--text); text-align:center; padding:24px;
+  }
+  .box{max-width:360px}
+  .spinner{
+    width:36px; height:36px; margin:0 auto 20px; border-radius:50%;
+    border:3px solid #262b35; border-top-color:var(--teal);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  h1{font-size:1.05rem; margin:0 0 8px; font-weight:600}
+  p{color:var(--sub); font-size:0.9rem; margin:0}
+  .err{color:var(--red)}
+  a.btn{
+    display:inline-block; margin-top:20px; padding:10px 20px; border-radius:8px;
+    background:var(--teal); color:#0f1115; text-decoration:none; font-weight:600; font-size:0.9rem;
+  }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="spinner" id="spinner"></div>
+    <h1 id="title">Menghubungkan akun TikTok...</h1>
+    <p id="msg">Mohon tunggu sebentar.</p>
+    <a class="btn" id="backBtn" href="/index.html" style="display:none">Kembali ke aplikasi</a>
+  </div>
+
+<script>
+(async function(){
+  const titleEl = document.getElementById('title');
+  const msgEl = document.getElementById('msg');
+  const spinnerEl = document.getElementById('spinner');
+  const backBtn = document.getElementById('backBtn');
+
+  function fail(message){
+    spinnerEl.style.display = 'none';
+    titleEl.textContent = 'Gagal menghubungkan';
+    msgEl.textContent = message;
+    msgEl.classList.add('err');
+    backBtn.style.display = 'inline-block';
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  const errorParam = params.get('error');
+  const errorDesc = params.get('error_description');
+
+  if (errorParam) {
+    fail(errorDesc || ('TikTok menolak otorisasi: ' + errorParam));
+    return;
+  }
+  if (!code) {
+    fail('Tidak ada kode otorisasi dari TikTok. Coba ulangi proses login dari awal.');
+    return;
+  }
+
+  // CSRF check: state must match what we generated before redirecting to TikTok.
+  const expectedState = sessionStorage.getItem('tt_oauth_state');
+  sessionStorage.removeItem('tt_oauth_state');
+  if (!expectedState || state !== expectedState) {
+    fail('State tidak cocok (kemungkinan sesi login basi atau permintaan tidak sah). Coba ulangi dari awal.');
+    return;
+  }
+
+  try {
+    const resp = await fetch('/api/tiktok-token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ code })
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || data.error) {
+      fail(data.error || 'Gagal menukar kode otorisasi menjadi token.');
+      return;
+    }
+
+    // Store tokens locally (this app keeps all data client-side).
+    const record = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      open_id: data.open_id,
+      scope: data.scope,
+      obtained_at: Date.now(),
+      expires_in: data.expires_in,
+      refresh_expires_in: data.refresh_expires_in
+    };
+    localStorage.setItem('tt_oauth_token', JSON.stringify(record));
+
+    titleEl.textContent = 'Berhasil terhubung!';
+    msgEl.textContent = 'Akun TikTok kamu sudah tersambung. Mengarahkan kembali...';
+    spinnerEl.style.display = 'none';
+    setTimeout(() => { window.location.href = '/index.html'; }, 1200);
+  } catch (err) {
+    fail('Terjadi kesalahan jaringan: ' + err.message);
+  }
+})();
+</script>
+</body>
+</html>
