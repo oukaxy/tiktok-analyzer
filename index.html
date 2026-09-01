@@ -370,9 +370,10 @@
   <div class="tt-import-banner" id="ttConnectBanner" style="display:none" onclick="ttConnectAccount()">
     <div class="tt-import-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.66 6.63c-2.11.11-4.28-.62-5.84-2.18a7.6 7.6 0 01-2.18-4.45h-3.6v14.75a2.9 2.9 0 11-2.9-2.9c.3 0 .58.04.85.11V8.02a6.4 6.4 0 00-.85-.06 6.44 6.44 0 106.44 6.44V9.28c1.5.94 3.27 1.44 5.08 1.4V6.63z"/></svg></div>
     <div class="tt-import-text">
-      <div class="tt-import-title">Hubungkan Akun TikTok</div>
+      <div class="tt-import-title" id="ttConnectTitle">Hubungkan Akun TikTok</div>
       <div class="tt-import-sub" id="ttConnectSub">Tarik data video & statistik otomatis lewat TikTok API</div>
     </div>
+    <button type="button" id="ttSyncBtn" style="display:none;background:var(--teal);color:#0f1115;border:none;border-radius:14px;padding:6px 12px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:pointer" onclick="event.stopPropagation();ttSyncVideos();">Sync</button>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--teal);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
   </div>
   <div class="tt-import-banner" id="ttImportBanner" style="display:none" onclick="document.getElementById('ttCsvFile').click()">
@@ -705,6 +706,18 @@ async function switchAccount(acc){
   }
   await renderLog();await renderInsight();
   closeSheet('sheetAccounts');
+  ttMaybeAutoSync();
+}
+
+// Auto-sync in the background (no toast spam) when opening an account
+// that's connected and hasn't synced in a while — so performance data
+// shows up without the user having to remember to tap Sync.
+const TT_AUTO_SYNC_INTERVAL_MS=30*60*1000; // 30 min
+function ttMaybeAutoSync(){
+  if(!cur||cur.platform!=='TikTok'||!ttIsTokenConnected())return;
+  const tok=ttGetStoredToken();
+  const dueForSync=!tok?.lastSyncAt||(Date.now()-new Date(tok.lastSyncAt).getTime())>TT_AUTO_SYNC_INTERVAL_MS;
+  if(dueForSync)ttSyncVideos();
 }
 
 // ===== CHIPS =====
@@ -1203,13 +1216,144 @@ function ttDisconnectAccount(){
 function ttUpdateConnectBanner(){
   const banner=document.getElementById('ttConnectBanner');
   const sub=document.getElementById('ttConnectSub');
+  const syncBtn=document.getElementById('ttSyncBtn');
   if(!banner)return;
   if(ttIsTokenConnected()){
-    sub.textContent='Terhubung — klik untuk putuskan koneksi';
+    const tok=ttGetStoredToken();
+    sub.textContent=tok?.lastSyncAt
+      ? 'Terakhir sync: '+ttFormatSyncTime(tok.lastSyncAt)+' — klik ikon untuk putuskan'
+      : 'Terhubung — tap Sync untuk tarik data pertama kali';
     banner.onclick=()=>{if(confirm('Putuskan koneksi akun TikTok?'))ttDisconnectAccount();};
+    if(syncBtn)syncBtn.style.display='inline-block';
   }else{
     sub.textContent='Tarik data video & statistik otomatis lewat TikTok API';
     banner.onclick=ttConnectAccount;
+    if(syncBtn)syncBtn.style.display='none';
+  }
+}
+function ttFormatSyncTime(iso){
+  try{
+    const d=new Date(iso);
+    return d.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  }catch{return '';}
+}
+
+// Returns a valid access_token, refreshing it first if it's expired (or
+// close to it). Throws if there's no connection or the refresh fails
+// (in which case the stored token is cleared so the UI falls back to
+// "not connected").
+async function ttEnsureFreshToken(){
+  const tok=ttGetStoredToken();
+  if(!tok)throw new Error('Akun TikTok belum terhubung');
+  const ageMs=Date.now()-(tok.obtained_at||0);
+  const stillValid=tok.expires_in&&ageMs<(tok.expires_in*1000-60000); // 60s buffer
+  if(stillValid)return tok.access_token;
+  if(!tok.refresh_token)throw new Error('Sesi TikTok kedaluwarsa, sambungkan ulang akunnya');
+  const resp=await fetch('/api/tiktok-token',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({grant_type:'refresh_token',refresh_token:tok.refresh_token})
+  });
+  const data=await resp.json();
+  if(!resp.ok||data.error){
+    ttDisconnectAccount();
+    throw new Error(data.error||'Gagal perpanjang sesi TikTok, sambungkan ulang akunnya');
+  }
+  const updated={
+    access_token:data.access_token,
+    refresh_token:data.refresh_token||tok.refresh_token,
+    open_id:data.open_id||tok.open_id,
+    scope:data.scope||tok.scope,
+    obtained_at:Date.now(),
+    expires_in:data.expires_in,
+    refresh_expires_in:data.refresh_expires_in,
+    lastSyncAt:tok.lastSyncAt
+  };
+  localStorage.setItem('tt_oauth_token',JSON.stringify(updated));
+  return updated.access_token;
+}
+
+// Pulls videos + stats from TikTok (paginated) and upserts them into the
+// local 'contents' store for the active account, matched by tiktokId.
+// Existing manually-tracked fields (format/hook/struct/topic/goal/notes/
+// retention) are left untouched — only perf + title/date get filled in
+// automatically, and only on first creation for title/date.
+async function ttSyncVideos(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const syncBtn=document.getElementById('ttSyncBtn');
+  let accessToken;
+  try{
+    accessToken=await ttEnsureFreshToken();
+  }catch(err){
+    ttUpdateConnectBanner();
+    showToast(err.message);
+    return;
+  }
+  if(syncBtn){syncBtn.disabled=true;syncBtn.textContent='...';}
+  try{
+    const existing=await dbByIdx('contents','accountId',cur.id);
+    const byTiktokId={};
+    for(const c of existing)if(c.tiktokId)byTiktokId[c.tiktokId]=c;
+
+    let cursor=undefined,hasMore=true,pages=0;
+    let created=0,updated=0;
+    const nowIso=new Date().toISOString();
+
+    while(hasMore&&pages<10){ // hard cap: 10 pages x 20 = 200 videos per sync
+      const resp=await fetch('/api/tiktok-videos',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({access_token:accessToken,...(cursor?{cursor}:{})})
+      });
+      const data=await resp.json();
+      if(!resp.ok||data.error){
+        throw new Error(data.error||'Gagal mengambil video dari TikTok');
+      }
+      for(const v of(data.videos||[])){
+        let c=byTiktokId[v.id];
+        if(!c){
+          c={
+            id:Date.now().toString()+'_'+v.id,
+            accountId:cur.id,
+            title:(v.video_description||v.title||'(Tanpa judul)').slice(0,120),
+            desc:v.video_description||'',
+            date:v.create_time?new Date(v.create_time*1000).toISOString().split('T')[0]:new Date().toISOString().split('T')[0],
+            format:'—',slides:0,hook:'—',struct:'—',topic:'—',goal:'—',
+            notes:null,retention:{},
+            tiktokId:v.id,
+            createdAt:new Date().toISOString()
+          };
+          byTiktokId[v.id]=c;
+          created++;
+        }else{
+          updated++;
+        }
+        c.perf={
+          view:v.view_count||0,
+          like:v.like_count||0,
+          save:c.perf?.save||0, // TikTok Display API doesn't expose saves
+          comment:v.comment_count||0,
+          share:v.share_count||0,
+          follower:c.perf?.follower||0
+        };
+        c.shareUrl=v.share_url||c.shareUrl;
+        c.lastSyncAt=nowIso;
+        await dbPut('contents',c);
+      }
+      cursor=data.cursor;
+      hasMore=!!data.has_more;
+      pages++;
+    }
+
+    const tok=ttGetStoredToken();
+    if(tok){tok.lastSyncAt=nowIso;localStorage.setItem('tt_oauth_token',JSON.stringify(tok));}
+
+    await renderLog();await renderInsight();ttUpdateConnectBanner();
+    showToast(`Sync selesai: ${created} video baru, ${updated} diperbarui`);
+  }catch(err){
+    showToast('Gagal sync: '+err.message+' (pastikan akun ini terdaftar sebagai Target User di Sandbox TikTok)');
+  }finally{
+    if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync';}
   }
 }
 
