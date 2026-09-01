@@ -505,6 +505,7 @@
       <div class="form-group"><label class="form-label">Deskripsi / Caption</label><textarea class="form-input" id="inDesc" placeholder="Caption + hashtag..."></textarea></div>
       <div class="form-group"><label class="form-label">Format Konten</label><div class="chip-group" id="inFmtChips"></div></div>
       <div class="form-group" id="slideGroup"><label class="form-label">Jumlah Slide</label><input type="number" class="form-input" id="inSlides" placeholder="Misal: 6" min="1" max="30"/></div>
+      <div class="form-group" id="slideScriptGroup" style="display:none"><label class="form-label">Naskah / Isi Slide <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(dari draft, terpisah dari caption)</span></label><textarea class="form-input" id="inSlideScript" placeholder="Isi tiap slide..." style="min-height:100px"></textarea></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="inHookChips"></div></div>
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="inStructChips"></div></div>
       <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik Spesifik</label><button class="auto-topic-btn" id="autoTopicBtnAdd" onclick="autoSelectTopic('add')">✦ Auto Topik</button></div><div class="chip-group" id="inTopicChips"></div></div>
@@ -737,7 +738,11 @@ function renderAddChips(){
 function selChip(el,group){
   el.closest('.chip-group').querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');cs[group]=el.textContent.trim();
-  if(group==='inFmt') document.getElementById('slideGroup').style.display=el.textContent.trim()==='Carousel'?'':'none';
+  if(group==='inFmt'){
+    const isCarousel=el.textContent.trim()==='Carousel';
+    document.getElementById('slideGroup').style.display=isCarousel?'':'none';
+    const ssg=document.getElementById('slideScriptGroup');if(ssg)ssg.style.display=isCarousel?'':'none';
+  }
 }
 
 // ===== LOG =====
@@ -906,10 +911,12 @@ function openAddSheet(){
   const today=new Date().toISOString().split('T')[0];
   const dateEl=document.getElementById('inDateHidden');
   if(dateEl)dateEl.value=today;
-  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower','inNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['inTitle','inDesc','inSlides','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const retSec=document.getElementById('retentionSectionAdd');if(retSec)retSec.innerHTML='';
   document.querySelectorAll('#sheetAdd .chip').forEach(c=>c.classList.remove('selected'));
-  cs={};backStep1();document.getElementById('slideGroup').style.display='';openSheet('sheetAdd');
+  cs={};backStep1();document.getElementById('slideGroup').style.display='';
+  const ssg0=document.getElementById('slideScriptGroup');if(ssg0)ssg0.style.display='none';
+  openSheet('sheetAdd');
 }
 async function openEditSheet(id){
   if(!cur){showToast('Pilih akun dulu');return;}
@@ -926,6 +933,7 @@ async function openEditSheet(id){
   setVal('inDesc',c.desc);
   setVal('inDateHidden',c.date||new Date().toISOString().split('T')[0]);
   setVal('inSlides',c.slides||'');
+  setVal('inSlideScript',c.slideScript||'');
   setVal('inNotes',c.notes);
   // Render retention section for add/edit form
   renderRetentionFields('retentionSectionAdd', c.format, c.retention, 'in');
@@ -944,6 +952,8 @@ async function openEditSheet(id){
   // Show/hide slide field
   const sg=document.getElementById('slideGroup');
   if(sg)sg.style.display=c.format==='Carousel'?'':'none';
+  const ssg=document.getElementById('slideScriptGroup');
+  if(ssg)ssg.style.display=c.format==='Carousel'?'':'none';
   // Fill step 2
   setVal('inView',c.perf?.view);
   setVal('inLike',c.perf?.like);
@@ -990,6 +1000,7 @@ function buildContent(withPerf){
     date:document.getElementById('inDateHidden').value,
     format:cs['inFmt']||'—',
     slides:parseInt(document.getElementById('inSlides').value)||0,
+    slideScript:document.getElementById('inSlideScript')?.value.trim()||'',
     hook:cs['inHook']||'—',
     struct:cs['inStruct']||'—',
     topic:cs['inTopic']||'—',
@@ -2477,13 +2488,18 @@ function saveToLog(){
   const slides=type==='carousel'
     ? document.querySelectorAll('#slidesContainer .slide-inp').length
     : 0;
-  // Build description from slide contents or body
-  let desc='';
+  // Build slide script (carousel only) — kept SEPARATE from Deskripsi/Caption,
+  // which stays blank so the user can fill it with the real caption (e.g. from TikTok).
+  let slideScript='';
   if(type==='carousel'){
     const slideTexts=[...document.querySelectorAll('#slidesContainer .slide-inp')]
       .map((el,i)=>`Slide ${i+1}: ${el.value.trim()}`).filter(s=>!s.endsWith(': '));
-    desc=slideTexts.join('\n');
-  } else if(type==='video'){
+    slideScript=slideTexts.join('\n');
+  }
+  // Build description from body text for non-carousel formats (there's no separate
+  // "script" concept for these, so the body doubles as the starting caption).
+  let desc='';
+  if(type==='video'){
     desc=[
       document.getElementById('videoBody')?.value.trim(),
       document.getElementById('videoCta')?.value.trim()
@@ -2496,11 +2512,18 @@ function saveToLog(){
       document.getElementById('threadClose')?.value.trim()
     ].filter(Boolean).join('\n');
   }
+  // Capture the draft's selected chips BEFORE resetting `cs` below — `cs` is the
+  // same global object used by both the draft form and the Add sheet, so reading
+  // it after `cs={}` would always come back empty.
+  const draftHook=cs['dHook']||'';
+  const draftStruct=cs['dStruct']||'';
+  const draftTopic=cs['dTopic']||'';
+  const draftGoal=cs['dGoal']||'';
   // Pre-fill openAddSheet with draft data
   editingId=null;
   document.getElementById('addSheetTitle').textContent='Simpan ke Log';
   // Reset
-  ['inTitle','inDesc','inSlides','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{
+  ['inTitle','inDesc','inSlides','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   const dateEl=document.getElementById('inDateHidden');
@@ -2509,6 +2532,7 @@ function saveToLog(){
   const setInput=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.value=val;};
   setInput('inTitle',title);
   setInput('inDesc',desc);
+  setInput('inSlideScript',slideScript);
   if(slides>0)setInput('inSlides',slides);
   // Reset and select chips
   document.querySelectorAll('#sheetAdd .chip').forEach(ch=>ch.classList.remove('selected'));
@@ -2517,35 +2541,33 @@ function saveToLog(){
   document.querySelectorAll('#inFmtChips .chip').forEach(ch=>{
     if(ch.textContent.trim()===format){ch.classList.add('selected');cs['inFmt']=format;}
   });
-  // Slide group visibility
+  // Slide group + slide script visibility
   const sg=document.getElementById('slideGroup');
   if(sg)sg.style.display=format==='Carousel'?'':'none';
+  const ssg=document.getElementById('slideScriptGroup');
+  if(ssg)ssg.style.display=format==='Carousel'?'':'none';
   // Select hook chip
-  const hook=cs['dHook']||cs['dHookV']||cs['dHookP']||cs['dHookT']||'';
-  if(hook){
+  if(draftHook){
     document.querySelectorAll('#inHookChips .chip').forEach(ch=>{
-      if(ch.textContent.trim()===hook){ch.classList.add('selected');cs['inHook']=hook;}
+      if(ch.textContent.trim()===draftHook){ch.classList.add('selected');cs['inHook']=draftHook;}
     });
   }
   // Select struct chip
-  const struct=cs['dStruct']||'';
-  if(struct){
+  if(draftStruct){
     document.querySelectorAll('#inStructChips .chip').forEach(ch=>{
-      if(ch.textContent.trim()===struct){ch.classList.add('selected');cs['inStruct']=struct;}
+      if(ch.textContent.trim()===draftStruct){ch.classList.add('selected');cs['inStruct']=draftStruct;}
     });
   }
   // Select topic chip
-  const topic=cs['dTopic']||cs['dTopicV']||cs['dTopicF']||cs['dTopicP']||cs['dTopicT']||'';
-  if(topic){
+  if(draftTopic){
     document.querySelectorAll('#inTopicChips .chip').forEach(ch=>{
-      if(ch.textContent.trim()===topic){ch.classList.add('selected');cs['inTopic']=topic;}
+      if(ch.textContent.trim()===draftTopic){ch.classList.add('selected');cs['inTopic']=draftTopic;}
     });
   }
   // Select goal chip
-  const goal=cs['dGoal']||cs['dGoalV']||'';
-  if(goal){
+  if(draftGoal){
     document.querySelectorAll('#inGoalChips .chip').forEach(ch=>{
-      if(ch.textContent.trim()===goal){ch.classList.add('selected');cs['inGoal']=goal;}
+      if(ch.textContent.trim()===draftGoal){ch.classList.add('selected');cs['inGoal']=draftGoal;}
     });
   }
   // Show step 1, open sheet
