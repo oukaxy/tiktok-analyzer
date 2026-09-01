@@ -760,22 +760,31 @@ async function renderLog(){
 function renderFilterChips(){
   const formats=[...new Set(allContents.map(c=>c.format).filter(f=>f&&f!=='—'))];
   const topics=[...new Set(allContents.map(c=>c.topic).filter(t=>t&&t!=='—'))];
+  const goals=[...new Set(allContents.map(c=>c.goal).filter(g=>g&&g!=='—'))];
   const incompleteCount=allContents.filter(c=>c.perf&&c.perf.view>0&&(!c.format||c.format==='—')).length;
+  const live3=allContents.filter(c=>c.perf&&c.perf.view>0);
+  const avgView3=live3.length?live3.reduce((s,c)=>s+c.perf.view,0)/live3.length:0;
+  const avgSave3=live3.length?live3.reduce((s,c)=>s+c.perf.save,0)/live3.length:0;
+  const topPerfCount=live3.filter(c=>c.perf.view>=avgView3*1.3||c.perf.save>=avgSave3*1.5).length;
+  const noRetentionCount=live3.filter(c=>!(c.retention&&Object.values(c.retention).some(v=>v>0))).length;
   const row=document.getElementById('filterRow');
-  const isAllActive=activeFilters.status==='all'&&activeFilters.format==='all'&&activeFilters.topic==='all'&&activeFilters.incomplete==='all';
+  const isAllActive=activeFilters.status==='all'&&activeFilters.format==='all'&&activeFilters.topic==='all'&&activeFilters.incomplete==='all'&&activeFilters.topPerf==='all'&&activeFilters.goal==='all'&&activeFilters.noRetention==='all';
   const chip=(label,key,val)=>`<div class="filter-chip ${activeFilters[key]===val&&!(key==='status'&&val==='all'&&!isAllActive)?'active':''}" onclick="setFilter('${key}','${val}')">${label}</div>`;
   row.innerHTML=[
     `<div class="filter-chip ${isAllActive?'active':''}" onclick="resetFilters()">Semua</div>`,
     chip('Live','status','live'),
     chip('Draft','status','draft'),
     incompleteCount?chip(`✎ Perlu Dilengkapi (${incompleteCount})`,'incomplete','yes'):'',
+    topPerfCount?chip(`🔥 Top Performer (${topPerfCount})`,'topPerf','yes'):'',
+    noRetentionCount?chip(`Belum Ada Retention (${noRetentionCount})`,'noRetention','yes'):'',
     ...formats.map(f=>chip(f,'format',f)),
     ...topics.map(t=>chip(t,'topic',t)),
+    ...goals.map(g=>chip(g,'goal',g)),
   ].join('');
 }
 
 function resetFilters(){
-  activeFilters={status:'all',format:'all',topic:'all',incomplete:'all'};
+  activeFilters={status:'all',format:'all',topic:'all',incomplete:'all',topPerf:'all',goal:'all',noRetention:'all'};
   const si=document.getElementById('searchInput');if(si)si.value='';
   applyFilter();
 }
@@ -800,7 +809,10 @@ function applyFilter(){
     if(activeFilters.status==='draft'&&(c.perf&&c.perf.view>0))return false;
     if(activeFilters.format!=='all'&&c.format!==activeFilters.format)return false;
     if(activeFilters.topic!=='all'&&c.topic!==activeFilters.topic)return false;
+    if(activeFilters.goal!=='all'&&c.goal!==activeFilters.goal)return false;
     if(activeFilters.incomplete==='yes'&&!(c.perf&&c.perf.view>0&&(!c.format||c.format==='—')))return false;
+    if(activeFilters.topPerf==='yes'&&!(c.perf&&c.perf.view>0&&(c.perf.view>=avgView*1.3||c.perf.save>=avgSave*1.5)))return false;
+    if(activeFilters.noRetention==='yes'&&!(c.perf&&c.perf.view>0&&!(c.retention&&Object.values(c.retention).some(v=>v>0))))return false;
     return true;
   });
   renderFilterChips();
@@ -1844,7 +1856,7 @@ function getRetentionBadge(c,stats){
 
 // ===== DRAG & DROP =====
 let dragSrcId=null;
-let activeFilters={status:'all',format:'all',topic:'all',incomplete:'all'};
+let activeFilters={status:'all',format:'all',topic:'all',incomplete:'all',topPerf:'all',goal:'all',noRetention:'all'};
 let allContents=[];
 // Touch drag state
 let touchDragId=null,touchStartX=0,touchStartY=0,touchMoved=false,touchLongPressTimer=null,touchClone=null,touchOffsetY=0;
