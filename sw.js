@@ -5,10 +5,19 @@ const STATIC_ASSETS = [
   'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap',
 ];
 
-// Install — cache static assets
+// Install — cache static assets. Uses Promise.allSettled (not cache.addAll)
+// so a single failing request (e.g. Google Fonts blocked by a flaky
+// connection, ad-blocker, or CORS) can't fail the whole install and leave
+// an old/buggy service worker stuck in control forever.
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.allSettled(
+        STATIC_ASSETS.map(url =>
+          cache.add(url).catch(err => console.warn('SW: gagal cache', url, err))
+        )
+      )
+    )
   );
   self.skipWaiting();
 });
