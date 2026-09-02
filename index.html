@@ -807,6 +807,7 @@ function setFilter(key,val){
 }
 
 function applyFilter(){
+  try{localStorage.setItem('ka_activeFilters',JSON.stringify(activeFilters));}catch{}
   const q=(document.getElementById('searchInput')?.value||'').toLowerCase().trim();
   const live2=allContents.filter(c=>c.perf&&c.perf.view>0);
   const avgView=live2.length?live2.reduce((s,c)=>s+c.perf.view,0)/live2.length:0;
@@ -1322,9 +1323,14 @@ async function ttSyncVideos(){
     const existing=await dbByIdx('contents','accountId',cur.id);
     const byTiktokId={};
     for(const c of existing)if(c.tiktokId)byTiktokId[c.tiktokId]=c;
+    // Entries without a tiktokId yet (e.g. saved from a draft) — eligible to be
+    // claimed via fuzzy title match instead of spawning a blank duplicate.
+    const SIM_THRESHOLD=0.85;
+    const unclaimed=existing.filter(c=>!c.tiktokId);
+    const claimedIds=new Set();
 
     let cursor=undefined,hasMore=true,pages=0;
-    let created=0,updated=0;
+    let created=0,updated=0,matched=0;
     const nowIso=new Date().toISOString();
 
     while(hasMore&&pages<10){ // hard cap: 10 pages x 20 = 200 videos per sync
@@ -1339,6 +1345,25 @@ async function ttSyncVideos(){
       }
       for(const v of(data.videos||[])){
         let c=byTiktokId[v.id];
+        if(!c){
+          // Try to claim an existing draft-based entry with a similar title
+          // before creating a brand-new (blank) one, so hook/struct/topic/
+          // goal/notes/retention filled in manually don't get orphaned.
+          const vTitle=v.video_description||v.title||'';
+          let best=null,bestScore=0;
+          for(const cand of unclaimed){
+            if(claimedIds.has(cand.id))continue;
+            const score=ttSimilarity(vTitle,cand.title);
+            if(score>bestScore){bestScore=score;best=cand;}
+          }
+          if(best&&bestScore>=SIM_THRESHOLD){
+            c=best;
+            c.tiktokId=v.id;
+            claimedIds.add(c.id);
+            byTiktokId[v.id]=c;
+            matched++;
+          }
+        }
         if(!c){
           c={
             id:Date.now().toString()+'_'+v.id,
@@ -1377,7 +1402,8 @@ async function ttSyncVideos(){
     if(tok){tok.lastSyncAt=nowIso;localStorage.setItem('tt_oauth_token',JSON.stringify(tok));}
 
     await renderLog();await renderInsight();ttUpdateConnectBanner();
-    showToast(`Sync selesai: ${created} video baru, ${updated} diperbarui`);
+    const matchedTxt=matched>0?`, ${matched} draft ke-link otomatis`:'';
+    showToast(`Sync selesai: ${created} video baru, ${updated} diperbarui${matchedTxt}`);
   }catch(err){
     showToast('Gagal sync: '+err.message+' (pastikan akun ini terdaftar sebagai Target User di Sandbox TikTok)');
   }finally{
@@ -1873,6 +1899,10 @@ function getRetentionBadge(c,stats){
 // ===== DRAG & DROP =====
 let dragSrcId=null;
 let activeFilters={status:'all',format:'all',topic:'all',incomplete:'all',goal:'all',noRetention:'all',sortView:false};
+try{
+  const savedFilters=JSON.parse(localStorage.getItem('ka_activeFilters')||'null');
+  if(savedFilters&&typeof savedFilters==='object')Object.assign(activeFilters,savedFilters);
+}catch{}
 let allContents=[];
 // Touch drag state
 let touchDragId=null,touchStartX=0,touchStartY=0,touchMoved=false,touchLongPressTimer=null,touchClone=null,touchOffsetY=0;
