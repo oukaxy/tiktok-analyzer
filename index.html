@@ -749,17 +749,17 @@ function selChip(el,group){
 async function renderLog(){
   if(!cur){document.getElementById('contentList').innerHTML='<div class="empty-state"><div class="empty-title">Pilih akun dulu</div></div>';return;}
   allContents=await dbByIdx('contents','accountId',cur.id);
-  // Sort by date desc, newest first
+  // Sort by date desc, newest first (base order — actual filter/sort applied below)
   allContents.sort((a,b)=>new Date(b.date)-new Date(a.date)||Number(b.id)-Number(a.id));
-  // Compute avg view & save for perf badges
-  const live=allContents.filter(c=>c.perf&&c.perf.view>0);
-  const avgView=live.length?live.reduce((s,c)=>s+c.perf.view,0)/live.length:0;
-  const avgSave=live.length?live.reduce((s,c)=>s+c.perf.save,0)/live.length:0;
-  // Build filter chips
-  renderFilterChips();
-  document.getElementById('logCount').textContent=allContents.length+' konten';
-  if(!allContents.length){document.getElementById('contentList').innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg><div class="empty-title">Belum ada konten</div><p>Tap + untuk mulai catat.<br>Makin banyak data, makin akurat analisisnya.</p></div>';return;}
-  renderContentList(allContents, avgView, avgSave, ttEngagementStats(allContents));
+  if(!allContents.length){
+    renderFilterChips();
+    document.getElementById('logCount').textContent='0 konten';
+    document.getElementById('contentList').innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h8M8 16h5"/></svg><div class="empty-title">Belum ada konten</div><p>Tap + untuk mulai catat.<br>Makin banyak data, makin akurat analisisnya.</p></div>';
+    return;
+  }
+  // Route through applyFilter so any active filter/sort (incl. restored from
+  // localStorage on reload) is actually applied, not just shown as selected.
+  applyFilter();
 }
 
 function renderFilterChips(){
