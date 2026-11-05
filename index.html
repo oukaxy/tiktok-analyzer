@@ -676,6 +676,7 @@ let cs={}; // chip state
 let editingId=null; // id konten yang sedang diedit
 let contentOrigin=null; // asal konten saat disimpan (mis. hasil repurpose)
 let draftOrigin=null; // asal draft yang menunggu disimpan lewat "Simpan ke Log"
+let editSync={tiktokId:null,lastSyncAt:null}; // kunci sync TikTok — dipertahankan saat edit agar re-sync tidak buat draft baru
 let slideCount=3;
 let obTopics=[];
 let obPlatform='';
@@ -990,6 +991,7 @@ function openAddSheet(){
   editingId=null;
   contentOrigin=null;
   draftOrigin=null;
+  editSync={tiktokId:null,lastSyncAt:null};
   document.getElementById('addSheetTitle').textContent='Tambah Konten';
   const today=new Date().toISOString().split('T')[0];
   const dateEl=document.getElementById('inDateHidden');
@@ -1008,6 +1010,7 @@ async function openEditSheet(id){
   editingId=id;
   contentOrigin=c.origin||null;
   draftOrigin=null;
+  editSync={tiktokId:c.tiktokId||null,lastSyncAt:c.lastSyncAt||null};
   const setVal=(elId,val)=>{const el=document.getElementById(elId);if(el)el.value=val||'';};
   document.getElementById('addSheetTitle').textContent='Edit Konten';
   // Reset chips
@@ -1096,10 +1099,12 @@ function buildContent(withPerf){
     createdAt:new Date().toISOString()
   };
   if(contentOrigin)content.origin=contentOrigin;
+  if(editSync.tiktokId)content.tiktokId=editSync.tiktokId;
+  if(editSync.lastSyncAt)content.lastSyncAt=editSync.lastSyncAt;
   return content;
 }
-async function saveAsDraft(){if(!document.getElementById('inTitle').value.trim()){showToast('Isi judul dulu ya');return;}await dbPut('contents',buildContent(false));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;}
-async function saveContentFull(){await dbPut('contents',buildContent(true));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;}
+async function saveAsDraft(){if(!document.getElementById('inTitle').value.trim()){showToast('Isi judul dulu ya');return;}await dbPut('contents',buildContent(false));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;editSync={tiktokId:null,lastSyncAt:null};}
+async function saveContentFull(){await dbPut('contents',buildContent(true));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;editSync={tiktokId:null,lastSyncAt:null};}
 
 // ===== PERFORMA =====
 async function openPerfSheet(id){
@@ -1795,7 +1800,7 @@ function ttParseCSV(text){
 
 function ttExtractVideoId(link){
   if(!link)return null;
-  const m=String(link).match(/\/video\/(\d+)/);
+  const m=String(link).match(/\/(?:video|photo|v)\/(\d+)/);
   return m?m[1]:null;
 }
 
@@ -1926,10 +1931,32 @@ async function ttMatchRows(parsed){
       row.group='suggest';row.contentId=best.id;row.contentTitle=best.title;row.score=bestScore;
       row.decision=null; // 'confirm' | 'reject' set by user
       usedContentIds.add(best.id);
-    } else {
-      row.group='notfound';row.contentId=null;row.contentTitle=null;row.score=bestScore;
-      row.manualId='__new__'; // default: create a new draft from this CSV row
     }
+  }
+  // Pass 3: rows with a tiktokId that failed exact match → fuzzy against drafts
+  // holding a DIFFERENT tiktokId (e.g. CSV link format changed), so previously
+  // synced drafts still get suggested instead of silently duplicated.
+  const idCandidates=drafts.filter(d=>d.tiktokId);
+  for(const row of rows){
+    if(row.group||!row.tiktokId)continue;
+    let best=null,bestScore=0;
+    for(const d of idCandidates){
+      if(usedContentIds.has(d.id))continue;
+      if(d.tiktokId===row.tiktokId)continue;
+      const score=ttSimilarity(row.title,d.title);
+      if(score>bestScore){bestScore=score;best=d;}
+    }
+    if(best&&bestScore>=SIM_THRESHOLD){
+      row.group='suggest';row.contentId=best.id;row.contentTitle=best.title;row.score=bestScore;
+      row.decision=null;
+      usedContentIds.add(best.id);
+    }
+  }
+  // Whatever is left unmatched becomes notfound (default: new draft)
+  for(const row of rows){
+    if(row.group)continue;
+    row.group='notfound';row.contentId=null;row.contentTitle=null;row.score=row.score||0;
+    row.manualId='__new__'; // default: create a new draft from this CSV row
   }
   ttImportRows=rows;
   ttImportRows._allDrafts=drafts; // stash for dropdown building
@@ -3334,6 +3361,7 @@ function saveToLog(){
   // Pre-fill openAddSheet with draft data
   editingId=null;
   contentOrigin=draftOrigin||null;
+  editSync={tiktokId:null,lastSyncAt:null};
   document.getElementById('addSheetTitle').textContent='Simpan ke Log';
   // Reset
   ['inTitle','inDesc','inSlides','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{
