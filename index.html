@@ -3641,6 +3641,7 @@ function renderCalDetail(dateStr, items){
           <div class="cal-item-meta">${meta}</div>
         </div>
         <button class="act-btn" style="flex:none;padding:5px 10px;font-size:11px" onclick="openEditSheet('${c.id}')">Edit</button>
+        <button class="act-btn danger" style="flex:none;padding:5px 10px;font-size:11px" onclick="calDelContent('${c.id}')">Hapus</button>
       </div>`;
     }).join('');
   } else {
@@ -3651,6 +3652,13 @@ function renderCalDetail(dateStr, items){
     Tambah konten di tanggal ini
   </button></div>`;
   document.getElementById('calDetail').innerHTML=html;
+}
+
+async function calDelContent(id){
+  if(!confirm('Hapus konten ini?'))return;
+  await dbDel('contents',id);
+  await renderCalendar();await renderLog();await renderInsight();
+  showToast('Dihapus');
 }
 
 function openAddSheetWithDate(dateStr){
@@ -3679,6 +3687,10 @@ function planNextWeek(from){
 async function openPlannerSheet(){
   if(!cur){showToast('Pilih akun dulu');return;}
   const days=planNextWeek();
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const since=new Date();since.setDate(since.getDate()-28);
+  const rhythm=Math.max(1,Math.round(all.filter(c=>c.date&&c.date>=isoDate(since)).length/4));
+  const defCount=Math.min(7,Math.max(3,rhythm));
   document.getElementById('plannerBody').innerHTML=`
     <div class="form-group"><label class="form-label">Rentang Minggu <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(default: minggu berikutnya)</span></label>
       <div style="display:flex;gap:8px;align-items:center">
@@ -3686,6 +3698,7 @@ async function openPlannerSheet(){
         <span style="color:var(--text-3);font-size:12px">s/d</span>
         <input type="date" class="form-input" id="planEnd" value="${days[6]}"/>
       </div></div>
+    <div class="form-group"><label class="form-label">Jumlah Konten <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(ritme historis: ${rhythm}/minggu — bisa diubah)</span></label><input type="number" class="form-input" id="planCount" min="1" max="14" value="${defCount}"/></div>
     <button class="btn-primary" id="planGenBtn" onclick="generatePlanSuggestions()">Generate Usulan</button>
     <div id="planResult"></div>`;
   openSheet('sheetPlanner');
@@ -3703,6 +3716,7 @@ async function generatePlanSuggestions(){
   const since=new Date();since.setDate(since.getDate()-28);
   const recent=all.filter(c=>c.date&&c.date>=isoDate(since));
   const rhythm=Math.max(1,Math.round(recent.length/4));
+  const count=Math.min(14,Math.max(1,parseInt(document.getElementById('planCount')?.value,10)||rhythm));
   const live=all.filter(c=>c.perf&&c.perf.view>0);
   const stats=live.length>=2?buildTopicStats(live):null;
   const w=cur.prWeights||{jualan:1,awareness:1,save:1};
@@ -3713,28 +3727,33 @@ async function generatePlanSuggestions(){
   const existing=all.filter(c=>c.date&&c.date>=start&&c.date<=end);
   const existingLines=existing.length?existing.map(c=>`- ${c.date}: ${c.title||'(tanpa judul)'}`).join('\n'):'- Tidak ada.';
   const formats=(cur.formats&&cur.formats.length?cur.formats:Object.keys(DRAFT_TAB_LABELS)).join(', ');
-  const prompt=`Platform: ${cur.platform} · Niche: ${cur.niche}\nRentang minggu: ${start} s/d ${end}\nRitme historis: sekitar ${rhythm} konten/minggu (4 minggu terakhir: ${recent.length} konten)\nFormat yang dipakai akun: ${formats}\nTopik queue (urut skor gap):\n${topicLines}\nKonten yang sudah ada di rentang ini:\n${existingLines}\n\nSusun usulan jadwal posting untuk minggu tersebut. Kembalikan HANYA JSON valid tanpa markdown:\n{"suggestions":[{"date":"YYYY-MM-DD","topic":"","format":"","hook":""}]}\nAturan: tanggal wajib berada di rentang (perhatikan pergantian bulan/tahun); jumlah sekitar ${rhythm} konten; jangan menempatkan lebih dari 1 konten di tanggal yang sama kecuali ritme > 1 konten/hari; hook opsional tapi bila diisi harus spesifik niche; format pilih dari daftar format akun.`;
+  const daysTotal=Math.max(1,Math.round((new Date(end+'T00:00:00')-new Date(start+'T00:00:00'))/86400000)+1);
+  const spacing=Math.max(1,Math.floor(daysTotal/count));
+  const prompt=`Platform: ${cur.platform} · Niche: ${cur.niche}\nRentang minggu: ${start} s/d ${end} (${daysTotal} hari)\nRitme historis: sekitar ${rhythm} konten/minggu (4 minggu terakhir: ${recent.length} konten)\nJumlah diminta: ${count} konten\nFormat yang dipakai akun: ${formats}\nTopik queue (urut skor gap):\n${topicLines}\nKonten yang sudah ada di rentang ini:\n${existingLines}\n\nSusun usulan jadwal posting untuk minggu tersebut. Kembalikan HANYA JSON valid tanpa markdown:\n{"suggestions":[{"date":"YYYY-MM-DD","topic":"","format":"","hook":""}]}\nAturan:\n1. Tanggal wajib berada di rentang (perhatikan pergantian bulan/tahun).\n2. Usulkan TEPAT ${count} konten, disebar MERATA mulai dari tanggal awal rentang dengan jarak sekitar ${spacing} hari antar konten — JANGAN menumpuk semua di satu tanggal atau di akhir minggu.\n3. Maksimal 1 konten per tanggal, kecuali ${count} lebih besar dari ${daysTotal} hari.\n4. Hook opsional tapi bila diisi harus spesifik niche; format pilih dari daftar format akun.`;
   try{
     const r=await callAI({system:`Kamu adalah perencana konten ${cur.platform} niche "${cur.niche}". Jawab HANYA JSON valid tanpa markdown.`,messages:[{role:'user',content:prompt}],maxTokens:1024});
     if(!r.ok){box.innerHTML=`<div class="info-box">⚠️ ${escapeHtml(r.error)}</div>`;return;}
     let parsed;
     try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{showToast('Gagal parse respons AI');box.innerHTML='<div class="info-box">Respons AI tidak valid. Coba lagi.</div>';return;}
-    plannerSuggestions=Array.isArray(parsed.suggestions)?parsed.suggestions.filter(s=>s&&s.date):[];
+    plannerSuggestions=(Array.isArray(parsed.suggestions)?parsed.suggestions.filter(s=>s&&s.date):[])
+      .filter(s=>s.date>=start&&s.date<=end)
+      .sort((a,b)=>a.date<b.date?-1:1);
     if(!plannerSuggestions.length){box.innerHTML='<div class="info-box">AI tidak memberi usulan. Coba lagi.</div>';return;}
-    renderPlanSuggestions(box);
+    renderPlanSuggestions(box,count);
   }catch{
     box.innerHTML='<div class="info-box">Gagal terhubung ke AI. Cek koneksi internet.</div>';
   }finally{
     if(btn){btn.disabled=false;btn.textContent='Generate Usulan';}
   }
 }
-function renderPlanSuggestions(box){
+function renderPlanSuggestions(box,expected){
   const rows=plannerSuggestions.map((s,i)=>{
     const d=s.date?new Date(s.date+'T00:00:00'):null;
     const label=d?d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'}):'—';
     return`<div class="cal-item"><input type="checkbox" class="plan-check" data-idx="${i}" checked style="flex:none"/><div class="cal-item-info"><div class="cal-item-title">${escapeHtml(s.topic||'(Tanpa topik)')}</div><div class="cal-item-meta">${label} · ${escapeHtml(s.format||'—')}${s.hook?' · '+escapeHtml(s.hook):''}</div></div></div>`;
   }).join('');
-  box.innerHTML=`<div class="sec-hdr" style="margin-top:14px"><span class="sec-title">Usulan (${plannerSuggestions.length})</span></div>${rows}<button class="btn-primary" onclick="addPlannedContents()">Tambahkan yang Dicentang</button>`;
+  const shortWarn=(expected&&plannerSuggestions.length<expected)?`<div class="info-box" style="margin-top:10px">AI memberi ${plannerSuggestions.length} dari ${expected} usulan — coba Generate ulang bila kurang.</div>`:'';
+  box.innerHTML=`<div class="sec-hdr" style="margin-top:14px"><span class="sec-title">Usulan (${plannerSuggestions.length})</span></div>${rows}${shortWarn}<button class="btn-primary" onclick="addPlannedContents()">Tambahkan yang Dicentang</button>`;
 }
 async function addPlannedContents(){
   const checks=[...document.querySelectorAll('#plannerBody .plan-check')];
