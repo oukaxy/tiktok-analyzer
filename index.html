@@ -2757,7 +2757,7 @@ async function openReportSheet(){
   sec.push(`## Per Tipe Hook\n\n${mdTable(['Hook','Konten','Avg View','Avg Save'],reportAggTable(live,'hook'))}`);
   sec.push(`## Per Struktur\n\n${mdTable(['Struktur','Konten','Avg View','Avg Save'],reportAggTable(live,'struct'))}`);
   sec.push(`## Per Topik\n\n${mdTable(['Topik','Konten','Avg View','Avg Save'],reportAggTable(live,'topic'))}`);
-  sec.push(`## Konten Bulan Ini\n${monthAll.map(c=>`- ${c.date}: ${c.title||'(Tanpa judul)'} (${c.perf&&c.perf.view?fmt(c.perf.view)+' view / '+c.perf.save+' save':'draft'})`).join('\n')||'- Tidak ada.'}`);
+  sec.push(`## Konten Bulan Ini\n${monthAll.map(c=>`- ${c.date?new Date(c.date+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'}):'—'}: ${c.title||'(Tanpa judul)'} (${c.perf&&c.perf.view?fmt(c.perf.view)+' view / '+c.perf.save+' save':'draft'})`).join('\n')||'- Tidak ada.'}`);
   sec.push(`## Review Mingguan\n${reviewLines.join('\n')||'- Tidak ada review bulan ini.'}`);
   sec.push(`## Eksperimen A/B\n${abLines.join('\n')||'- Tidak ada pasangan bulan ini.'}`);
   sec.push(`## Narasi AI\n${narrErr?'> ⚠️ Narasi AI gagal: '+narrErr:narrative}`);
@@ -3121,7 +3121,7 @@ async function renderSettings(){
   document.getElementById('settingsBody').innerHTML=`
     <div class="form-group"><label class="form-label">Nama Akun</label><input type="text" class="form-input" id="editName" value="${escapeHtml(cur.name)}"/></div>
     <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="editUsername" value="${escapeHtml(cur.username||'')}"/></div>
-    <div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="editPlatform">${['TikTok','Instagram','YouTube'].map(p=>`<option ${cur.platform===p?'selected':''}>${p}</option>`).join('')}</select></div>
+    <div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="editPlatform">${['TikTok','Instagram','YouTube','X','Threads'].map(p=>`<option ${cur.platform===p?'selected':''}>${p}</option>`).join('')}</select></div>
     <div class="form-group"><label class="form-label">Niche</label><input type="text" class="form-input" id="editNiche" value="${escapeHtml(cur.niche)}"/></div>
     <div class="sec-title" style="margin:18px 0 10px;display:block">Posisi Brand</div>
     <div class="form-group"><label class="form-label">Tone of Voice</label><input type="text" class="form-input" id="editTone" value="${escapeHtml(cur.positioning.tone||'')}" placeholder="Misal: santai tapi berbasis data"/></div>

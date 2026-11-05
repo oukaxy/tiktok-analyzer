@@ -147,10 +147,10 @@
 
 ## Fase 7 — Perbaikan Kecil & Konsistensi
 
-- [ ] **Pengaturan platform**: `<select id="editPlatform">` di `renderSettings()` hanya TikTok/Instagram/YouTube → tambah **X** dan **Threads** (samakan daftar dengan platform-grid onboarding). `FMT`, `GOALS`, dll. sudah mendukung X/Threads.
-- [ ] **Lokalisasi tanggal**: potongan tanggal raw (`c.date` pada area compare/hasil draft) → `toLocaleDateString('id-ID', {day:'numeric', month:'short'})` (pola `buildLineChart`).
-- [ ] **Sanity prompt**: pastikan semua prompt JSON strict jelas minta "hanya JSON tanpa markdown" di system prompt; `maxTokens` eksplisit saat kebutuhan > default (2048 untuk F1/F2/repurpose/review/laporan; 512 untuk klasifikasi; 1024 default).
-- [ ] Verifikasi: `node --check` ekstraksi `<script>`; uji manual ringkas per perubahan.
+- [x] **Pengaturan platform**: `<select id="editPlatform">` di `renderSettings()` hanya TikTok/Instagram/YouTube → tambah **X** dan **Threads** (samakan daftar dengan platform-grid onboarding). `FMT`, `GOALS`, dll. sudah mendukung X/Threads.
+- [x] **Lokalisasi tanggal**: potongan tanggal raw (`c.date` pada area compare/hasil draft) → `toLocaleDateString('id-ID', {day:'numeric', month:'short'})` (pola `buildLineChart`).
+- [x] **Sanity prompt**: pastikan semua prompt JSON strict jelas minta "hanya JSON tanpa markdown" di system prompt; `maxTokens` eksplisit saat kebutuhan > default (2048 untuk F1/F2/repurpose/review/laporan; 512 untuk klasifikasi; 1024 default).
+- [x] Verifikasi: `node --check` ekstraksi `<script>`; uji manual ringkas per perubahan.
 
 ---
 
