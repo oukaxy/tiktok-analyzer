@@ -542,7 +542,7 @@
       <div class="form-group"><label class="form-label">Deskripsi / Caption</label><textarea class="form-input" id="inDesc" placeholder="Caption + hashtag..."></textarea></div>
       <div class="form-group"><label class="form-label">Format Konten</label><div class="chip-group" id="inFmtChips"></div></div>
       <div class="form-group" id="slideGroup"><label class="form-label">Jumlah Slide</label><input type="number" class="form-input" id="inSlides" placeholder="Misal: 6" min="1" max="30"/></div>
-      <div class="form-group" id="slideScriptGroup" style="display:none"><label class="form-label">Naskah / Isi Slide <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(dari draft, terpisah dari caption)</span></label><textarea class="form-input" id="inSlideScript" placeholder="Isi tiap slide..." style="min-height:100px"></textarea></div>
+      <div class="form-group" id="slideScriptGroup" style="display:none"><label class="form-label" id="slideScriptLabel">Naskah / Isi Slide <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(dari draft, terpisah dari caption)</span></label><textarea class="form-input" id="inSlideScript" placeholder="Isi tiap slide..." style="min-height:100px"></textarea></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="inHookChips"></div></div>
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="inStructChips"></div></div>
       <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik Spesifik</label><button class="auto-topic-btn" id="autoTopicBtnAdd" onclick="autoSelectTopic('add')">✦ Auto Topik</button></div><div class="chip-group" id="inTopicChips"></div></div>
@@ -1038,10 +1038,7 @@ async function openEditSheet(id){
   selByText('inTopicChips',c.topic,'inTopic');
   selByText('inGoalChips',c.goal,'inGoal');
   // Show/hide slide field
-  const sg=document.getElementById('slideGroup');
-  if(sg)sg.style.display=c.format==='Carousel'?'':'none';
-  const ssg=document.getElementById('slideScriptGroup');
-  if(ssg)ssg.style.display=c.format==='Carousel'?'':'none';
+  toggleSlideGroups(c.format);
   // Fill step 2
   setVal('inView',c.perf?.view);
   setVal('inLike',c.perf?.like);
@@ -1060,6 +1057,23 @@ function goStep2(){
   // Render retention fields based on selected format
   const fmt=cs['inFmt']||'';
   renderRetentionFields('retentionSectionAdd', fmt, null, 'in');
+  toggleSlideGroups(fmt);
+}
+function toggleSlideGroups(format){
+  const isCarousel=format==='Carousel',isVideo=format==='Video';
+  const sg=document.getElementById('slideGroup');
+  if(sg)sg.style.display=isCarousel?'':'none';
+  const ssg=document.getElementById('slideScriptGroup');
+  if(ssg)ssg.style.display=(isCarousel||isVideo)?'':'none';
+  const lbl=document.getElementById('slideScriptLabel');
+  const ta=document.getElementById('inSlideScript');
+  if(isVideo){
+    if(lbl)lbl.textContent='Naskah / Script Video (Hook / Isi / CTA — terpisah dari caption)';
+    if(ta)ta.placeholder='Hook: kalimat pembuka 0-3 detik...\nIsi: poin utama...\nCTA: ajakan penutup...';
+  } else {
+    if(lbl)lbl.textContent='Naskah / Isi Slide (terpisah dari caption)';
+    if(ta)ta.placeholder='Isi tiap slide...';
+  }
 }
 function backStep1(){
   document.getElementById('addStep1').style.display='';document.getElementById('addStep2').style.display='none';
@@ -3334,16 +3348,22 @@ function saveToLog(){
     const slideTexts=[...document.querySelectorAll('#slidesContainer .slide-inp')]
       .map((el,i)=>`Slide ${i+1}: ${el.value.trim()}`).filter(s=>!s.endsWith(': '));
     slideScript=slideTexts.join('\n');
+  } else if(type==='video'){
+    const vHook=document.getElementById('videoHook')?.value.trim()||'';
+    const vBody=document.getElementById('videoBody')?.value.trim()||'';
+    const vCta=document.getElementById('videoCta')?.value.trim()||'';
+    slideScript=[
+      vHook?`Hook: ${vHook}`:'',
+      vBody?`Isi: ${vBody}`:'',
+      vCta?`CTA: ${vCta}`:''
+    ].filter(Boolean).join('\n');
   }
   // Build description from body text for non-carousel formats (there's no separate
   // "script" concept for these, so the body doubles as the starting caption).
+  // Video keeps desc empty — its script lives in slideScript, so the real TikTok
+  // caption can be pasted without mixing with the copywriting.
   let desc='';
-  if(type==='video'){
-    desc=[
-      document.getElementById('videoBody')?.value.trim(),
-      document.getElementById('videoCta')?.value.trim()
-    ].filter(Boolean).join('\n');
-  } else if(type==='post'){
+  if(type==='post'){
     desc=document.getElementById('postText')?.value.trim()||'';
   } else if(type==='thread'){
     desc=[
@@ -3383,10 +3403,7 @@ function saveToLog(){
     if(ch.textContent.trim()===format){ch.classList.add('selected');cs['inFmt']=format;}
   });
   // Slide group + slide script visibility
-  const sg=document.getElementById('slideGroup');
-  if(sg)sg.style.display=format==='Carousel'?'':'none';
-  const ssg=document.getElementById('slideScriptGroup');
-  if(ssg)ssg.style.display=format==='Carousel'?'':'none';
+  toggleSlideGroups(format);
   // Select hook chip
   if(draftHook){
     document.querySelectorAll('#inHookChips .chip').forEach(ch=>{
