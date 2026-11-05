@@ -817,11 +817,7 @@ function renderAddChips(){
 function selChip(el,group){
   el.closest('.chip-group').querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');cs[group]=el.textContent.trim();
-  if(group==='inFmt'){
-    const isCarousel=el.textContent.trim()==='Carousel';
-    document.getElementById('slideGroup').style.display=isCarousel?'':'none';
-    const ssg=document.getElementById('slideScriptGroup');if(ssg)ssg.style.display=isCarousel?'':'none';
-  }
+  if(group==='inFmt')toggleSlideGroups(el.textContent.trim());
 }
 
 // ===== LOG =====
@@ -999,8 +995,7 @@ function openAddSheet(){
   ['inTitle','inDesc','inSlides','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const retSec=document.getElementById('retentionSectionAdd');if(retSec)retSec.innerHTML='';
   document.querySelectorAll('#sheetAdd .chip').forEach(c=>c.classList.remove('selected'));
-  cs={};backStep1();document.getElementById('slideGroup').style.display='';
-  const ssg0=document.getElementById('slideScriptGroup');if(ssg0)ssg0.style.display='none';
+  cs={};backStep1();toggleSlideGroups('');
   openSheet('sheetAdd');
 }
 async function openEditSheet(id){
