@@ -52,7 +52,7 @@
     .metric-val{font-size:14px;font-weight:600;font-family:'DM Mono',monospace}
     .metric-label{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
     .metric-val.hi{color:var(--teal)}
-    .card-actions{display:flex;gap:8px;padding:0 16px 14px}
+    .card-actions{display:flex;gap:8px;padding:0 16px 14px;flex-wrap:wrap}
     .act-btn{flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
     .act-btn:hover{background:var(--border);color:var(--text)}
     .act-btn.accent{background:var(--teal-bg);border-color:var(--teal);color:var(--teal)}
@@ -436,6 +436,7 @@
     <button class="cal-nav-btn" onclick="calPrev()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="cal-month" id="calMonthLabel"></div>
     <button class="cal-nav-btn" onclick="calNext()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <button class="bulk-topic-btn" style="margin-left:auto" onclick="openPlannerSheet()">Rencanakan Minggu</button>
   </div>
   <div class="cal-legend">
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--teal)"></div>Sudah posting</div>
@@ -486,7 +487,43 @@
     <button class="btn-secondary" onclick="exportData()"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Semua Data</span></button>
     <button class="btn-secondary" onclick="document.getElementById('importFile').click()"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Data</span></button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
+    <hr class="div"/>
+    <button class="btn-secondary" onclick="closeSheet('sheetAccounts');openSheet('sheetAI')"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/></svg> Pengaturan AI</span></button>
+    <button class="btn-secondary" onclick="closeSheet('sheetAccounts');openCompetitorSheet()"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg> Analisis Kompetitor</span></button>
   </div>
+</div>
+
+<!-- SHEET: COMPETITOR -->
+<div class="sheet-overlay" id="overlayCompetitor" onclick="closeSheet('sheetCompetitor')"></div>
+<div class="sheet" id="sheetCompetitor">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div><div class="sheet-title">Analisis Kompetitor</div><div class="sheet-sub">Paste manual temuan — tanpa scraping</div></div>
+    <button class="sheet-close" onclick="closeSheet('sheetCompetitor')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body" id="competitorBody"></div>
+</div>
+
+<!-- SHEET: LAPORAN BULANAN -->
+<div class="sheet-overlay" id="overlayReport" onclick="closeSheet('sheetReport')"></div>
+<div class="sheet" id="sheetReport">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div><div class="sheet-title">Laporan Bulanan</div><div class="sheet-sub" id="reportSub">—</div></div>
+    <button class="sheet-close" onclick="closeSheet('sheetReport')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body" id="reportBody"></div>
+</div>
+
+<!-- SHEET: RENCANA MINGGUAN -->
+<div class="sheet-overlay" id="overlayPlanner" onclick="closeSheet('sheetPlanner')"></div>
+<div class="sheet" id="sheetPlanner">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div><div class="sheet-title">Rencanakan Minggu</div><div class="sheet-sub">AI menyusun usulan jadwal</div></div>
+    <button class="sheet-close" onclick="closeSheet('sheetPlanner')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body" id="plannerBody"></div>
 </div>
 
 <!-- SHEET: ADD CONTENT -->
@@ -553,12 +590,50 @@
 </div>
 
 
+<!-- SHEET: REPURPOSE -->
+<div class="sheet-overlay" id="overlayRepurpose" onclick="closeSheet('sheetRepurpose')"></div>
+<div class="sheet" id="sheetRepurpose">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div><div class="sheet-title">Repurpose Konten</div><div class="sheet-sub" id="repurposeSub">—</div></div>
+    <button class="sheet-close" onclick="closeSheet('sheetRepurpose')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body" id="repurposeBody"></div>
+</div>
+
+<!-- SHEET: REVIEW MINGGUAN -->
+<div class="sheet-overlay" id="overlayReview" onclick="closeSheet('sheetReview')"></div>
+<div class="sheet" id="sheetReview">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div><div class="sheet-title">Review Mingguan</div><div class="sheet-sub" id="rvStepLabel">Langkah 1 dari 2 · Statistik 7 Hari</div></div>
+    <button class="sheet-close" onclick="closeSheet('sheetReview')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="sheet-body" id="reviewBody"></div>
+</div>
+
+<!-- SHEET: A/B EKSPERIMEN -->
+<div class="sheet-overlay" id="overlayAB" onclick="closeSheet('sheetAB')"></div>
+<div class="sheet" id="sheetAB">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr"><div class="sheet-title">Eksperimen A/B</div><button class="sheet-close" onclick="closeSheet('sheetAB')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="sheet-body" id="abBody"></div>
+</div>
+
 <!-- SHEET: SETTINGS -->
 <div class="sheet-overlay" id="overlaySettings" onclick="closeSheet('sheetSettings')"></div>
 <div class="sheet" id="sheetSettings">
   <div class="sheet-handle"></div>
   <div class="sheet-hdr"><div class="sheet-title">Pengaturan Akun</div><button class="sheet-close" onclick="closeSheet('sheetSettings')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="sheet-body" id="settingsBody"></div>
+</div>
+
+<!-- SHEET: AI SETTINGS -->
+<div class="sheet-overlay" id="overlayAI" onclick="closeSheet('sheetAI')"></div>
+<div class="sheet" id="sheetAI">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr"><div class="sheet-title">Pengaturan AI</div><button class="sheet-close" onclick="closeSheet('sheetAI')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="sheet-body" id="aiBody"></div>
 </div>
 
 <!-- SHEET: TIKTOK CSV IMPORT REVIEW -->
@@ -577,12 +652,13 @@
 let db;
 function initDB(){
   return new Promise((res,rej)=>{
-    const r=indexedDB.open('KontenAnalyzerDB',1);
+    const r=indexedDB.open('KontenAnalyzerDB',2);
     r.onupgradeneeded=e=>{
       const d=e.target.result;
       if(!d.objectStoreNames.contains('accounts')) d.createObjectStore('accounts',{keyPath:'id'});
       if(!d.objectStoreNames.contains('contents')){const s=d.createObjectStore('contents',{keyPath:'id'});s.createIndex('accountId','accountId',{unique:false});}
       if(!d.objectStoreNames.contains('audience')){const s=d.createObjectStore('audience',{keyPath:'id'});s.createIndex('accountId','accountId',{unique:false});}
+      if(!d.objectStoreNames.contains('competitors')){const s=d.createObjectStore('competitors',{keyPath:'id'});s.createIndex('accountId','accountId',{unique:false});}
     };
     r.onsuccess=e=>{db=e.target.result;res(db);};
     r.onerror=()=>rej(r.error);
@@ -598,6 +674,8 @@ const dbDel=(s,k)=>new Promise((res,rej)=>{const r=db.transaction(s,'readwrite')
 let cur=null; // current account
 let cs={}; // chip state
 let editingId=null; // id konten yang sedang diedit
+let contentOrigin=null; // asal konten saat disimpan (mis. hasil repurpose)
+let draftOrigin=null; // asal draft yang menunggu disimpan lewat "Simpan ke Log"
 let slideCount=3;
 let obTopics=[];
 let obPlatform='';
@@ -651,13 +729,13 @@ function onNicheType(){
 }
 async function genTopics(niche){
   document.getElementById('obTopicArea').style.display='';
+  const fallback=['Tips & trik','Tutorial','Review','Edukasi','Mitos vs fakta','Behind the scene','Produk','Q&A'];
   document.getElementById('obTopicChips').innerHTML='<div style="color:var(--text-3);font-size:12px;font-family:\'DM Mono\',monospace" class="ai-thinking">Generating topik...</div>';
-  try{
-    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'Jawab hanya dengan JSON array string tanpa penjelasan atau markdown.',messages:[{role:'user',content:`Berikan 8 topik konten untuk niche "${niche}" di social media. Format: ["topik1","topik2",...]. Hanya JSON.`}]})});
-    const data=await res.json();
-    try{obTopics=JSON.parse(data.text.replace(/```json|```/g,'').trim());}
-    catch{obTopics=['Tips & trik','Tutorial','Review','Edukasi','Mitos vs fakta','Behind the scene','Produk','Q&A'];}
-  }catch{obTopics=['Tips & trik','Tutorial','Review','Edukasi','Mitos vs fakta','Behind the scene','Produk','Q&A'];}
+  const r=await callAI({system:'Jawab hanya dengan JSON array string tanpa penjelasan atau markdown.',messages:[{role:'user',content:`Berikan 8 topik konten untuk niche "${niche}" di social media. Format: ["topik1","topik2",...]. Hanya JSON.`}]});
+  try{obTopics=JSON.parse(stripAiMarkdown(r.text));}
+  catch{obTopics=[...fallback];}
+  if(!r.ok){obTopics=[...fallback];showToast('AI gagal: '+r.error+' — pakai topik default');}
+  if(r.ok&&!Array.isArray(obTopics))obTopics=[...fallback];
   renderObTopics();
 }
 function renderObTopics(){
@@ -898,6 +976,8 @@ function renderContentList(list, avgView, avgSave, retStats){
       <div class="card-actions">
         <button class="act-btn" onclick="openEditSheet('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
         <button class="act-btn accent" onclick="openPerfSheet('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>${hp?'Update':'Performa'}</button>
+        <button class="act-btn" onclick="openRepurposeSheet('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Repurpose</button>
+        ${hp?`<button class="act-btn" onclick="openABSheet('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>A/B</button>`:''}
         <button class="act-btn danger" onclick="delContent('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Hapus</button>
       </div>
     </div>`;
@@ -908,6 +988,8 @@ function renderContentList(list, avgView, avgSave, retStats){
 function openAddSheet(){
   if(!cur){showToast('Pilih akun dulu');return;}
   editingId=null;
+  contentOrigin=null;
+  draftOrigin=null;
   document.getElementById('addSheetTitle').textContent='Tambah Konten';
   const today=new Date().toISOString().split('T')[0];
   const dateEl=document.getElementById('inDateHidden');
@@ -924,6 +1006,8 @@ async function openEditSheet(id){
   const c=await dbGet('contents',id);
   if(!c){showToast('Konten tidak ditemukan');return;}
   editingId=id;
+  contentOrigin=c.origin||null;
+  draftOrigin=null;
   const setVal=(elId,val)=>{const el=document.getElementById(elId);if(el)el.value=val||'';};
   document.getElementById('addSheetTitle').textContent='Edit Konten';
   // Reset chips
@@ -993,7 +1077,7 @@ function buildRetentionFromForm(prefix, format){
   return{};
 }
 function buildContent(withPerf){
-  return{
+  const content={
     id:editingId||Date.now().toString(),
     accountId:cur.id,
     title:document.getElementById('inTitle').value.trim(),
@@ -1011,9 +1095,11 @@ function buildContent(withPerf){
     perf:withPerf?{view:parseInt(document.getElementById('inView').value)||0,like:parseInt(document.getElementById('inLike').value)||0,save:parseInt(document.getElementById('inSave').value)||0,comment:parseInt(document.getElementById('inComment').value)||0,share:parseInt(document.getElementById('inShare').value)||0,follower:parseInt(document.getElementById('inFollower').value)||0}:null,
     createdAt:new Date().toISOString()
   };
+  if(contentOrigin)content.origin=contentOrigin;
+  return content;
 }
-async function saveAsDraft(){if(!document.getElementById('inTitle').value.trim()){showToast('Isi judul dulu ya');return;}await dbPut('contents',buildContent(false));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;}
-async function saveContentFull(){await dbPut('contents',buildContent(true));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;}
+async function saveAsDraft(){if(!document.getElementById('inTitle').value.trim()){showToast('Isi judul dulu ya');return;}await dbPut('contents',buildContent(false));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;}
+async function saveContentFull(){await dbPut('contents',buildContent(true));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;}
 
 // ===== PERFORMA =====
 async function openPerfSheet(id){
@@ -1157,6 +1243,125 @@ async function savePerf(){
   await dbPut('contents',c);closeSheet('sheetPerf');await renderLog();await renderInsight();showToast('Performa diperbarui ✓');
 }
 async function delContent(id){if(!confirm('Hapus konten ini?'))return;await dbDel('contents',id);await renderLog();await renderInsight();showToast('Dihapus');}
+
+// ===== REPURPOSE =====
+let repurposeSourceId=null, repurposeTarget='', repurposeFields=null;
+
+async function openRepurposeSheet(id){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const c=await dbGet('contents',id);
+  if(!c){showToast('Konten tidak ditemukan');return;}
+  repurposeSourceId=id;repurposeTarget='';repurposeFields=null;
+  const targets=DRAFT_TABS[cur.platform]||['carousel','video'];
+  document.getElementById('repurposeSub').textContent=c.title||'(Tanpa judul)';
+  document.getElementById('repurposeBody').innerHTML=`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">${escapeHtml(c.title||'(Tanpa judul)')}</div>
+      <div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${escapeHtml(c.format||'—')} · ${escapeHtml(c.hook||'—')} · ${escapeHtml(c.topic||'—')}${c.perf&&c.perf.view?` · ${fmt(c.perf.view)} view · ${c.perf.save} save`:''}</div>
+    </div>
+    <div class="form-group"><label class="form-label">Format Tujuan</label><div class="chip-group" id="repurposeTargetChips">${targets.map(t=>`<div class="chip" data-target="${t}" onclick="selectRepurposeTarget(this)">${DRAFT_TAB_LABELS[t]||t}</div>`).join('')}</div></div>
+    <button class="btn-primary" id="repurposeConvertBtn" onclick="convertRepurpose()">Convert</button>
+    <div id="repurposeResult"></div>`;
+  openSheet('sheetRepurpose');
+}
+
+function selectRepurposeTarget(btn){
+  document.querySelectorAll('#repurposeTargetChips .chip').forEach(ch=>ch.classList.remove('selected'));
+  btn.classList.add('selected');
+  repurposeTarget=btn.dataset.target||'';
+}
+
+function repurposeRule(target){
+  const isX=cur.platform==='X';
+  const limit=isX?280:500;
+  if(target==='post')return`Post ${cur.platform}: maks ${limit} karakter.`;
+  if(target==='thread')return`Thread ${cur.platform}: 3-7 tweet. Setiap tweet maks ${limit} karakter. open = tweet pertama, body = array tweet tengah, close = tweet terakhir.`;
+  if(target==='carousel')return'Carousel: 4-8 slide. Slide 1 = hook kuat, slide tengah = isi, slide terakhir = CTA.';
+  if(target==='video')return'Video: hook (0-3 detik) + body + CTA.';
+  if(target==='foto')return'Foto: caption + deskripsi visual + CTA + hashtag.';
+  return'';
+}
+
+function repurposeSchema(target){
+  if(target==='post')return'{"fields":{"text":""}}';
+  if(target==='thread')return'{"fields":{"open":"","body":["",""],"close":""}}';
+  if(target==='carousel')return'{"fields":{"title":"","slides":["","",""]}}';
+  if(target==='video')return'{"fields":{"hook":"","body":"","cta":""}}';
+  if(target==='foto')return'{"fields":{"caption":"","visual":"","cta":"","hashtag":""}}';
+  return'{"fields":{}}';
+}
+
+async function convertRepurpose(){
+  if(!repurposeTarget){showToast('Pilih format tujuan dulu');return;}
+  const c=await dbGet('contents',repurposeSourceId);
+  if(!c){showToast('Konten sumber tidak ditemukan');return;}
+  const btn=document.getElementById('repurposeConvertBtn');
+  const box=document.getElementById('repurposeResult');
+  if(btn){btn.disabled=true;btn.textContent='⟳ Mengonversi...';}
+  box.innerHTML='<div class="insight-card"><div class="insight-text ai-thinking" style="color:var(--text-3)">AI sedang mengubah konten ke format tujuan...</div></div>';
+  const tags=c.aiTags?`${c.aiTags.emotion||'—'}/${c.aiTags.style||'—'}${c.aiTags.reason?` — ${c.aiTags.reason}`:''}`:'—';
+  const source=`Judul: ${c.title||'—'}\nDeskripsi/Caption: ${c.desc||'—'}\nNaskah slide: ${c.slideScript||'—'}\nHook: ${c.hook||'—'}\nStruktur: ${c.struct||'—'}\nTopik: ${c.topic||'—'}\nMetrik: ${c.perf&&c.perf.view?`${fmt(c.perf.view)} view, ${c.perf.save} save, ${c.perf.like} like`:'belum ada'}\nLabel klasifikasi: ${tags}`;
+  const prompt=`Platform: ${cur.platform}\nNiche: ${cur.niche}\n\nKonten sumber:\n${source}\n\nUbah konten di atas menjadi format "${DRAFT_TAB_LABELS[repurposeTarget]||repurposeTarget}".\nAturan: ${repurposeRule(repurposeTarget)}\n\nJawab HANYA JSON valid tanpa markdown dengan bentuk:\n${repurposeSchema(repurposeTarget)}\nIsi semua field dengan bahasa yang sesuai niche dan platform.`;
+  try{
+    const r=await callAI({system:`Kamu adalah content repurposer untuk ${cur.platform} niche "${cur.niche}". Pertahankan inti pesan, sesuaikan dengan aturan format tujuan. Jawab HANYA JSON valid.`,messages:[{role:'user',content:prompt}],maxTokens:2048});
+    if(!r.ok){box.innerHTML=`<div class="insight-card"><div class="insight-text" style="color:var(--red)">⚠️ ${escapeHtml(r.error)}</div></div>`;return;}
+    let parsed;
+    try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{showToast('Gagal parse respons AI');box.innerHTML='<div class="info-box">Respons AI tidak valid. Coba lagi.</div>';return;}
+    const fields=parsed&&parsed.fields?parsed.fields:null;
+    if(!fields||typeof fields!=='object'||Array.isArray(fields)){showToast('Respons AI kosong');box.innerHTML='<div class="info-box">Respons AI tidak berisi field yang valid. Coba lagi.</div>';return;}
+    repurposeFields=fields;
+    renderRepurposeResult(fields);
+  }catch{
+    box.innerHTML='<div class="insight-card"><div class="insight-text" style="color:var(--red)">Gagal terhubung ke AI. Cek koneksi internet.</div></div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Convert';}
+  }
+}
+
+function repurposeFieldLabel(key){
+  return{title:'Judul / Hook',slides:'Isi Slide',hook:'Hook (0-3 detik)',body:'Isi',cta:'CTA',caption:'Caption',visual:'Deskripsi Visual',hashtag:'Hashtag',text:'Teks Post',open:'Opening',close:'Closing'}[key]||key;
+}
+
+function renderRepurposeResult(fields){
+  const rows=Object.entries(fields).map(([k,v])=>{
+    const val=Array.isArray(v)?v.map((item,i)=>`${i+1}. ${item}`).join('\n'):String(v??'');
+    return`<div class="form-group"><label class="form-label">${escapeHtml(repurposeFieldLabel(k))}</label><div class="insight-text" style="white-space:pre-wrap;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px">${escapeHtml(val)}</div></div>`;
+  }).join('');
+  document.getElementById('repurposeResult').innerHTML=`<div class="sec-hdr" style="margin-top:16px"><span class="sec-title">Hasil Repurpose</span></div><div class="insight-card">${rows}</div><button class="btn-primary" onclick="fillRepurposeDraft()">Isi ke Draft</button>`;
+}
+
+function fillRepurposeDraft(){
+  if(!repurposeFields){showToast('Convert dulu sebelum mengisi draft');return;}
+  const fields=repurposeFields,target=repurposeTarget,sourceId=repurposeSourceId;
+  closeSheet('sheetRepurpose');
+  const navBtn=document.querySelector('.nav-item[onclick*="Draft"]');
+  switchView('Draft',navBtn);
+  const tabBtn=[...document.querySelectorAll('#draftTabBar .tab')].find(b=>b.textContent.trim()===(DRAFT_TAB_LABELS[target]||target));
+  switchDraftTab(target,tabBtn||null);
+  const setVal=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=Array.isArray(val)?val.join('\n\n'):String(val);};
+  if(target==='carousel'){
+    setVal('draftTitle',fields.title);
+    const slides=Array.isArray(fields.slides)?fields.slides:[];
+    const cont=document.getElementById('slidesContainer');
+    if(cont&&slides.length){
+      cont.innerHTML=slides.map((s,i)=>`<div class="slide-wrap"><span class="slide-num">S${i+1}</span><textarea class="slide-inp">${escapeHtml(s)}</textarea></div>`).join('');
+      slideCount=slides.length;
+    }
+  } else if(target==='video'){
+    setVal('videoHook',fields.hook);setVal('videoBody',fields.body);setVal('videoCta',fields.cta);
+  } else if(target==='foto'){
+    setVal('fotoCaption',fields.caption);setVal('fotoVisual',fields.visual);setVal('fotoCta',fields.cta);setVal('fotoHashtag',fields.hashtag);
+  } else if(target==='post'){
+    setVal('postText',fields.text);
+    const ta=document.getElementById('postText');
+    if(ta)ta.dispatchEvent(new Event('input'));
+  } else if(target==='thread'){
+    setVal('threadOpen',fields.open);setVal('threadBody',fields.body);setVal('threadClose',fields.close);
+  }
+  draftOrigin='repurposed:'+sourceId;
+  contentOrigin=null;
+  showToast('Draft terisi — validasi lalu Simpan ke Log');
+}
 
 // ===== TIKTOK CSV IMPORT =====
 const TT_MONTHS={
@@ -2074,21 +2279,39 @@ async function renderInsight(){
   const avgSaveVal=(live.reduce((s,c)=>s+c.perf.save,0)/live.length).toFixed(1);
   const warnings=buildDataWarnings(all,live);
   const warningHtml=renderWarnings(warnings);
+  const personas=await dbByIdx('audience','accountId',cur.id);
+  const personaKicker=(!cur.positioning||!cur.positioning.audience)&&!personas.length
+    ?`<div class="info-box" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span>Isi persona → AI lebih akurat</span><button class="copy-btn" onclick="openSheet('sheetSettings')">Isi Persona</button></div>`
+    :'';
   // Store plain text version for copy
   window._insightText=buildInsightText(live, cur, avgViewVal, avgSaveVal, topFmt);
   document.getElementById('insightBody').innerHTML=`
+    ${personaKicker}
     ${warningHtml}
     <div class="copy-bar">
       <span class="sec-title">Tren Performa</span>
-      <button class="copy-btn" id="copyInsightBtn" onclick="copyInsightResult()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-        Copy Insight
-      </button>
+      <div style="display:flex;gap:6px">
+        <button class="copy-btn" id="narrativeBtn" onclick="generateNarrative()"><span style="font-size:12px">✦</span> Narasi AI</button>
+        <button class="copy-btn" id="reportBtn" onclick="openReportSheet()">Export Laporan</button>
+        <button class="copy-btn" id="copyInsightBtn" onclick="copyInsightResult()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy Insight
+        </button>
+      </div>
     </div>
+    <div id="narrativeResult"></div>
     ${chartHtml}
     <div style="height:4px"></div>
-    <div class="sec-hdr"><span class="sec-title">Pattern</span></div>
+    <div class="sec-hdr"><span class="sec-title">Pattern</span><button class="bulk-topic-btn" onclick="openReviewSheet()">Review Mingguan</button></div>
     ${buildPatterns(live).map(p=>`<div class="insight-card"><div class="insight-hdr"><span class="insight-icon">${p.icon}</span><span class="insight-title">${p.title}</span></div><div class="insight-text">${p.text}</div></div>`).join('')}
+    <div style="height:4px"></div>
+    <div class="sec-hdr"><span class="sec-title">Klasifikasi Dalam</span><button class="bulk-topic-btn" id="bulkClassifyBtn" onclick="bulkClassify()">✦ Label Klasifikasi</button></div>
+    <div id="bulkClassifyStatus" style="display:none;margin-bottom:8px"></div>
+    <div class="sec-hdr"><span class="sec-title">Per Emosi Hook</span></div>
+    <div class="card"><div class="card-body">${aggregateByPath(live,'aiTags.emotion')}</div></div>
+    <div style="height:4px"></div>
+    <div class="sec-hdr"><span class="sec-title">Per Gaya Bahasa</span></div>
+    <div class="card"><div class="card-body">${aggregateByPath(live,'aiTags.style')}</div></div>
     <div style="height:4px"></div>
     <div class="sec-hdr"><span class="sec-title">Per Tipe Hook</span></div>
     <div class="card"><div class="card-body">${buildTable(live,'hook')}</div></div>
@@ -2096,9 +2319,10 @@ async function renderInsight(){
     <div class="sec-hdr"><span class="sec-title">Per Struktur</span></div>
     <div class="card"><div class="card-body">${buildTable(live,'struct')}</div></div>
     <div style="height:4px"></div>
-    <div class="sec-hdr"><span class="sec-title">Per Topik</span><button class="bulk-topic-btn" id="bulkTopicBtn" onclick="bulkAutoTopic()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>✦ Auto Topik Massal</button></div>
+    <div class="sec-hdr"><span class="sec-title">Per Topik</span><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="bulk-topic-btn" id="gapIdeasBtn" onclick="generateGapIdeas()"><span style="font-size:12px">✦</span> Ide dari Gap</button><button class="bulk-topic-btn" id="bulkTopicBtn" onclick="bulkAutoTopic()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>✦ Auto Topik Massal</button></div></div>
     <div id="bulkTopicStatus" style="display:none;margin-bottom:8px"></div>
-    <div class="card"><div class="card-body">${buildTable(live,'topic')}</div></div>`;
+    <div class="card"><div class="card-body">${buildTable(live,'topic')}</div></div>
+    <div id="gapIdeas"></div>`;
 }
 function buildLineChart(live){
   if(live.length<2)return'<div class="chart-wrap"><div style="color:var(--text-3);font-size:13px;text-align:center;padding:20px 0">Butuh minimal 2 konten live untuk menampilkan grafik.</div></div>';
@@ -2197,6 +2421,491 @@ function buildPatterns(live){
 function buildTable(live,key){
   const map={};live.forEach(c=>{const k=c[key]||'—';if(!map[k])map[k]={v:0,s:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].n++;});
   return Object.entries(map).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).map(([k,d])=>`<div class="pat-row"><div><div class="pat-label">${k}</div><div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${d.n}x konten</div></div><div class="pat-val">${fmt(Math.round(d.v/d.n))} view<br><span style="color:var(--text-3);font-weight:400">${(d.s/d.n).toFixed(1)} save avg</span></div></div>`).join('')||'<div style="color:var(--text-3);font-size:13px">Belum ada data</div>';
+}
+
+function aggregateByPath(list,path){
+  const map={};
+  list.forEach(c=>{const k=path.split('.').reduce((o,key)=>(o!=null&&o[key]!=null?o[key]:undefined),c)||'—';if(!map[k])map[k]={v:0,s:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].n++;});
+  return Object.entries(map).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).map(([k,d])=>`<div class="pat-row"><div><div class="pat-label">${escapeHtml(k)}</div><div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${d.n}x konten</div></div><div class="pat-val">${fmt(Math.round(d.v/d.n))} view<br><span style="color:var(--text-3);font-weight:400">${(d.s/d.n).toFixed(1)} save avg</span></div></div>`).join('')||'<div style="color:var(--text-3);font-size:13px">Belum ada data</div>';
+}
+
+function buildPatternSummary(live){
+  if(!live||live.length<2)return'';
+  function aggBy(key){
+    const map={};
+    live.forEach(c=>{const k=c[key]||'—';if(!map[k])map[k]={v:0,s:0,l:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].l+=c.perf.like;map[k].n++;});
+    return Object.entries(map).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n))
+      .map(([k,d])=>`  ${k} (${d.n}x): avg view ${Math.round(d.v/d.n)}, avg save ${(d.s/d.n).toFixed(1)}, avg like ${(d.l/d.n).toFixed(1)}`).join('\n');
+  }
+  const avgView=Math.round(live.reduce((s,c)=>s+c.perf.view,0)/live.length);
+  const avgSave=(live.reduce((s,c)=>s+c.perf.save,0)/live.length).toFixed(1);
+  const retByHook={};
+  live.filter(c=>c.retention?.compRate>0).forEach(c=>{const k=c.hook||'—';if(!retByHook[k])retByHook[k]={s:0,n:0};retByHook[k].s+=c.retention.compRate;retByHook[k].n++;});
+  const retHookStr=Object.entries(retByHook).length
+    ?Object.entries(retByHook).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).map(([k,d])=>`  ${k}: avg completion ${(d.s/d.n).toFixed(1)}%`).join('\n')
+    :'  Belum ada data retention.';
+  return`\nPattern histori akun (pre-calculated):\nRata-rata keseluruhan: ${avgView} view, ${avgSave} save\nPer tipe hook (diurutkan avg save):\n${aggBy('hook')}\nPer struktur:\n${aggBy('struct')}\nPer topik:\n${aggBy('topic')}\nRetention per hook:\n${retHookStr}\n`;
+}
+
+function generateNarrativePrompt({cur,live,all,contextBlock}){
+  const ret=buildRetentionInsight(live);
+  const warnings=buildDataWarnings(all,live).map(w=>`- ${w.title}: ${w.text}`).join('\n')||'- Tidak ada masalah data.';
+  const best=[...live].sort((a,b)=>b.perf.view-a.perf.view).slice(0,5).map(c=>`- "${c.title||'Tanpa judul'}" (${fmt(c.perf.view)} view, ${c.perf.save} save, hook: ${c.hook||'—'}, topik: ${c.topic||'—'}, tags: ${c.aiTags?.emotion||'—'}/${c.aiTags?.style||'—'}${c.aiTags?.reason?` — ${c.aiTags.reason}`:''})`).join('\n');
+  return`Platform: ${cur.platform}\nNiche: ${cur.niche}${contextBlock||''}\nJumlah konten live: ${live.length}\n\n${buildPatternSummary(live)}\nRetention agregat: ${ret?JSON.stringify(ret):'Belum ada data retention.'}\nFilter kualitas data:\n${warnings}\n\n5 konten terbaik:\n${best}\n\nTulis narasi insight dengan format TEPAT:\n1. Kondisi umum — gambaran singkat performa akun.\n2. Yang terbukti bekerja — sebut angka konkret dari histori.\n3. Signal bahaya — pola yang melemahkan performa.\n4. Satu fokus minggu ini — satu tindakan konkret saja.\nSesuaikan bahasa dengan posisi brand & persona di atas bila ada.\n\nJangan pakai judul markdown; tulis paragraf pendek per bagian. Bahasa Indonesia, jujur, actionable.`;
+}
+
+async function generateNarrative(){
+  if(!cur)return;
+  const btn=document.getElementById('narrativeBtn');
+  const box=document.getElementById('narrativeResult');
+  if(!box)return;
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const live=all.filter(c=>c.perf&&c.perf.view>0);
+  if(live.length<3){showToast('Butuh minimal 3 konten live');return;}
+  const orig=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.textContent='⟳ Menulis...';}
+  box.innerHTML='<div class="insight-card"><div class="insight-text ai-thinking" style="color:var(--text-3)">AI sedang menyusun narasi dari histori akun...</div></div>';
+  try{
+    const contextBlock=await buildContextBlock(cur);
+    const lastReview=cur.reviews&&cur.reviews.length?cur.reviews[cur.reviews.length-1]:null;
+    const reviewCtx=lastReview?` Keputusan review lalu (${lastReview.date}): keep=${(lastReview.kept||[]).join(', ')||'—'}; stop=${(lastReview.stopped||[]).join(', ')||'—'}; iterate=${(lastReview.iterate||[]).join(', ')||'—'}. Pertimbangkan keputusan strategi ini.`:'';
+    const r=await callAI({system:`Kamu adalah analis konten ${cur.platform} untuk niche "${cur.niche}". Bukan saran generik — sebut angka dari histori akun ini. Jawab bahasa Indonesia, singkat, jujur, dan actionable.${reviewCtx}`,messages:[{role:'user',content:generateNarrativePrompt({cur,live,all,contextBlock})}],maxTokens:2048});
+    if(!r.ok){
+      box.innerHTML=`<div class="insight-card"><div class="insight-text" style="color:var(--red)">⚠️ ${escapeHtml(r.error)}</div></div>`;
+      return;
+    }
+    const raw=r.text||'';
+    window._narrativeText=raw;
+    const html=escapeHtml(raw).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    box.innerHTML=`<div class="insight-card"><div class="insight-hdr"><span class="insight-icon">✦</span><span class="insight-title">Narasi AI</span></div><div class="insight-text" style="white-space:pre-wrap;line-height:1.7">${html}</div><div style="margin-top:10px"><button class="copy-btn" id="copyNarrativeBtn" onclick="copyNarrativeResult()">${copyIcon()} Copy Narasi</button></div></div>`;
+  }catch{
+    box.innerHTML='<div class="insight-card"><div class="insight-text" style="color:var(--red)">Gagal terhubung ke AI. Cek koneksi internet.</div></div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML=orig||'<span style="font-size:12px">✦</span> Narasi AI';}
+  }
+}
+
+function copyIcon(){
+  return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+}
+
+function copyNarrativeResult(){
+  copyToClipboard(window._narrativeText||'','copyNarrativeBtn');
+}
+
+function renderGapIdeaCard(item,kind,score,maxScore){
+  const topic=item&&item.topic?item.topic:'—';
+  const reason=item&&item.reason?item.reason:'';
+  const extra=kind==='newIdeas'?(item&&item.angle||''):(kind==='underproduced'?(item&&item.evidence||''):'');
+  const why=item&&item.why?item.why:'';
+  const icon=kind==='newIdeas'?'✦':kind==='underproduced'?'↗':'▼';
+  const scoreHtml=(score!=null&&maxScore)?`<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-family:'DM Mono',monospace"><span>Skor prioritas</span><span>${score.toFixed(2)}</span></div><div style="height:4px;background:var(--border);border-radius:2px;margin-top:3px"><div style="width:${Math.max(2,Math.round(score/maxScore*100))}%;height:4px;background:var(--teal);border-radius:2px"></div></div></div>`:'';
+  return`<div class="insight-card"><div class="insight-hdr"><span class="insight-icon">${icon}</span><span class="insight-title">${escapeHtml(topic)}</span></div>${reason?`<div class="insight-text">${escapeHtml(reason)}</div>`:''}${extra?`<div class="insight-text" style="color:var(--text-3);font-size:12px;margin-top:4px">${escapeHtml(extra)}</div>`:''}${why?`<div class="insight-text" style="color:var(--text-3);font-size:12px;margin-top:4px">${escapeHtml(why)}</div>`:''}${scoreHtml}<div style="margin-top:10px"><button class="bulk-topic-btn" data-topic="${escapeHtml(topic)}" onclick="addGapIdeaTopic(this.dataset.topic,this)">+ ke Topik</button></div></div>`;
+}
+
+function buildTopicStats(live){
+  const map={};
+  live.forEach(c=>{const k=c.topic||'—';if(!map[k])map[k]={v:0,s:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].n++;});
+  const stats={};
+  let maxView=0,maxSave=0;
+  Object.entries(map).forEach(([k,d])=>{const avgView=d.v/d.n,avgSave=d.s/d.n;stats[k]={avgView,avgSave,count:d.n};if(avgView>maxView)maxView=avgView;if(avgSave>maxSave)maxSave=avgSave;});
+  stats._maxView=maxView||1;
+  stats._maxSave=maxSave||1;
+  return stats;
+}
+
+function ideaScore(topic,kind,stats,w){
+  const st=stats&&stats[topic];
+  const saveScore=st?st.avgSave/stats._maxSave:0;
+  const viewScore=st?st.avgView/stats._maxView:0;
+  let gapScore;
+  if(st)gapScore=st.count<=2?1:0.3;
+  else gapScore=kind==='newIdeas'?1:0.6;
+  return saveScore*((w&&w.save)!=null?w.save:1)+viewScore*((w&&w.awareness)!=null?w.awareness:1)+gapScore*((w&&w.jualan)!=null?w.jualan:1);
+}
+
+function prWeightChipsHtml(){
+  if(!cur)return'';
+  const w=cur.prWeights||{jualan:1,awareness:1,save:1};
+  const balanced=!!(w.jualan&&w.awareness&&w.save);
+  return`<div class="chip-group" style="margin-bottom:10px">
+    <span style="font-size:11px;color:var(--text-3);align-self:center;font-family:'DM Mono',monospace">Prioritas:</span>
+    ${[['jualan','Jualan'],['awareness','Awareness'],['save','Save']].map(([k,label])=>`<div class="chip ${w[k]&&!balanced?'selected':''}" onclick="setPrWeight('${k}')">${label}</div>`).join('')}
+  </div>`;
+}
+
+async function setPrWeight(key){
+  if(!cur)return;
+  const w=cur.prWeights||{jualan:1,awareness:1,save:1};
+  const balanced=!!(w.jualan&&w.awareness&&w.save);
+  if(balanced)cur.prWeights={jualan:0,awareness:0,save:0,[key]:1};
+  else if(w[key])cur.prWeights={jualan:1,awareness:1,save:1};
+  else cur.prWeights={jualan:0,awareness:0,save:0,[key]:1};
+  await dbPut('accounts',cur);
+  if(lastGapIdeas){const box=document.getElementById('gapIdeas');if(box)await renderGapIdeasResults(lastGapIdeas,box);}
+  if(lastCompetitorOpps){const box=document.getElementById('competitorCompareResult');if(box)await renderCompetitorOpps(lastCompetitorOpps,box);}
+}
+
+let lastGapIdeas=null,lastCompetitorOpps=null;
+
+async function renderGapIdeasResults(parsed,box){
+  if(!box)return;
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const live=all.filter(c=>c.perf&&c.perf.view>0);
+  const stats=buildTopicStats(live);
+  const w=cur.prWeights||{jualan:1,awareness:1,save:1};
+  const groups=[
+    {key:'underproduced',title:'Kurang Diproduksi'},
+    {key:'deprioritize',title:'Deprioritaskan'},
+    {key:'newIdeas',title:'Ide Baru'},
+  ];
+  let html=prWeightChipsHtml();
+  let any=false;
+  for(const g of groups){
+    const items=Array.isArray(parsed[g.key])?parsed[g.key]:[];
+    if(!items.length)continue;
+    any=true;
+    const scored=items.map(item=>({item,score:ideaScore(item&&item.topic,g.key,stats,w)})).sort((a,b)=>b.score-a.score);
+    const maxScore=Math.max(...scored.map(x=>x.score),0.0001);
+    html+=`<div class="sec-hdr" style="margin-top:14px"><span class="sec-title">${g.title}</span><span style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${items.length} saran</span></div>`+scored.map(({item,score})=>renderGapIdeaCard(item,g.key,score,maxScore)).join('');
+  }
+  box.innerHTML=any?html:'<div class="info-box">AI tidak memberi saran. Coba lagi.</div>';
+}
+
+// ===== KOMPETITOR =====
+let editingCompetitorId=null;
+
+function compSnippetRow(){
+  return`<div class="comp-snippet-row" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;margin-bottom:8px">
+    <input type="text" class="form-input comp-snip-title" placeholder="Judul konten / temuan" style="margin-bottom:6px"/>
+    <textarea class="form-input comp-snip-desc" placeholder="Deskripsi: hook, angle, hasil yang terlihat..." style="min-height:50px"></textarea>
+  </div>`;
+}
+function addCompSnippet(){
+  const box=document.getElementById('compSnippets');
+  if(box)box.insertAdjacentHTML('beforeend',compSnippetRow());
+}
+async function openCompetitorSheet(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  editingCompetitorId=null;
+  const list=await dbByIdx('competitors','accountId',cur.id);
+  const cards=list.map(c=>`
+    <div class="insight-card">
+      <div class="insight-hdr"><span class="insight-icon">🎯</span><span class="insight-title">${escapeHtml(c.name)}</span></div>
+      ${c.summary&&c.summary.positioning?`<div class="insight-text" style="font-size:12px;color:var(--text-2)">${escapeHtml(c.summary.positioning)}</div>`:''}
+      ${c.summary&&c.summary.hooksPatterns&&c.summary.hooksPatterns.length?`<div style="font-size:11px;color:var(--text-3);margin-top:6px;font-family:'DM Mono',monospace">Hook: ${escapeHtml(c.summary.hooksPatterns.join(' · '))}</div>`:''}
+      ${c.summary&&c.summary.contentGaps&&c.summary.contentGaps.length?`<div style="font-size:11px;color:var(--text-3);margin-top:4px;font-family:'DM Mono',monospace">Gap: ${escapeHtml(c.summary.contentGaps.join(' · '))}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="bulk-topic-btn" onclick="compareCompetitor('${c.id}')">Bandingkan dengan Akunku</button>
+        <button class="copy-btn" onclick="reanalyzeCompetitor('${c.id}')">Analisis Ulang</button>
+        <button class="copy-btn" style="color:var(--red)" onclick="deleteCompetitor('${c.id}')">Hapus</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('competitorBody').innerHTML=`
+    ${cards||'<div style="color:var(--text-3);font-size:12px;margin-bottom:12px">Belum ada kompetitor. Paste temuan manual di bawah — tidak ada scraping.</div>'}
+    <div class="sec-title" style="margin:14px 0 10px;display:block">Tambah Kompetitor</div>
+    <div class="form-group"><label class="form-label">Nama Kompetitor</label><input type="text" class="form-input" id="compName" placeholder="Misal: akun kompetitor utama"/></div>
+    <div class="form-group"><label class="form-label">URL <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional)</span></label><input type="text" class="form-input" id="compUrl" placeholder="https://..."/></div>
+    <div class="form-group"><label class="form-label">Snippet Temuan <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(paste manual)</span></label>
+      <div id="compSnippets">${compSnippetRow()}</div>
+      <button class="btn-secondary" onclick="addCompSnippet()">+ Tambah Snippet</button>
+    </div>
+    <button class="btn-primary" id="compSaveBtn" onclick="saveCompetitorAnalysis()">Simpan & Analisis</button>
+    <div id="competitorCompareResult"></div>`;
+  openSheet('sheetCompetitor');
+}
+async function requestCompetitorSummary(name,snippets){
+  const snippetText=snippets.map((s,i)=>`${i+1}. ${s.title||'(tanpa judul)'}${s.desc?' — '+s.desc:''}`).join('\n');
+  const prompt=`Nama kompetitor: ${name}\nNiche akun kita: ${cur.niche} · Platform: ${cur.platform}\n\nSnippet temuan manual (hasil observasi konten kompetitor):\n${snippetText}\n\nAnalisis kompetitor di atas. Kembalikan HANYA JSON valid tanpa markdown:\n{"positioning":"posisi brand kompetitor dalam 1-2 kalimat","hooksPatterns":["pola hook yang dipakai"],"contentGaps":["topik yang belum dibahas"]}`;
+  const r=await callAI({system:'Kamu adalah analis kompetitor konten. Jawab HANYA JSON valid tanpa markdown.',messages:[{role:'user',content:prompt}],maxTokens:1024});
+  if(!r.ok){showToast('AI gagal: '+r.error);return null;}
+  let parsed;
+  try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{showToast('Gagal parse respons AI');return null;}
+  return{
+    positioning:String(parsed.positioning||''),
+    hooksPatterns:Array.isArray(parsed.hooksPatterns)?parsed.hooksPatterns.map(String):[],
+    contentGaps:Array.isArray(parsed.contentGaps)?parsed.contentGaps.map(String):[],
+  };
+}
+async function saveCompetitorAnalysis(){
+  if(!cur)return;
+  const name=document.getElementById('compName')?.value.trim();
+  if(!name){showToast('Isi nama kompetitor dulu');return;}
+  const snippets=[...document.querySelectorAll('#compSnippets .comp-snippet-row')].map(r=>({
+    title:r.querySelector('.comp-snip-title')?.value.trim()||'',
+    desc:r.querySelector('.comp-snip-desc')?.value.trim()||'',
+  })).filter(s=>s.title||s.desc);
+  if(!snippets.length){showToast('Tambahkan minimal 1 snippet temuan');return;}
+  const btn=document.getElementById('compSaveBtn');
+  if(btn){btn.disabled=true;btn.textContent='⟳ Menganalisis...';}
+  const summary=await requestCompetitorSummary(name,snippets);
+  if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Simpan & Analisis';}
+  if(!summary)return;
+  const rec={id:editingCompetitorId||Date.now().toString(36),accountId:cur.id,name,url:document.getElementById('compUrl')?.value.trim()||'',snippets,summary,createdAt:new Date().toISOString()};
+  await dbPut('competitors',rec);
+  editingCompetitorId=null;
+  await openCompetitorSheet();
+  showToast('Kompetitor dianalisis & disimpan ✓');
+}
+async function reanalyzeCompetitor(id){
+  const c=await dbGet('competitors',id);
+  if(!c){showToast('Kompetitor tidak ditemukan');return;}
+  const summary=await requestCompetitorSummary(c.name,c.snippets||[]);
+  if(!summary)return;
+  c.summary=summary;
+  await dbPut('competitors',c);
+  await openCompetitorSheet();
+  showToast('Analisis diperbarui ✓');
+}
+async function deleteCompetitor(id){
+  if(!confirm('Hapus kompetitor ini?'))return;
+  await dbDel('competitors',id);
+  await openCompetitorSheet();
+  showToast('Kompetitor dihapus');
+}
+async function compareCompetitor(id){
+  if(!cur)return;
+  const c=await dbGet('competitors',id);
+  if(!c)return;
+  const box=document.getElementById('competitorCompareResult');
+  if(!box)return;
+  box.innerHTML='<div class="info-box">AI sedang membandingkan dengan akun kamu...</div>';
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const live=all.filter(x=>x.perf&&x.perf.view>0);
+  const snapshot=live.length>=2?buildPatternSummary(live):'Belum ada data konten live yang cukup.';
+  const prompt=`Kompetitor: ${c.name}\nRingkasan kompetitor:\n${JSON.stringify(c.summary)}\n\nSnapshot akun kita (pre-calculated):\n${snapshot}\n\nTopik yang sudah kita punya: ${(cur.topics||[]).join(', ')||'—'}\n\nTugas: identifikasi peluang & gap untuk akun kita berdasarkan kompetitor. Kembalikan HANYA JSON valid tanpa markdown:\n{"opportunities":[{"topic":"...","reason":"..."}]}\nIsi 3-5 peluang konkret.`;
+  try{
+    const r=await callAI({system:`Kamu adalah strategist konten ${cur.platform} niche "${cur.niche}". Jawab HANYA JSON valid tanpa markdown.`,messages:[{role:'user',content:prompt}],maxTokens:1024});
+    if(!r.ok){box.innerHTML=`<div class="info-box">⚠️ ${escapeHtml(r.error)}</div>`;return;}
+    let parsed;
+    try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{showToast('Gagal parse respons AI');box.innerHTML='<div class="info-box">Respons AI tidak valid. Coba lagi.</div>';return;}
+    lastCompetitorOpps=Array.isArray(parsed.opportunities)?parsed.opportunities:[];
+    await renderCompetitorOpps(lastCompetitorOpps,box);
+  }catch{
+    box.innerHTML='<div class="info-box">Gagal terhubung ke AI. Cek koneksi internet.</div>';
+  }
+}
+async function renderCompetitorOpps(opps,box){
+  if(!box)return;
+  if(!opps.length){box.innerHTML='<div class="info-box">AI tidak memberi peluang. Coba lagi.</div>';return;}
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const live=all.filter(x=>x.perf&&x.perf.view>0);
+  const stats=buildTopicStats(live);
+  const w=cur.prWeights||{jualan:1,awareness:1,save:1};
+  const scored=opps.map(item=>({item,score:ideaScore(item&&item.topic,'newIdeas',stats,w)})).sort((a,b)=>b.score-a.score);
+  const maxScore=Math.max(...scored.map(x=>x.score),0.0001);
+  box.innerHTML=`<div class="sec-hdr" style="margin-top:16px"><span class="sec-title">Peluang & Gap</span></div>${prWeightChipsHtml()}${scored.map(({item,score})=>renderGapIdeaCard(item,'underproduced',score,maxScore)).join('')}`;
+}
+
+// ===== LAPORAN BULANAN =====
+function mdTable(header,rows){
+  return['| '+header.join(' | ')+' |','| '+header.map(()=>'---').join(' | ')+' |',...rows.map(r=>'| '+r.join(' | ')+' |')].join('\n');
+}
+function reportAggTable(live,key){
+  const map={};live.forEach(c=>{const k=c[key]||'—';if(!map[k])map[k]={v:0,s:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].n++;});
+  return Object.entries(map).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).map(([k,d])=>[k,String(d.n),fmt(Math.round(d.v/d.n)),(d.s/d.n).toFixed(1)]);
+}
+async function openReportSheet(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const now=new Date();
+  const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthLabel=(MONTHS[now.getMonth()]||'')+' '+now.getFullYear();
+  document.getElementById('reportSub').textContent=`${monthLabel} · ${cur.username||cur.name}`;
+  const body=document.getElementById('reportBody');
+  body.innerHTML='<div class="insight-card"><div class="insight-text ai-thinking" style="color:var(--text-3)">Menyusun laporan...</div></div>';
+  openSheet('sheetReport');
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const monthAll=all.filter(c=>c.date&&c.date.startsWith(ym));
+  const live=monthAll.filter(c=>c.perf&&c.perf.view>0);
+  if(!live.length){body.innerHTML='<div class="info-box">Belum ada konten live di bulan ini — isi performa dulu.</div>';return;}
+  const avgView=Math.round(live.reduce((s,c)=>s+c.perf.view,0)/live.length);
+  const avgSave=+(live.reduce((s,c)=>s+c.perf.save,0)/live.length).toFixed(1);
+  const byFmt={};live.forEach(c=>{const k=c.format||'—';if(!byFmt[k])byFmt[k]={s:0,n:0};byFmt[k].s+=c.perf.save;byFmt[k].n++;});
+  let bestFmt='—',bestV=-1;Object.entries(byFmt).forEach(([k,d])=>{const v=d.s/d.n;if(v>bestV){bestV=v;bestFmt=k;}});
+  const reviews=(cur.reviews||[]).filter(r=>r.date&&r.date.startsWith(ym));
+  const reviewLines=reviews.map(r=>`- ${r.date}: keep=${(r.kept||[]).join(', ')||'—'} · stop=${(r.stopped||[]).join(', ')||'—'} · iterate=${(r.iterate||[]).join(', ')||'—'}`);
+  const pairs={};all.forEach(c=>{if(c.experiment&&c.experiment.id){(pairs[c.experiment.id]=pairs[c.experiment.id]||[]).push(c);}});
+  const abLines=Object.values(pairs).filter(arr=>arr.length===2&&arr.some(c=>c.date&&c.date.startsWith(ym))).map(arr=>{
+    const a=arr.find(x=>x.experiment.group==='A')||arr[0];
+    const b=arr.find(x=>x.experiment.group==='B')||arr[1];
+    const metric=a.experiment.metric||b.experiment.metric||'save';
+    const va=metric==='save'?a.perf.save:a.perf.view;
+    const vb=metric==='save'?b.perf.save:b.perf.view;
+    const winner=va>vb?'A':(vb>va?'B':'Tie');
+    return`- ${a.title||'(Tanpa judul)'} (A) vs ${b.title||'(Tanpa judul)'} (B) · metrik ${metric} · menang: ${winner} (${va} vs ${vb})`;
+  });
+  const compact=key=>{const map={};live.forEach(c=>{const k=c[key]||'—';if(!map[k])map[k]={v:0,s:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].n++;});return Object.entries(map).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).map(([k,d])=>`- ${k}: ${d.n}x, avg ${Math.round(d.v/d.n)} view / ${(d.s/d.n).toFixed(1)} save`).join('\n');};
+  const statLines=[
+    `Total konten: ${monthAll.length} (${live.length} live)`,
+    `Avg view: ${avgView} · Avg save: ${avgSave}`,
+    `Format terbaik (avg save): ${bestFmt}`,
+    `Per hook:\n${compact('hook')}`,
+    `Per struktur:\n${compact('struct')}`,
+    `Per topik:\n${compact('topic')}`,
+  ];
+  const prompt=`Buat laporan bisnis singkat (3-5 paragraf) untuk akun ${cur.platform} niche "${cur.niche}" periode ${monthLabel}.\n\nData bulan ini:\n${statLines.join('\n')}\n\nKeputusan review mingguan:\n${reviewLines.join('\n')||'- Tidak ada.'}\n\nEksperimen A/B:\n${abLines.join('\n')||'- Tidak ada.'}\n\nSebut angka, evaluasi apa yang bekerja dan tidak, lalu tutup dengan satu fokus bulan depan.`;
+  let narrative='—',narrErr='';
+  try{
+    const r=await callAI({system:'Kamu adalah analis bisnis konten. Tulis laporan singkat, padat, berbasis angka, bahasa Indonesia.',messages:[{role:'user',content:prompt}],maxTokens:2048});
+    if(r.ok)narrative=r.text||'—';
+    else narrErr=r.error||'AI gagal';
+  }catch{narrErr='Gagal terhubung ke AI';}
+  const sec=[];
+  sec.push(`# Laporan Bulanan — ${cur.username||cur.name}`);
+  sec.push(`Platform: ${cur.platform} · Niche: ${cur.niche} · Periode: ${monthLabel}`);
+  sec.push(`## Statistik Inti\n- Total konten: ${monthAll.length} (${live.length} live)\n- Avg view: ${avgView}\n- Avg save: ${avgSave}\n- Format terbaik (avg save): ${bestFmt}`);
+  sec.push(`## Per Tipe Hook\n\n${mdTable(['Hook','Konten','Avg View','Avg Save'],reportAggTable(live,'hook'))}`);
+  sec.push(`## Per Struktur\n\n${mdTable(['Struktur','Konten','Avg View','Avg Save'],reportAggTable(live,'struct'))}`);
+  sec.push(`## Per Topik\n\n${mdTable(['Topik','Konten','Avg View','Avg Save'],reportAggTable(live,'topic'))}`);
+  sec.push(`## Konten Bulan Ini\n${monthAll.map(c=>`- ${c.date}: ${c.title||'(Tanpa judul)'} (${c.perf&&c.perf.view?fmt(c.perf.view)+' view / '+c.perf.save+' save':'draft'})`).join('\n')||'- Tidak ada.'}`);
+  sec.push(`## Review Mingguan\n${reviewLines.join('\n')||'- Tidak ada review bulan ini.'}`);
+  sec.push(`## Eksperimen A/B\n${abLines.join('\n')||'- Tidak ada pasangan bulan ini.'}`);
+  sec.push(`## Narasi AI\n${narrErr?'> ⚠️ Narasi AI gagal: '+narrErr:narrative}`);
+  const md=sec.join('\n\n');
+  window._reportText=md;
+  window._reportFilename=`laporan-${ym}-akun.md`;
+  body.innerHTML=`<div style="white-space:pre-wrap;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:11px;font-family:'DM Mono',monospace;line-height:1.6;max-height:320px;overflow:auto;color:var(--text-2)">${escapeHtml(md)}</div>
+    <button class="btn-primary" onclick="downloadReport()">Download .md</button>
+    <button class="btn-secondary" id="reportCopyBtn" onclick="copyReport()">Copy</button>`;
+}
+function downloadReport(){
+  const text=window._reportText||'';
+  const blob=new Blob([text],{type:'text/markdown'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=window._reportFilename||'laporan-akun.md';a.click();URL.revokeObjectURL(url);
+  showToast('Laporan diunduh ✓');
+}
+function copyReport(){
+  copyToClipboard(window._reportText||'','reportCopyBtn');
+}
+
+async function generateGapIdeas(){
+  if(!cur)return;
+  const btn=document.getElementById('gapIdeasBtn');
+  const box=document.getElementById('gapIdeas');
+  if(!box)return;
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const live=all.filter(c=>c.perf&&c.perf.view>0);
+  if(live.length<3){showToast('Butuh minimal 3 konten live');return;}
+  const orig=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.textContent='⟳ Menganalisis...';}
+  box.innerHTML='<div class="info-box">AI sedang mencari gap topik dari histori...</div>';
+  const map={};live.forEach(c=>{const k=c.topic||'—';if(!map[k])map[k]={v:0,s:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].n++;});
+  const statsText=Object.entries(map).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).map(([k,d])=>`- ${k}: ${d.n} konten, avg view ${Math.round(d.v/d.n)}, avg save ${(d.s/d.n).toFixed(1)}`).join('\n')||'- Belum ada topik terisi.';
+  const known=cur.topics&&cur.topics.length?cur.topics.map(t=>`- ${t}`).join('\n'):'- Belum ada.';
+  const best=[...live].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).slice(0,10).sort((a,b)=>b.perf.view-a.perf.view).slice(0,5).map(c=>`- "${c.title||'Tanpa judul'}" (topik: ${c.topic||'—'}, ${fmt(c.perf.view)} view, ${c.perf.save} save)`).join('\n');
+  const contextBlock=await buildContextBlock(cur);
+  const prompt=`Platform: ${cur.platform}\nNiche: ${cur.niche}${contextBlock}\n\nSkor per topik (histori):\n${statsText}\n\nDaftar topik yang sudah ada:\n${known}\n\n5 konten terbaik terakhir:\n${best}\n\nTugas: temukan gap konten yang relevan dengan posisi brand & persona di atas. Kembalikan HANYA JSON valid tanpa markdown:\n{"underproduced":[{"topic":"…","reason":"…","evidence":"…"}],"deprioritize":[{"topic":"…","reason":"…"}],"newIdeas":[{"topic":"…","angle":"…","why":"…"}]}\nunderproduced = topik yang masih punya ruang; deprioritize = topik yang sebaiknya dikurangi; newIdeas = ide topik baru yang belum ada di daftar. Sebut angka dari data bila ada.`;
+  try{
+    const r=await callAI({system:`Kamu adalah strategist konten ${cur.platform} niche "${cur.niche}". Jawab HANYA dengan JSON valid, tanpa markdown.`,messages:[{role:'user',content:prompt}],maxTokens:2048});
+    if(!r.ok){showToast('AI gagal: '+r.error);box.innerHTML=`<div class="info-box">⚠️ ${escapeHtml(r.error)}</div>`;return;}
+    let parsed;
+    try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{showToast('Gagal parse respons AI');box.innerHTML='<div class="info-box">Respons AI tidak valid. Coba lagi.</div>';return;}
+    if(!parsed||typeof parsed!=='object'){showToast('Respons AI kosong');box.innerHTML='<div class="info-box">Respons AI kosong. Coba lagi.</div>';return;}
+    lastGapIdeas=parsed;
+    await renderGapIdeasResults(parsed,box);
+  }catch{
+    box.innerHTML='<div class="info-box">Gagal terhubung ke AI. Cek koneksi internet.</div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML=orig||'<span style="font-size:12px">✦</span> Ide dari Gap';}
+  }
+}
+
+async function addGapIdeaTopic(topic,btn){
+  if(!cur||!topic||topic==='—')return;
+  cur.topics=cur.topics||[];
+  if(cur.topics.some(t=>String(t).toLowerCase()===String(topic).toLowerCase())){
+    showToast('Topik sudah ada di daftar');
+    if(btn){btn.disabled=true;btn.textContent='✓ Sudah ada';}
+    return;
+  }
+  cur.topics.push(topic);
+  if(btn){btn.disabled=true;btn.textContent='✓ Ditambahkan';}
+  await dbPut('accounts',cur);
+  showToast(`Topik ditambahkan: ${topic}`);
+}
+
+// ===== REVIEW MINGGUAN =====
+let reviewDecisions={}, reviewLive7=[], reviewPatterns=[];
+
+function reviewStats(list){
+  const n=list.length;
+  const views=list.reduce((s,c)=>s+c.perf.view,0);
+  const saves=list.reduce((s,c)=>s+c.perf.save,0);
+  return{n,views,saves,avgSave:n?saves/n:0};
+}
+function reviewDelta(a,b){
+  if(!b)return a>0?'↑ baru':'—';
+  const pct=Math.round((a-b)/b*100);
+  if(!pct)return'—';
+  return`<span style="color:${pct>0?'var(--teal)':'var(--red)'}">${pct>0?'↑':'↓'} ${pct>0?'+':''}${pct}%</span>`;
+}
+async function openReviewSheet(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const live=all.filter(c=>c.perf&&c.perf.view>0);
+  reviewDecisions={};
+  reviewLive7=live.filter(c=>c.date&&daysSince(c.date)<=7);
+  reviewPatterns=reviewLive7.length?buildPatterns(reviewLive7):[];
+  const livePrev=live.filter(c=>c.date&&daysSince(c.date)>7&&daysSince(c.date)<=14);
+  const s7=reviewStats(reviewLive7),sp=reviewStats(livePrev);
+  const lastReview=cur.reviews&&cur.reviews.length?cur.reviews[cur.reviews.length-1]:null;
+  const lastHtml=lastReview?`<div class="info-box"><strong>Keputusan review lalu (${escapeHtml(lastReview.date)}):</strong><br>Keep: ${escapeHtml((lastReview.kept||[]).join(', ')||'—')}<br>Stop: ${escapeHtml((lastReview.stopped||[]).join(', ')||'—')}<br>Iterate: ${escapeHtml((lastReview.iterate||[]).join(', ')||'—')}</div>`:'';
+  document.getElementById('rvStepLabel').textContent='Langkah 1 dari 2 · Statistik 7 Hari';
+  document.getElementById('reviewBody').innerHTML=`
+    <div class="step-bar"><div class="step active" id="rvSb1"></div><div class="step" id="rvSb2"></div></div>
+    ${lastHtml}
+    <div class="card"><div class="card-body">
+      <div class="pat-row"><div><div class="pat-label">Konten Live</div><div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">7 hari vs 7 hari sebelumnya</div></div><div class="pat-val">${s7.n} vs ${sp.n} ${reviewDelta(s7.n,sp.n)}</div></div>
+      <div class="pat-row"><div><div class="pat-label">Total View</div></div><div class="pat-val">${fmt(s7.views)} vs ${fmt(sp.views)} ${reviewDelta(s7.views,sp.views)}</div></div>
+      <div class="pat-row"><div><div class="pat-label">Total Save</div></div><div class="pat-val">${fmt(s7.saves)} vs ${fmt(sp.saves)} ${reviewDelta(s7.saves,sp.saves)}</div></div>
+      <div class="pat-row"><div><div class="pat-label">Avg Save</div></div><div class="pat-val">${s7.avgSave.toFixed(1)} vs ${sp.avgSave.toFixed(1)} ${reviewDelta(s7.avgSave,sp.avgSave)}</div></div>
+    </div></div>
+    ${reviewLive7.length?`<button class="btn-primary" onclick="reviewGoStep2()">Lanjut → Pilih Pola</button>`:'<div class="info-box" style="margin-top:10px">Belum ada konten live dalam 7 hari terakhir. Pattern diambil dari konten live saat tersedia.</div>'}`;
+  openSheet('sheetReview');
+}
+function rvSetStep(n){
+  const s1=document.getElementById('rvSb1'),s2=document.getElementById('rvSb2');
+  if(s1)s1.className='step '+(n===1?'active':'done');
+  if(s2)s2.className='step '+(n===2?'active':'');
+  const label=document.getElementById('rvStepLabel');
+  if(label)label.textContent=n===1?'Langkah 1 dari 2 · Statistik 7 Hari':'Langkah 2 dari 2 · Keep / Stop / Iterate';
+}
+const REVIEW_DECISIONS=[['keep','Keep'],['stop','Stop'],['iterate','Iterate']];
+function reviewGoStep2(){
+  rvSetStep(2);
+  const cards=reviewPatterns.map((p,i)=>`
+    <div class="insight-card">
+      <div class="insight-hdr"><span class="insight-icon">✦</span><span class="insight-title">${escapeHtml(p.title)}</span></div>
+      <div class="insight-text">${p.text}</div>
+      <div class="chip-group" style="margin-top:10px">
+        ${REVIEW_DECISIONS.map(([d,label])=>`<div class="chip ${reviewDecisions[i]===d?'selected':''}" onclick="selReviewDecision(${i},'${d}',this)">${label}</div>`).join('')}
+      </div>
+    </div>`).join('');
+  document.getElementById('reviewBody').innerHTML=`
+    <div class="step-bar"><div class="step done" id="rvSb1"></div><div class="step active" id="rvSb2"></div></div>
+    ${cards||'<div class="info-box">Belum ada pattern dari konten 7 hari terakhir.</div>'}
+    <button class="btn-primary" onclick="saveReview()">Simpan Review</button>
+    <button class="btn-secondary" onclick="openReviewSheet()">← Kembali</button>`;
+}
+function selReviewDecision(idx,decision,btn){
+  reviewDecisions[idx]=decision;
+  btn.parentElement.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+async function saveReview(){
+  const kept=[],stopped=[],iterate=[];
+  reviewPatterns.forEach((p,i)=>{
+    const d=reviewDecisions[i];
+    if(d==='keep')kept.push(p.title);
+    else if(d==='stop')stopped.push(p.title);
+    else if(d==='iterate')iterate.push(p.title);
+  });
+  cur.reviews=cur.reviews||[];
+  cur.reviews.push({date:new Date().toISOString().split('T')[0],kept,stopped,iterate});
+  await dbPut('accounts',cur);
+  closeSheet('sheetReview');
+  showToast('Review mingguan disimpan ✓');
 }
 
 // ===== DRAFT =====
@@ -2325,26 +3034,13 @@ function renderDraftForm(type){
 async function analyzeDraft(type){
   if(!cur){showToast('Pilih akun dulu');return;}
   const live=(await dbByIdx('contents','accountId',cur.id)).filter(c=>c.perf&&c.perf.view>0);
-  const hist=live.length?live.map(c=>`- "${c.title}" | Hook:${c.hook} | Struktur:${c.struct} | Topik:${c.topic} | View:${c.perf.view} | Save:${c.perf.save} | Like:${c.perf.like} | Komen:${c.perf.comment} | Share:${c.perf.share}${c.retention?.compRate?` | Completion:${c.retention.compRate}% | Watch:${c.retention.watchTime}s | Rewatch:${c.retention.rewatchRate}%`:''}`).join('\n'):'Belum ada histori.';
+  const hist=live.length?live.map(c=>`- "${c.title}" | Hook:${c.hook} | Struktur:${c.struct} | Topik:${c.topic} | View:${c.perf.view} | Save:${c.perf.save} | Like:${c.perf.like} | Komen:${c.perf.comment} | Share:${c.perf.share}${c.retention?.compRate?` | Completion:${c.retention.compRate}% | Watch:${c.retention.watchTime}s | Rewatch:${c.retention.rewatchRate}%`:''} | Tags:${c.aiTags?.emotion||'—'}/${c.aiTags?.style||'—'}${c.aiTags?.reason?` — ${c.aiTags.reason}`:''}`).join('\n'):'Belum ada histori.';
 
   // Build pattern summary (aggregated, so AI gets pre-calculated insights)
-  function aggBy(key){
-    const map={};
-    live.forEach(c=>{const k=c[key]||'—';if(!map[k])map[k]={v:0,s:0,l:0,n:0};map[k].v+=c.perf.view;map[k].s+=c.perf.save;map[k].l+=c.perf.like;map[k].n++;});
-    return Object.entries(map).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n))
-      .map(([k,d])=>`  ${k} (${d.n}x): avg view ${Math.round(d.v/d.n)}, avg save ${(d.s/d.n).toFixed(1)}, avg like ${(d.l/d.n).toFixed(1)}`).join('\n');
-  }
-  const avgView=live.length?Math.round(live.reduce((s,c)=>s+c.perf.view,0)/live.length):0;
-  const avgSave=live.length?(live.reduce((s,c)=>s+c.perf.save,0)/live.length).toFixed(1):0;
-  // Retention pattern per hook (for video/carousel)
-  const retByHook={};
-  live.filter(c=>c.retention?.compRate>0).forEach(c=>{const k=c.hook||'—';if(!retByHook[k])retByHook[k]={s:0,n:0};retByHook[k].s+=c.retention.compRate;retByHook[k].n++;});
-  const retHookStr=Object.entries(retByHook).length
-    ?Object.entries(retByHook).sort((a,b)=>(b[1].s/b[1].n)-(a[1].s/a[1].n)).map(([k,d])=>`  ${k}: avg completion ${(d.s/d.n).toFixed(1)}%`).join('\n')
-    :'  Belum ada data retention.';
-  const patternSummary=live.length>=2?`\nPattern histori akun (pre-calculated):\nRata-rata keseluruhan: ${avgView} view, ${avgSave} save\nPer tipe hook (diurutkan avg save):\n${aggBy('hook')}\nPer struktur:\n${aggBy('struct')}\nPer topik:\n${aggBy('topic')}\nRetention per hook:\n${retHookStr}\n`:'';
+  const patternSummary=buildPatternSummary(live);
 
-  const base=`Akun: ${cur.username||cur.name}\nPlatform: ${cur.platform}\nNiche: ${cur.niche}\n${patternSummary}\nHistori konten (detail):\n${hist}\n\n`;
+  const contextBlock=await buildContextBlock(cur);
+  const base=`Akun: ${cur.username||cur.name}\nPlatform: ${cur.platform}\nNiche: ${cur.niche}${contextBlock}\n${patternSummary}\nHistori konten (detail):\n${hist}\n\n`;
   const analysisFmt=`\nAnalisis:\n1. **Potensi** — berdasarkan histori akun.\n2. **Kekuatan** — apa yang sudah bagus.\n3. **Yang perlu diperbaiki** — bagian mana yang lemah dan kenapa.\n4. **Rekomendasi spesifik** — saran konkret.\n5. **Prediksi metrik** — berdasarkan histori.\nJujur dan spesifik.`;
   let prompt='';
 
@@ -2381,9 +3077,10 @@ async function analyzeDraft(type){
   result.style.display='';content.innerHTML='<div class="insight-card"><div class="insight-text ai-thinking" style="color:var(--text-3)">AI sedang menganalisis draft kamu...</div></div>';
   result.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
-    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:`Kamu adalah analis konten ${cur.platform} untuk niche "${cur.niche}". Kamu diberi data histori performa akun ini — gunakan sebagai acuan utama, bukan saran generik. Kalau hook atau struktur di draft ini terbukti lemah di histori, sebut angkanya. Kalau ada yang terbukti kuat, rekomendasikan itu. Jawab dalam bahasa Indonesia, singkat, jujur, dan actionable.`,messages:[{role:'user',content:prompt}]})});
-    const data=await res.json();
-    const text=(data.text||'Gagal mendapat respons.').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    const r=await callAI({system:`Kamu adalah analis konten ${cur.platform} untuk niche "${cur.niche}". Kamu diberi data histori performa akun ini — gunakan sebagai acuan utama, bukan saran generik. Kalau hook atau struktur di draft ini terbukti lemah di histori, sebut angkanya. Kalau ada yang terbukti kuat, rekomendasikan itu. Jawab dalam bahasa Indonesia, singkat, jujur, dan actionable.`,messages:[{role:'user',content:prompt}]});
+    const text=r.ok
+      ?(r.text||'Gagal mendapat respons.').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      :'⚠️ '+r.error;
     content.innerHTML=`<div class="insight-card"><div class="insight-text" style="white-space:pre-wrap;line-height:1.7">${text}</div></div>`;
   }catch{content.innerHTML='<div class="insight-card"><div class="insight-text" style="color:var(--red)">Gagal terhubung ke AI. Cek koneksi internet.</div></div>';}
 }
@@ -2405,12 +3102,34 @@ function switchAccountFromSheet(acc){switchAccount(acc);}
 // ===== SETTINGS =====
 async function renderSettings(){
   if(!cur){document.getElementById('settingsBody').innerHTML='<div class="empty-state"><p>Pilih akun dulu.</p></div>';return;}
-  const editChips=(arr,removeFn,addFn)=>`${(arr||[]).map((t,i)=>`<div class="chip removable selected">${t}<span class="chip-x" onclick="${removeFn}(${i})">×</span></div>`).join('')}<div class="chip chip-add" onclick="${addFn}()">+ Tambah</div>`;
+  const editChips=(arr,removeFn,addFn)=>`${(arr||[]).map((t,i)=>`<div class="chip removable selected">${escapeHtml(t)}<span class="chip-x" onclick="${removeFn}(${i})">×</span></div>`).join('')}<div class="chip chip-add" onclick="${addFn}()">+ Tambah</div>`;
+  if(!cur.positioning)cur.positioning={tone:'',audience:'',pillars:[]};
+  const personas=await dbByIdx('audience','accountId',cur.id);
+  const personaCards=personas.length?personas.map(p=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${escapeHtml(p.name||'—')}${p.ageRange?` <span style="font-weight:400;color:var(--text-3);font-family:'DM Mono',monospace;font-size:11px">(${escapeHtml(p.ageRange)})</span>`:''}</div>
+          <div style="font-size:11px;color:var(--text-3);line-height:1.5;margin-top:2px">${p.painPoints&&p.painPoints.length?'Pain: '+escapeHtml(p.painPoints.join('; ')):''}${p.favoriteWords?`<br>Kata favorit: ${escapeHtml(p.favoriteWords)}`:''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex:none">
+          <button class="copy-btn" onclick="openPersonaEditor('${p.id}')">Edit</button>
+          <button class="copy-btn" style="color:var(--red)" onclick="deletePersona('${p.id}')">Hapus</button>
+        </div>
+      </div>
+    </div>`).join(''):'<div style="color:var(--text-3);font-size:12px;margin-bottom:8px">Belum ada persona. Tambahkan agar AI menyesuaikan bahasa & sudut pandang.</div>';
   document.getElementById('settingsBody').innerHTML=`
-    <div class="form-group"><label class="form-label">Nama Akun</label><input type="text" class="form-input" id="editName" value="${cur.name}"/></div>
-    <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="editUsername" value="${cur.username||''}"/></div>
+    <div class="form-group"><label class="form-label">Nama Akun</label><input type="text" class="form-input" id="editName" value="${escapeHtml(cur.name)}"/></div>
+    <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="editUsername" value="${escapeHtml(cur.username||'')}"/></div>
     <div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="editPlatform">${['TikTok','Instagram','YouTube'].map(p=>`<option ${cur.platform===p?'selected':''}>${p}</option>`).join('')}</select></div>
-    <div class="form-group"><label class="form-label">Niche</label><input type="text" class="form-input" id="editNiche" value="${cur.niche}"/></div>
+    <div class="form-group"><label class="form-label">Niche</label><input type="text" class="form-input" id="editNiche" value="${escapeHtml(cur.niche)}"/></div>
+    <div class="sec-title" style="margin:18px 0 10px;display:block">Posisi Brand</div>
+    <div class="form-group"><label class="form-label">Tone of Voice</label><input type="text" class="form-input" id="editTone" value="${escapeHtml(cur.positioning.tone||'')}" placeholder="Misal: santai tapi berbasis data"/></div>
+    <div class="form-group"><label class="form-label">Target Audiens</label><textarea class="form-input" id="editAudience" placeholder="Siapa yang dituju? Contoh: mahasiswa yang mau mulai investasi..." style="min-height:70px">${escapeHtml(cur.positioning.audience||'')}</textarea></div>
+    <div class="form-group">
+      <label class="form-label">Pilar Konten</label>
+      <div class="chip-group" id="editPillarChips">${editChips(cur.positioning.pillars,'rmEditPillar','addEditPillar')}</div>
+    </div>
     <div class="form-group">
       <label class="form-label">Topik Konten</label>
       <div class="chip-group" id="editTopicChips">${editChips(cur.topics,'rmEditTopic','addEditTopic')}</div>
@@ -2431,8 +3150,66 @@ async function renderSettings(){
       <label class="form-label">Tujuan Konten</label>
       <div class="chip-group" id="editGoalChips">${editChips(cur.goals,'rmEditGoal','addEditGoal')}</div>
     </div>
+    <div class="sec-title" style="margin:18px 0 10px;display:block">Persona Audiens <span style="color:var(--text-3);font-size:10px;font-weight:400">MAKS 3</span></div>
+    <div id="personaList">${personaCards}</div>
+    <div id="personaEditor"></div>
+    <button class="btn-secondary" id="addPersonaBtn" onclick="openPersonaEditor(null)">+ Tambah Persona</button>
+    <div style="height:8px"></div>
     <button class="btn-primary" onclick="saveSettings()">Simpan Perubahan</button>
     <button class="btn-danger" onclick="deleteAccount()">Hapus Akun Ini</button>`;
+}
+function syncPositioningInputs(){
+  if(!cur.positioning)cur.positioning={tone:'',audience:'',pillars:[]};
+  const t=document.getElementById('editTone');if(t)cur.positioning.tone=t.value.trim();
+  const a=document.getElementById('editAudience');if(a)cur.positioning.audience=a.value.trim();
+}
+function rmEditPillar(i){syncPositioningInputs();cur.positioning.pillars.splice(i,1);renderSettings();}
+function addEditPillar(){const v=prompt('Nama pilar konten baru:');if(!v)return;syncPositioningInputs();cur.positioning=cur.positioning||{tone:'',audience:'',pillars:[]};cur.positioning.pillars=cur.positioning.pillars||[];cur.positioning.pillars.push(v.trim());renderSettings();}
+let editingPersonaId=null;
+async function openPersonaEditor(id){
+  const personas=await dbByIdx('audience','accountId',cur.id);
+  if(!id&&personas.length>=3){showToast('Maksimal 3 persona');return;}
+  editingPersonaId=id||null;
+  const p=id?await dbGet('audience',id):null;
+  const box=document.getElementById('personaEditor');
+  if(!box)return;
+  box.innerHTML=`
+    <div style="background:var(--surface2);border:1px solid var(--teal);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px">
+      <div class="form-group"><label class="form-label">Nama Persona</label><input type="text" class="form-input" id="editPersonaName" value="${escapeHtml(p?.name||'')}" placeholder="Misal: Sara, mahasiswi akhir"/></div>
+      <div class="form-group"><label class="form-label">Rentang Usia</label><input type="text" class="form-input" id="editPersonaAge" value="${escapeHtml(p?.ageRange||'')}" placeholder="Misal: 18-24"/></div>
+      <div class="form-group"><label class="form-label">Pain Points <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(pisahkan dengan ;)</span></label><textarea class="form-input" id="editPersonaPain" placeholder="Bingung mulai dari mana; takut rugi..." style="min-height:60px">${escapeHtml((p?.painPoints||[]).join('; '))}</textarea></div>
+      <div class="form-group"><label class="form-label">Kata Favorit</label><input type="text" class="form-input" id="editPersonaFav" value="${escapeHtml(p?.favoriteWords||'')}" placeholder="Kosakata yang mereka pakai sehari-hari"/></div>
+      <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-input" id="editPersonaNotes" placeholder="Catatan tambahan..." style="min-height:50px">${escapeHtml(p?.notes||'')}</textarea></div>
+      <button class="btn-primary" onclick="savePersona()">Simpan Persona</button>
+      <button class="btn-secondary" onclick="cancelPersonaEditor()">Batal</button>
+    </div>`;
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function cancelPersonaEditor(){editingPersonaId=null;const box=document.getElementById('personaEditor');if(box)box.innerHTML='';}
+async function savePersona(){
+  const name=document.getElementById('editPersonaName')?.value.trim();
+  if(!name){showToast('Isi nama persona dulu');return;}
+  const painRaw=document.getElementById('editPersonaPain')?.value.trim()||'';
+  const p={
+    id:editingPersonaId||Date.now().toString(36),
+    accountId:cur.id,
+    name,
+    ageRange:document.getElementById('editPersonaAge')?.value.trim()||'',
+    painPoints:painRaw?painRaw.split(';').map(s=>s.trim()).filter(Boolean):[],
+    favoriteWords:document.getElementById('editPersonaFav')?.value.trim()||'',
+    notes:document.getElementById('editPersonaNotes')?.value.trim()||'',
+  };
+  await dbPut('audience',p);
+  editingPersonaId=null;
+  await renderSettings();
+  showToast('Persona disimpan ✓');
+}
+async function deletePersona(id){
+  if(!confirm('Hapus persona ini?'))return;
+  await dbDel('audience',id);
+  if(editingPersonaId===id)editingPersonaId=null;
+  await renderSettings();
+  showToast('Persona dihapus');
 }
 function rmEditTopic(i){cur.topics.splice(i,1);renderSettings();}
 function addEditTopic(){const v=prompt('Nama topik baru:');if(!v)return;cur.topics=cur.topics||[];cur.topics.push(v.trim());renderSettings();}
@@ -2447,12 +3224,16 @@ function addEditGoal(){const v=prompt('Nama tujuan konten baru:');if(!v)return;c
 async function saveSettings(){
   cur.name=document.getElementById('editName').value.trim();cur.username=document.getElementById('editUsername').value.trim();
   cur.platform=document.getElementById('editPlatform').value;cur.niche=document.getElementById('editNiche').value.trim();
+  cur.positioning=cur.positioning||{tone:'',audience:'',pillars:[]};
+  cur.positioning.tone=document.getElementById('editTone')?.value.trim()||'';
+  cur.positioning.audience=document.getElementById('editAudience')?.value.trim()||'';
   await dbPut('accounts',cur);await switchAccount(cur);closeSheet('sheetSettings');showToast('Pengaturan disimpan ✓');
 }
 async function deleteAccount(){
   if(!confirm(`Hapus akun "${cur.name}"? Semua konten akan ikut terhapus.`))return;
   const cs=await dbByIdx('contents','accountId',cur.id);for(const c of cs)await dbDel('contents',c.id);
   const au=await dbByIdx('audience','accountId',cur.id);for(const a of au)await dbDel('audience',a.id);
+  const comps=await dbByIdx('competitors','accountId',cur.id);for(const cp of comps)await dbDel('competitors',cp.id);
   await dbDel('accounts',cur.id);cur=null;closeSheet('sheetSettings');
   const accs=await dbGetAll('accounts');if(accs.length)await switchAccount(accs[0]);else showOnboarding();
   showToast('Akun dihapus');
@@ -2460,8 +3241,8 @@ async function deleteAccount(){
 
 // ===== EXPORT / IMPORT =====
 async function exportData(){
-  const accounts=await dbGetAll('accounts');const contents=await dbGetAll('contents');const audience=await dbGetAll('audience');
-  const data={version:1,exportedAt:new Date().toISOString(),accounts,contents,audience};
+  const accounts=await dbGetAll('accounts');const contents=await dbGetAll('contents');const audience=await dbGetAll('audience');const competitors=await dbGetAll('competitors');
+  const data={version:2,exportedAt:new Date().toISOString(),accounts,contents,audience,competitors};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');
   a.href=url;a.download=`konten-analyzer-${new Date().toISOString().split('T')[0]}.json`;a.click();URL.revokeObjectURL(url);
@@ -2475,6 +3256,7 @@ async function importData(e){
     for(const a of data.accounts)await dbPut('accounts',a);
     for(const c of data.contents)await dbPut('contents',c);
     for(const a of(data.audience||[]))await dbPut('audience',a);
+    for(const cp of(data.competitors||[]))await dbPut('competitors',cp);
     showToast(`Import berhasil — ${data.accounts.length} akun, ${data.contents.length} konten ✓`);
     const accs=await dbGetAll('accounts');if(accs.length)await switchAccount(accs[0]);
     closeSheet('sheetAccounts');
@@ -2551,6 +3333,7 @@ function saveToLog(){
   const draftGoal=cs['dGoal']||'';
   // Pre-fill openAddSheet with draft data
   editingId=null;
+  contentOrigin=draftOrigin||null;
   document.getElementById('addSheetTitle').textContent='Simpan ke Log';
   // Reset
   ['inTitle','inDesc','inSlides','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{
@@ -2851,6 +3634,111 @@ function openAddSheetWithDate(dateStr){
 function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}calSelected=null;renderCalendar();}
 function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}calSelected=null;renderCalendar();}
 
+// ===== PLANNER MINGGUAN =====
+let plannerSuggestions=[];
+function isoDate(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function planNextWeek(from){
+  const base=from?new Date(from+'T00:00:00'):new Date();
+  const dow=(base.getDay()+6)%7;
+  const monday=new Date(base);
+  monday.setDate(base.getDate()-dow+7);
+  const days=[];
+  for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(monday.getDate()+i);days.push(isoDate(d));}
+  return days;
+}
+async function openPlannerSheet(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const days=planNextWeek();
+  document.getElementById('plannerBody').innerHTML=`
+    <div class="form-group"><label class="form-label">Rentang Minggu <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(default: minggu berikutnya)</span></label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="date" class="form-input" id="planStart" value="${days[0]}"/>
+        <span style="color:var(--text-3);font-size:12px">s/d</span>
+        <input type="date" class="form-input" id="planEnd" value="${days[6]}"/>
+      </div></div>
+    <button class="btn-primary" id="planGenBtn" onclick="generatePlanSuggestions()">Generate Usulan</button>
+    <div id="planResult"></div>`;
+  openSheet('sheetPlanner');
+}
+async function generatePlanSuggestions(){
+  if(!cur)return;
+  const start=document.getElementById('planStart')?.value;
+  const end=document.getElementById('planEnd')?.value;
+  if(!start||!end){showToast('Isi rentang tanggal dulu');return;}
+  const btn=document.getElementById('planGenBtn');
+  const box=document.getElementById('planResult');
+  if(btn){btn.disabled=true;btn.textContent='⟳ Menyusun...';}
+  box.innerHTML='<div class="info-box">AI menyusun usulan jadwal...</div>';
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const since=new Date();since.setDate(since.getDate()-28);
+  const recent=all.filter(c=>c.date&&c.date>=isoDate(since));
+  const rhythm=Math.max(1,Math.round(recent.length/4));
+  const live=all.filter(c=>c.perf&&c.perf.view>0);
+  const stats=live.length>=2?buildTopicStats(live):null;
+  const w=cur.prWeights||{jualan:1,awareness:1,save:1};
+  const topics=cur.topics||[];
+  const topicLines=(stats&&topics.length)
+    ?topics.map(t=>({t,score:ideaScore(t,'underproduced',stats,w)})).sort((a,b)=>b.score-a.score).map(x=>`- ${x.t} (skor gap: ${x.score.toFixed(2)})`).join('\n')
+    :(topics.length?topics.map(t=>'- '+t).join('\n'):'- Belum ada topik.');
+  const existing=all.filter(c=>c.date&&c.date>=start&&c.date<=end);
+  const existingLines=existing.length?existing.map(c=>`- ${c.date}: ${c.title||'(tanpa judul)'}`).join('\n'):'- Tidak ada.';
+  const formats=(cur.formats&&cur.formats.length?cur.formats:Object.keys(DRAFT_TAB_LABELS)).join(', ');
+  const prompt=`Platform: ${cur.platform} · Niche: ${cur.niche}\nRentang minggu: ${start} s/d ${end}\nRitme historis: sekitar ${rhythm} konten/minggu (4 minggu terakhir: ${recent.length} konten)\nFormat yang dipakai akun: ${formats}\nTopik queue (urut skor gap):\n${topicLines}\nKonten yang sudah ada di rentang ini:\n${existingLines}\n\nSusun usulan jadwal posting untuk minggu tersebut. Kembalikan HANYA JSON valid tanpa markdown:\n{"suggestions":[{"date":"YYYY-MM-DD","topic":"","format":"","hook":""}]}\nAturan: tanggal wajib berada di rentang (perhatikan pergantian bulan/tahun); jumlah sekitar ${rhythm} konten; jangan menempatkan lebih dari 1 konten di tanggal yang sama kecuali ritme > 1 konten/hari; hook opsional tapi bila diisi harus spesifik niche; format pilih dari daftar format akun.`;
+  try{
+    const r=await callAI({system:`Kamu adalah perencana konten ${cur.platform} niche "${cur.niche}". Jawab HANYA JSON valid tanpa markdown.`,messages:[{role:'user',content:prompt}],maxTokens:1024});
+    if(!r.ok){box.innerHTML=`<div class="info-box">⚠️ ${escapeHtml(r.error)}</div>`;return;}
+    let parsed;
+    try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{showToast('Gagal parse respons AI');box.innerHTML='<div class="info-box">Respons AI tidak valid. Coba lagi.</div>';return;}
+    plannerSuggestions=Array.isArray(parsed.suggestions)?parsed.suggestions.filter(s=>s&&s.date):[];
+    if(!plannerSuggestions.length){box.innerHTML='<div class="info-box">AI tidak memberi usulan. Coba lagi.</div>';return;}
+    renderPlanSuggestions(box);
+  }catch{
+    box.innerHTML='<div class="info-box">Gagal terhubung ke AI. Cek koneksi internet.</div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Generate Usulan';}
+  }
+}
+function renderPlanSuggestions(box){
+  const rows=plannerSuggestions.map((s,i)=>{
+    const d=s.date?new Date(s.date+'T00:00:00'):null;
+    const label=d?d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'}):'—';
+    return`<div class="cal-item"><input type="checkbox" class="plan-check" data-idx="${i}" checked style="flex:none"/><div class="cal-item-info"><div class="cal-item-title">${escapeHtml(s.topic||'(Tanpa topik)')}</div><div class="cal-item-meta">${label} · ${escapeHtml(s.format||'—')}${s.hook?' · '+escapeHtml(s.hook):''}</div></div></div>`;
+  }).join('');
+  box.innerHTML=`<div class="sec-hdr" style="margin-top:14px"><span class="sec-title">Usulan (${plannerSuggestions.length})</span></div>${rows}<button class="btn-primary" onclick="addPlannedContents()">Tambahkan yang Dicentang</button>`;
+}
+async function addPlannedContents(){
+  const checks=[...document.querySelectorAll('#plannerBody .plan-check')];
+  const picked=checks.filter(c=>c.checked).map(c=>plannerSuggestions[parseInt(c.dataset.idx,10)]).filter(Boolean);
+  if(!picked.length){showToast('Pilih minimal 1 usulan');return;}
+  let added=0;
+  for(const [i,s] of picked.entries()){
+    await dbPut('contents',{
+      id:Date.now().toString(36)+i,
+      accountId:cur.id,
+      title:s.topic||'(Tanpa judul)',
+      desc:'',
+      date:s.date,
+      format:s.format||'—',
+      slides:0,
+      slideScript:'',
+      hook:s.hook||'—',
+      struct:'—',
+      topic:s.topic||'—',
+      goal:'—',
+      notes:null,
+      retention:{},
+      perf:null,
+      createdAt:new Date().toISOString(),
+    });
+    added++;
+  }
+  closeSheet('sheetPlanner');
+  await renderCalendar();
+  showToast(`${added} konten ditambahkan ke kalender ✓`);
+}
+
 // ===== COMPARE =====
 let cmpSelected=[];
 
@@ -2858,9 +3746,10 @@ async function renderCompare(){
   const accs=await dbGetAll('accounts');
   const sel=document.getElementById('cmpSelector');
   const body=document.getElementById('cmpBody');
+  const abHtml=await buildABSection();
   if(accs.length<2){
     sel.innerHTML='';
-    body.innerHTML=`<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><div class="empty-title">Butuh 2+ akun</div><p>Tambahkan minimal 2 akun untuk bisa membandingkan performa.</p></div>`;
+    body.innerHTML=`<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><div class="empty-title">Butuh 2+ akun</div><p>Tambahkan minimal 2 akun untuk bisa membandingkan performa.</p></div>${abHtml}`;
     return;
   }
   // Default select first 2
@@ -2941,6 +3830,7 @@ async function renderCompare(){
     <div style="height:4px"></div>
     <div class="sec-hdr"><span class="sec-title">Konten Terbaik per Akun</span></div>
     <div class="card"><div class="card-body">${topHtml}</div></div>
+    ${abHtml}
   `;
 }
 
@@ -2954,12 +3844,164 @@ function toggleCmpAcc(id){
   renderCompare();
 }
 
+// ===== A/B EKSPERIMEN =====
+let abMetric='save';
+window._abExplains=window._abExplains||{};
+
+async function openABSheet(contentId){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const c0=await dbGet('contents',contentId);
+  if(!c0){showToast('Konten tidak ditemukan');return;}
+  if(!c0.perf||!c0.perf.view){showToast('A/B hanya untuk konten live');return;}
+  abMetric=c0.experiment?.metric||'save';
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const live=all.filter(c=>c.perf&&c.perf.view>0&&c.id!==contentId);
+  const topic=c0.topic||'—';
+  const sorted=[...live.filter(c=>(c.topic||'—')===topic),...live.filter(c=>(c.topic||'—')!==topic)];
+  document.getElementById('abBody').innerHTML=`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">${escapeHtml(c0.title||'(Tanpa judul)')} <span style="color:var(--teal);font-size:10px;font-family:'DM Mono',monospace">GRUP A</span></div>
+      <div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${escapeHtml(c0.hook||'—')} · ${escapeHtml(c0.topic||'—')} · ${fmt(c0.perf.view)} view · ${c0.perf.save} save</div>
+    </div>
+    ${c0.experiment?`<div class="info-box">Konten ini sudah dipasangkan. Pasangkan ulang akan melepas pasangan lama.</div>`:''}
+    <div class="form-group"><label class="form-label">Konten Pembanding <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(topik sama diurutkan lebih dulu)</span></label>
+      <select class="form-input" id="abPartner">
+        <option value="">— Pilih konten live —</option>
+        ${sorted.map(c=>`<option value="${c.id}" ${c0.experiment&&c.experiment.id===c0.experiment.id&&c.experiment.group==='B'?'selected':''}>${escapeHtml(c.title||'(Tanpa judul)')} · ${escapeHtml(c.topic||'—')} · ${fmt(c.perf.view)} view / ${c.perf.save} save</option>`).join('')}
+      </select></div>
+    <div class="form-group"><label class="form-label">Metrik Tujuan</label>
+      <div class="chip-group" id="abMetricChips">
+        <div class="chip ${abMetric==='save'?'selected':''}" data-metric="save" onclick="selABMetric(this)">Save</div>
+        <div class="chip ${abMetric==='view'?'selected':''}" data-metric="view" onclick="selABMetric(this)">View</div>
+      </div></div>
+    <button class="btn-primary" onclick="pairAB('${contentId}')">Pasangkan</button>
+    ${c0.experiment?`<button class="btn-danger" onclick="unpairAB('${c0.experiment.id}')">Lepas Pasangan Ini</button>`:''}`;
+  openSheet('sheetAB');
+}
+function selABMetric(btn){
+  abMetric=btn.dataset.metric||'save';
+  document.querySelectorAll('#abMetricChips .chip').forEach(ch=>ch.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+async function clearOldPairOf(content,excludeId){
+  if(!content.experiment)return;
+  const mates=await dbByIdx('contents','accountId',cur.id);
+  for(const m of mates){
+    if(m.id!==content.id&&m.id!==excludeId&&m.experiment&&m.experiment.id===content.experiment.id){
+      delete m.experiment;
+      await dbPut('contents',m);
+    }
+  }
+}
+async function pairAB(contentId){
+  const partnerId=document.getElementById('abPartner')?.value;
+  if(!partnerId){showToast('Pilih konten pembanding dulu');return;}
+  const c0=await dbGet('contents',contentId);
+  const p=await dbGet('contents',partnerId);
+  if(!c0||!p){showToast('Konten tidak ditemukan');return;}
+  await clearOldPairOf(c0,partnerId);
+  await clearOldPairOf(p,contentId);
+  const expId=Date.now().toString(36);
+  const metric=abMetric||'save';
+  c0.experiment={id:expId,group:'A',metric};
+  p.experiment={id:expId,group:'B',metric};
+  await dbPut('contents',c0);
+  await dbPut('contents',p);
+  closeSheet('sheetAB');
+  showToast('Pasangan A/B dibuat ✓');
+}
+async function buildABSection(){
+  if(!cur)return'';
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const pairs={};
+  all.forEach(c=>{if(c.experiment&&c.experiment.id){(pairs[c.experiment.id]=pairs[c.experiment.id]||[]).push(c);}});
+  const entries=Object.entries(pairs).filter(([,arr])=>arr.length===2);
+  if(!entries.length)return'';
+  const cards=entries.map(([pairId,arr])=>{
+    const a=arr.find(x=>x.experiment.group==='A')||arr[0];
+    const b=arr.find(x=>x.experiment.group==='B')||arr[1];
+    const metric=a.experiment.metric||b.experiment.metric||'save';
+    const va=metric==='save'?a.perf.save:a.perf.view;
+    const vb=metric==='save'?b.perf.save:b.perf.view;
+    const winner=va>vb?'A':(vb>va?'B':'Tie');
+    const explain=a.experiment.explain||b.experiment.explain||'';
+    if(explain)window._abExplains[pairId]=explain;
+    const row=(c,g)=>{
+      const val=metric==='save'?c.perf.save:c.perf.view;
+      const win=winner===g;
+      return`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--border)">
+        <span style="flex:none;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:${win?'var(--teal)':'var(--text-3)'}">${g}${win?' 🏆':''}</span>
+        <div style="min-width:0;flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(c.title||'(Tanpa judul)')}</div>
+          <div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${escapeHtml(c.hook||'—')} · ${escapeHtml(c.struct||'—')} · ${escapeHtml(c.topic||'—')}${c.aiTags?.emotion?` · ${escapeHtml(c.aiTags.emotion)}/${escapeHtml(c.aiTags.style||'—')}`:''}</div>
+        </div>
+        <div style="flex:none;text-align:right;font-size:11px;color:var(--text-2);font-family:'DM Mono',monospace">${metric==='save'?fmt(val)+' save':fmt(val)+' view'}</div>
+      </div>`;
+    };
+    return`<div class="insight-card">
+      <div class="insight-hdr"><span class="insight-icon">⚡</span><span class="insight-title">A/B · Metrik ${metric==='save'?'Save':'View'} · Menang: ${winner}</span></div>
+      ${row(a,'A')}${row(b,'B')}
+      ${explain?`<div class="insight-text" id="abExplainText-${pairId}" style="white-space:pre-wrap;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text-2)">${escapeHtml(explain)}</div><div style="margin-top:6px"><button class="copy-btn" id="abCopy-${pairId}" onclick="copyABExplain('${pairId}')">${copyIcon()} Copy Penjelasan</button></div>`:''}
+      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+        <button class="copy-btn" id="abExplain-${pairId}" onclick="explainAB('${pairId}')"><span style="font-size:11px">✦</span> Minta penjelasan AI</button>
+        <button class="copy-btn" style="color:var(--red)" onclick="unpairAB('${pairId}')">Lepas</button>
+      </div>
+    </div>`;
+  }).join('');
+  return`<div class="sec-hdr" style="margin-top:18px"><span class="sec-title">Eksperimen A/B</span></div>${cards}`;
+}
+async function explainAB(pairId){
+  if(!cur)return;
+  const btn=document.getElementById('abExplain-'+pairId);
+  if(btn){btn.disabled=true;btn.textContent='⟳ AI menganalisis...';}
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const pair=all.filter(c=>c.experiment&&c.experiment.id===pairId);
+  if(pair.length!==2){showToast('Pasangan tidak lengkap');if(btn){btn.disabled=false;btn.innerHTML='<span style="font-size:11px">✦</span> Minta penjelasan AI';}return;}
+  const a=pair.find(x=>x.experiment.group==='A')||pair[0];
+  const b=pair.find(x=>x.experiment.group==='B')||pair[1];
+  const metric=a.experiment.metric||b.experiment.metric||'save';
+  const describe=c=>`"${c.title||'(Tanpa judul)'}" — hook: ${c.hook||'—'}, struktur: ${c.struct||'—'}, topik: ${c.topic||'—'}, label: ${c.aiTags?.emotion||'—'}/${c.aiTags?.style||'—'}, ${fmt(c.perf.view)} view, ${c.perf.save} save, ${c.perf.like} like`;
+  const va=metric==='save'?a.perf.save:a.perf.view;
+  const vb=metric==='save'?b.perf.save:b.perf.view;
+  const winner=va>vb?'A':(vb>va?'B':'Tie');
+  const prompt=`Dua konten eksperimen A/B (metrik tujuan: ${metric}):\nA: ${describe(a)}\nB: ${describe(b)}\nPemenang: ${winner} (${metric==='save'?va+' save':va+' view'} vs ${metric==='save'?vb+' save':vb+' view'}).\n\nJelaskan SINGKAT (maks 5 kalimat) mengapa pemenang menang berdasarkan hook/struktur/topik/label di atas, dan apa yang bisa ditiru dari konten ini.`;
+  try{
+    const r=await callAI({system:`Kamu adalah analis konten ${cur.platform} niche "${cur.niche}". Jawab singkat, spesifik, sebut angka dari data. Bahasa Indonesia.`,messages:[{role:'user',content:prompt}]});
+    if(!r.ok){showToast('AI gagal: '+r.error);if(btn){btn.disabled=false;btn.innerHTML='<span style="font-size:11px">✦</span> Minta penjelasan AI';}return;}
+    const text=r.text||'';
+    a.experiment.explain=text;
+    b.experiment.explain=text;
+    await dbPut('contents',a);
+    await dbPut('contents',b);
+    await renderCompare();
+    showToast('Penjelasan AI ditambahkan ✓');
+  }catch{
+    showToast('Gagal terhubung ke AI');
+    if(btn){btn.disabled=false;btn.innerHTML='<span style="font-size:11px">✦</span> Minta penjelasan AI';}
+  }
+}
+function copyABExplain(pairId){
+  copyToClipboard(window._abExplains[pairId]||'','abCopy-'+pairId);
+}
+async function unpairAB(pairId){
+  if(!cur)return;
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const pair=all.filter(c=>c.experiment&&c.experiment.id===pairId);
+  for(const c of pair){
+    delete c.experiment;
+    await dbPut('contents',c);
+  }
+  await renderCompare();
+  showToast('Pasangan dilepas');
+}
+
 // ===== SHEETS =====
 function openSheet(id){
   document.getElementById(id).classList.add('show');
   document.getElementById('overlay'+id.replace('sheet','')).classList.add('show');
   if(id==='sheetAccounts')renderAccountsSheet();
   if(id==='sheetSettings')renderSettings();
+  if(id==='sheetAI')renderAiSettings();
 }
 function closeSheet(id){
   document.getElementById(id).classList.remove('show');
@@ -2968,7 +4010,119 @@ function closeSheet(id){
 
 // ===== UTILS =====
 function fmt(n){if(!n)return'0';if(n>=1000000)return(n/1000000).toFixed(1).replace('.0','')+'M';if(n>=1000)return(n/1000).toFixed(1).replace('.0','')+'K';return String(n);}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ===== AI CONFIG/PROXY =====
+// Semua panggilan AI lewat /api/analyze (serverless proxy, bukan langsung ke
+// provider dari browser) supaya bebas CORS dan lebih aman. Config provider
+// (baseUrl/model/apiKey) disimpan global di localStorage 'ka_aiConfig' —
+// kosong = default Groq yang ditangani server.
+const AI_PRESETS={
+  'Groq':{baseUrl:'https://api.groq.com/openai/v1',model:'llama-3.3-70b-versatile'},
+  'OpenRouter':{baseUrl:'https://openrouter.ai/api/v1',model:'meta-llama/llama-3.3-70b-instruct'},
+  'DeepSeek':{baseUrl:'https://api.deepseek.com/v1',model:'deepseek-chat'},
+  'OpenAI':{baseUrl:'https://api.openai.com/v1',model:'gpt-4o-mini'},
+};
+function getAiConfig(){
+  try{return{baseUrl:'',model:'',apiKey:'',...JSON.parse(localStorage.getItem('ka_aiConfig')||'{}')};}
+  catch{return{baseUrl:'',model:'',apiKey:''};}
+}
+function saveAiConfig(cfg){localStorage.setItem('ka_aiConfig',JSON.stringify(cfg));}
+async function callAI({system,messages,maxTokens}){
+  const cfg=getAiConfig();
+  const body={messages};
+  if(system)body.system=system;
+  if(cfg.baseUrl)body.baseUrl=cfg.baseUrl;
+  if(cfg.model)body.model=cfg.model;
+  if(cfg.apiKey)body.apiKey=cfg.apiKey;
+  if(maxTokens)body.maxTokens=maxTokens;
+  let res;
+  try{res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+  catch(err){return{ok:false,error:'Gagal terhubung ke AI: '+err.message};}
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok||!data.text)return{ok:false,error:data.error||`Provider error (${res.status})`};
+  return{ok:true,text:data.text};
+}
+function stripAiMarkdown(text){return(text||'').trim().replace(/```json|```/g,'').trim();}
+async function buildContextBlock(acc){
+  const p=acc.positioning||{};
+  const personas=await dbByIdx('audience','accountId',acc.id);
+  const persona=personas[0];
+  let s=`\nPosisi brand: ${p.tone||'—'}\nTarget audiens: ${p.audience||'—'}`;
+  if(persona){
+    s+=`\nPersona: ${persona.name||'—'} (${persona.ageRange||'—'})`;
+    if(persona.painPoints&&persona.painPoints.length)s+=` — pain: ${persona.painPoints.join('; ')}`;
+    if(persona.favoriteWords)s+=` — kata favorit: ${persona.favoriteWords}`;
+  } else {
+    s+='\nPersona: —';
+  }
+  return s;
+}
+
+function openAiSettings(){openSheet('sheetAI');}
+function renderAiSettings(){
+  const cfg=getAiConfig();
+  document.getElementById('aiBody').innerHTML=`
+    <div class="form-group">
+      <label class="form-label">Preset Provider</label>
+      <select class="form-input" id="aiPreset" onchange="applyAiPreset(this)">
+        <option value="">— Pilih preset (opsional) —</option>
+        ${Object.keys(AI_PRESETS).map(p=>`<option value="${p}">${p}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Base URL <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(endpoint OpenAI-compatible)</span></label>
+      <input type="text" class="form-input" id="aiBaseUrl" value="${cfg.baseUrl}" placeholder="https://api.groq.com/openai/v1"/></div>
+    <div class="form-group"><label class="form-label">Model</label>
+      <input type="text" class="form-input" id="aiModel" value="${cfg.model}" placeholder="llama-3.3-70b-versatile"/></div>
+    <div class="form-group"><label class="form-label">API Key</label>
+      <input type="password" class="form-input" id="aiApiKey" value="${cfg.apiKey}" placeholder="sk-... atau key dari provider" autocomplete="off"/></div>
+    <div class="form-hint">Key tersimpan hanya di aplikasi ini (localStorage) dan dikirim melalui proxy /api/analyze — tidak langsung dari browser ke provider. Alternatif: set env AI_API_KEY di Vercel (lebih aman, dipakai kalau key di sini kosong). Kosongkan semua field = default Groq.</div>
+    <button class="btn-primary" onclick="saveAiSettings()">Simpan</button>
+    <button class="btn-secondary" id="aiTestBtn" onclick="testAiConnection()">Uji Koneksi</button>
+    <div id="aiTestStatus" style="display:none;font-size:12px;font-family:'DM Mono',monospace;line-height:1.6;margin-top:4px"></div>`;
+}
+function applyAiPreset(sel){
+  const p=AI_PRESETS[sel.value];if(!p)return;
+  document.getElementById('aiBaseUrl').value=p.baseUrl;
+  document.getElementById('aiModel').value=p.model;
+  showToast(`Preset ${sel.value} diisi — tinggal masukkan API key`);
+}
+function collectAiConfigFromUi(){
+  const cfg={
+    baseUrl:document.getElementById('aiBaseUrl').value.trim(),
+    model:document.getElementById('aiModel').value.trim(),
+    apiKey:document.getElementById('aiApiKey').value.trim(),
+  };
+  saveAiConfig(cfg);
+  return cfg;
+}
+function saveAiSettings(){
+  collectAiConfigFromUi();
+  showToast('Pengaturan AI disimpan ✓');
+}
+async function testAiConnection(){
+  const btn=document.getElementById('aiTestBtn');
+  const status=document.getElementById('aiTestStatus');
+  collectAiConfigFromUi();
+  if(btn){btn.disabled=true;btn.textContent='⟳ Menguji...';}
+  if(status){status.style.display='';status.style.color='var(--text-3)';status.textContent='Mengirim test request ke provider...';}
+  const cfg=getAiConfig();
+  const r=await callAI({messages:[{role:'user',content:'Balas dengan tepat satu kata: OK'}],maxTokens:10});
+  if(status){
+    if(r.ok&&/ok/i.test(r.text.trim())){
+      const label=[cfg.baseUrl||'Groq (default)',cfg.model||'model default'].join(' · ');
+      status.style.color='var(--teal)';
+      status.textContent='✓ Koneksi berhasil — '+label;
+      showToast('Uji koneksi berhasil ✓');
+    }else{
+      status.style.color='var(--red)';
+      status.textContent='✗ '+(r.error||'Respons tak terduga: '+r.text);
+      showToast('Uji koneksi gagal');
+    }
+  }
+  if(btn){btn.disabled=false;btn.textContent='Uji Koneksi';}
+}
 
 // ===== AUTO TOPIC =====
 function getContentTextForTopic(context){
@@ -3035,12 +4189,13 @@ async function autoSelectTopic(context){
 
   const contentText=[title,body].filter(Boolean).join('\n');
   const topicList=topics.map((t,i)=>`${i+1}. ${t}`).join('\n');
-  const prompt=`Kamu adalah asisten content strategy.\n\nNiche akun: ${cur.niche}\nPlatform: ${cur.platform}\n\nDaftar topik yang tersedia:\n${topicList}\n\nKonten:\n${contentText}\n\nTugasmu: pilih SATU topik dari daftar yang paling relevan dengan konten di atas.\nJika tidak ada yang relevan, sarankan topik baru yang singkat dan sesuai niche.\n\nJawab HANYA dengan format JSON ini (tanpa markdown, tanpa teks lain):\n{"matched": true, "topic": "nama topik dari daftar"}\natau jika tidak ada yang cocok:\n{"matched": false, "topic": "topik baru yang disarankan"}`;
+  const contextBlock=await buildContextBlock(cur);
+  const prompt=`Kamu adalah asisten content strategy.\n\nNiche akun: ${cur.niche}\nPlatform: ${cur.platform}${contextBlock}\n\nDaftar topik yang tersedia:\n${topicList}\n\nKonten:\n${contentText}\n\nTugasmu: pilih SATU topik dari daftar yang paling relevan dengan konten di atas dan sesuai persona/audiens.\nJika tidak ada yang relevan, sarankan topik baru yang singkat dan sesuai niche.\n\nJawab HANYA dengan format JSON ini (tanpa markdown, tanpa teks lain):\n{"matched": true, "topic": "nama topik dari daftar"}\natau jika tidak ada yang cocok:\n{"matched": false, "topic": "topik baru yang disarankan"}`;
 
   try{
-    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'Kamu adalah asisten pemilih topik konten. Jawab hanya dengan JSON.',messages:[{role:'user',content:prompt}]})});
-    const data=await res.json();
-    const rawText=(data.text||'').trim().replace(/```json|```/g,'').trim();
+    const r=await callAI({system:'Kamu adalah asisten pemilih topik konten. Jawab hanya dengan JSON.',messages:[{role:'user',content:prompt}]});
+    if(!r.ok){showToast('AI gagal: '+r.error);return;}
+    const rawText=stripAiMarkdown(r.text);
     let parsed;
     try{parsed=JSON.parse(rawText);}catch{showToast('Gagal parse respons AI');return;}
 
@@ -3100,13 +4255,13 @@ async function bulkAutoTopic(){
 
   for(let i=0;i<noTopic.length;i++){
     const c=noTopic[i];
-    const contentText=[c.title,c.description].filter(Boolean).join('\n');
+    const contentText=[c.title,c.desc].filter(Boolean).join('\n');
     const prompt=`Niche: ${cur.niche}\nPlatform: ${cur.platform}\n\nDaftar topik:\n${topicList}\n\nKonten: ${contentText}\n\nPilih SATU topik paling relevan dari daftar.\nJika tidak ada yang relevan, sarankan topik baru.\n\nJawab hanya JSON:\n{"matched": true, "topic": "topik dari daftar"}\natau\n{"matched": false, "topic": "topik baru"}`;
 
     try{
-      const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:'Jawab hanya dengan JSON.',messages:[{role:'user',content:prompt}]})});
-      const data=await res.json();
-      const rawText=(data.text||'').trim().replace(/```json|```/g,'').trim();
+      const r=await callAI({system:'Jawab hanya dengan JSON.',messages:[{role:'user',content:prompt}]});
+      if(!r.ok)continue;
+      const rawText=stripAiMarkdown(r.text);
       let parsed;
       try{parsed=JSON.parse(rawText);}catch{continue;}
 
@@ -3132,6 +4287,53 @@ async function bulkAutoTopic(){
   // Re-render insight
   await renderInsight();
   showToast(`${updated} konten berhasil di-assign topik ✓`);
+}
+
+async function bulkClassify(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const live=all.filter(c=>c.perf&&c.perf.view>0);
+  const todo=live.filter(c=>!c.aiTags||!c.aiTags.emotion);
+  if(!todo.length){showToast('Semua konten live sudah punya label ✓');return;}
+
+  const btn=document.getElementById('bulkClassifyBtn');
+  const statusEl=document.getElementById('bulkClassifyStatus');
+  if(btn){btn.disabled=true;btn.textContent='⟳ Memproses...';}
+  if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<div class="info-box">Memproses ${todo.length} konten... <span id="bulkClassifyProgress">0/${todo.length}</span></div>`;}
+
+  let updated=0;
+  for(let i=0;i<todo.length;i++){
+    const c=todo[i];
+    const contentText=[
+      `Judul: ${c.title||'—'}`,
+      `Deskripsi: ${c.desc||'—'}`,
+      c.slideScript?`Naskah slide: ${c.slideScript}`:'',
+      `Hook: ${c.hook||'—'}`,
+      `Struktur: ${c.struct||'—'}`,
+      `Topik: ${c.topic||'—'}`,
+      `Metrik: ${fmt(c.perf.view)} view, ${c.perf.save} save, ${c.perf.like} like, ${c.perf.comment} komen, ${c.perf.share} share`,
+    ].filter(Boolean).join('\n');
+    const prompt=`Niche: ${cur.niche}\nPlatform: ${cur.platform}\n\n${contentText}\n\nKlasifikasikan konten ini.\nemotion: emosi/pendekatan dominan (contoh: Edukasi, Drama, Percobaan, Reaksi, Humor, Daftar/Tips).\nstyle: gaya bahasa (contoh: informal, formal, humor, provokatif).\nreason: satu kalimat alasan singkat.\n\nJawab HANYA JSON valid tanpa markdown:\n{"emotion":"","style":"","reason":""}`;
+    try{
+      const r=await callAI({system:'Jawab hanya dengan JSON valid tanpa markdown.',messages:[{role:'user',content:prompt}],maxTokens:512});
+      if(!r.ok)continue;
+      let parsed;
+      try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{continue;}
+      const emotion=String(parsed.emotion||'').trim();
+      const style=String(parsed.style||'').trim();
+      if(!emotion&&!style)continue;
+      c.aiTags={emotion:emotion||'—',style:style||'—',reason:String(parsed.reason||'').trim()};
+      await dbPut('contents',c);
+      updated++;
+      const progress=document.getElementById('bulkClassifyProgress');
+      if(progress)progress.textContent=`${i+1}/${todo.length}`;
+    }catch{
+      // skip this content on error
+    }
+  }
+
+  await renderInsight();
+  showToast(`${updated} konten berhasil diberi label ✓`);
 }
 
 init();
