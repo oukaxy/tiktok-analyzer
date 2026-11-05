@@ -541,7 +541,7 @@
       <input type="hidden" id="inDateHidden"/>
       <div class="form-group"><label class="form-label">Deskripsi / Caption</label><textarea class="form-input" id="inDesc" placeholder="Caption + hashtag..."></textarea></div>
       <div class="form-group"><label class="form-label">Format Konten</label><div class="chip-group" id="inFmtChips"></div></div>
-      <div class="form-group" id="slideGroup"><label class="form-label">Jumlah Slide</label><input type="number" class="form-input" id="inSlides" placeholder="Misal: 6" min="1" max="30"/></div>
+      <div class="form-group" id="slideGroup" style="display:none"><label class="form-label">Isi Slide</label><div id="inSlidesContainer"><div class="slide-wrap"><span class="slide-num">S1</span><textarea class="slide-inp" placeholder="Hook — kalimat yang bikin orang geser..."></textarea></div><div class="slide-wrap"><span class="slide-num">S2</span><textarea class="slide-inp" placeholder="Isi / poin pertama..."></textarea></div><div class="slide-wrap"><span class="slide-num">S3</span><textarea class="slide-inp" placeholder="Isi / poin kedua..."></textarea></div></div><button class="add-slide-btn" onclick="addSlide('inSlidesContainer')">+ Tambah Slide</button></div>
       <div class="form-group" id="slideScriptGroup" style="display:none"><label class="form-label" id="slideScriptLabel">Naskah / Isi Slide <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(dari draft, terpisah dari caption)</span></label><textarea class="form-input" id="inSlideScript" placeholder="Isi tiap slide..." style="min-height:100px"></textarea></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="inHookChips"></div></div>
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="inStructChips"></div></div>
@@ -992,7 +992,8 @@ function openAddSheet(){
   const today=new Date().toISOString().split('T')[0];
   const dateEl=document.getElementById('inDateHidden');
   if(dateEl)dateEl.value=today;
-  ['inTitle','inDesc','inSlides','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['inTitle','inDesc','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  resetSlideInputs('inSlidesContainer');
   const retSec=document.getElementById('retentionSectionAdd');if(retSec)retSec.innerHTML='';
   document.querySelectorAll('#sheetAdd .chip').forEach(c=>c.classList.remove('selected'));
   cs={};backStep1();toggleSlideGroups('');
@@ -1015,8 +1016,8 @@ async function openEditSheet(id){
   setVal('inTitle',c.title);
   setVal('inDesc',c.desc);
   setVal('inDateHidden',c.date||new Date().toISOString().split('T')[0]);
-  setVal('inSlides',c.slides||'');
   setVal('inSlideScript',c.slideScript||'');
+  fillSlidesFromScript(c.slideScript,(c.format==='Carousel')?(c.slides||0):0);
   setVal('inNotes',c.notes);
   // Render retention section for add/edit form
   renderRetentionFields('retentionSectionAdd', c.format, c.retention, 'in');
@@ -1059,16 +1060,19 @@ function toggleSlideGroups(format){
   const sg=document.getElementById('slideGroup');
   if(sg)sg.style.display=isCarousel?'':'none';
   const ssg=document.getElementById('slideScriptGroup');
-  if(ssg)ssg.style.display=(isCarousel||isVideo)?'':'none';
+  if(ssg)ssg.style.display=isVideo?'':'none';
   const lbl=document.getElementById('slideScriptLabel');
   const ta=document.getElementById('inSlideScript');
-  if(isVideo){
-    if(lbl)lbl.textContent='Naskah / Script Video (Hook / Isi / CTA — terpisah dari caption)';
-    if(ta)ta.placeholder='Hook: kalimat pembuka 0-3 detik...\nIsi: poin utama...\nCTA: ajakan penutup...';
-  } else {
-    if(lbl)lbl.textContent='Naskah / Isi Slide (terpisah dari caption)';
-    if(ta)ta.placeholder='Isi tiap slide...';
-  }
+  if(lbl)lbl.textContent='Naskah / Script Video (terpisah dari caption)';
+  if(ta)ta.placeholder='Hook: kalimat pembuka 0-3 detik...\nIsi: poin utama...\nCTA: ajakan penutup...';
+}
+const DEFAULT_SLIDES_HTML='<div class="slide-wrap"><span class="slide-num">S1</span><textarea class="slide-inp" placeholder="Hook — kalimat yang bikin orang geser..."></textarea></div><div class="slide-wrap"><span class="slide-num">S2</span><textarea class="slide-inp" placeholder="Isi / poin pertama..."></textarea></div><div class="slide-wrap"><span class="slide-num">S3</span><textarea class="slide-inp" placeholder="Isi / poin kedua..."></textarea></div>';
+function resetSlideInputs(containerId){const cont=document.getElementById(containerId);if(cont)cont.innerHTML=DEFAULT_SLIDES_HTML;}
+function fillSlidesFromScript(script,total){
+  const cont=document.getElementById('inSlidesContainer');if(!cont)return;
+  const texts=(script||'').split('\n').map(l=>{const m=l.match(/^Slide\s*\d+:\s*(.*)$/);return m?m[1]:l;}).filter(t=>t&&t.trim());
+  const n=Math.max(total||0,texts.length,3);
+  cont.innerHTML=Array.from({length:n},(_,i)=>`<div class="slide-wrap"><span class="slide-num">S${i+1}</span><textarea class="slide-inp" placeholder="Isi slide ${i+1}...">${escapeHtml(texts[i]||'')}</textarea></div>`).join('');
 }
 function backStep1(){
   document.getElementById('addStep1').style.display='';document.getElementById('addStep2').style.display='none';
@@ -1089,15 +1093,18 @@ function buildRetentionFromForm(prefix, format){
   return{};
 }
 function buildContent(withPerf){
+  const fmt=cs['inFmt']||'—';
+  const slideEls=[...document.querySelectorAll('#inSlidesContainer .slide-inp')];
+  const isCar=fmt==='Carousel';
   const content={
     id:editingId||Date.now().toString(),
     accountId:cur.id,
     title:document.getElementById('inTitle').value.trim(),
     desc:document.getElementById('inDesc').value.trim(),
     date:document.getElementById('inDateHidden').value,
-    format:cs['inFmt']||'—',
-    slides:parseInt(document.getElementById('inSlides').value)||0,
-    slideScript:document.getElementById('inSlideScript')?.value.trim()||'',
+    format:fmt,
+    slides:isCar?slideEls.length:0,
+    slideScript:isCar?slideEls.map((el,i)=>`Slide ${i+1}: ${el.value.trim()}`).filter(s=>!s.endsWith(': ')).join('\n'):(document.getElementById('inSlideScript')?.value.trim()||''),
     hook:cs['inHook']||'—',
     struct:cs['inStruct']||'—',
     topic:cs['inTopic']||'—',
@@ -2945,7 +2952,7 @@ async function saveReview(){
 }
 
 // ===== DRAFT =====
-function addSlide(){slideCount++;const w=document.createElement('div');w.className='slide-wrap';w.innerHTML=`<span class="slide-num">S${slideCount}</span><textarea class="slide-inp" placeholder="Isi slide ${slideCount}..."></textarea>`;document.getElementById('slidesContainer').appendChild(w);}
+function addSlide(containerId){const cont=document.getElementById(containerId||'slidesContainer');if(!cont)return;const n=cont.querySelectorAll('.slide-wrap').length+1;const w=document.createElement('div');w.className='slide-wrap';w.innerHTML=`<span class="slide-num">S${n}</span><textarea class="slide-inp" placeholder="Isi slide ${n}..."></textarea>`;cont.appendChild(w);}
 // Platform → available draft tabs
 const DRAFT_TABS={
   TikTok:['carousel','video'],
@@ -3379,7 +3386,7 @@ function saveToLog(){
   editSync={tiktokId:null,lastSyncAt:null};
   document.getElementById('addSheetTitle').textContent='Simpan ke Log';
   // Reset
-  ['inTitle','inDesc','inSlides','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{
+  ['inTitle','inDesc','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   const dateEl=document.getElementById('inDateHidden');
@@ -3388,8 +3395,8 @@ function saveToLog(){
   const setInput=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.value=val;};
   setInput('inTitle',title);
   setInput('inDesc',desc);
-  setInput('inSlideScript',slideScript);
-  if(slides>0)setInput('inSlides',slides);
+  if(format==='Carousel'){fillSlidesFromScript(slideScript,slides);}
+  else{setInput('inSlideScript',slideScript);}
   // Reset and select chips
   document.querySelectorAll('#sheetAdd .chip').forEach(ch=>ch.classList.remove('selected'));
   cs={};
