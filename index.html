@@ -545,6 +545,7 @@
       <div class="form-group" id="slideScriptGroup" style="display:none"><label class="form-label" id="slideScriptLabel">Naskah / Isi Slide <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(dari draft, terpisah dari caption)</span></label><textarea class="form-input" id="inSlideScript" placeholder="Isi tiap slide..." style="min-height:100px"></textarea></div>
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="inHookChips"></div></div>
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="inStructChips"></div></div>
+      <div class="form-group"><label class="form-label">Pilar Konten</label><div class="chip-group" id="inPillarChips"></div></div>
       <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik Spesifik</label><button class="auto-topic-btn" id="autoTopicBtnAdd" onclick="autoSelectTopic('add')">✦ Auto Topik</button></div><div class="chip-group" id="inTopicChips"></div></div>
       <div class="form-group"><label class="form-label">Tujuan Konten</label><div class="chip-group" id="inGoalChips"></div></div>
       <div class="form-group"><label class="form-label">Catatan Pribadi <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional)</span></label><textarea class="form-input" id="inNotes" placeholder="Misal: konten ini viral karena trending audio, dibuat saat ramadan..." style="min-height:70px"></textarea></div>
@@ -812,6 +813,7 @@ function renderAddChips(){
   const fmts=cur.formats||FMT[cur.platform]||['Carousel','Video','Foto'];
   mkChips('inFmtChips',fmts,'inFmt');mkChips('inHookChips',cur.hooks||HOOKS,'inHook');
   mkChips('inStructChips',cur.structs||STRUCTS,'inStruct');mkChips('inTopicChips',cur.topics||[],'inTopic');
+  mkChips('inPillarChips',cur.positioning&&cur.positioning.pillars||[],'inPillar');
   mkChips('inGoalChips',cur.goals||GOALS,'inGoal');
 }
 function selChip(el,group){
@@ -1032,6 +1034,7 @@ async function openEditSheet(id){
   selByText('inHookChips',c.hook,'inHook');
   selByText('inStructChips',c.struct,'inStruct');
   selByText('inTopicChips',c.topic,'inTopic');
+  selByText('inPillarChips',c.pillar,'inPillar');
   selByText('inGoalChips',c.goal,'inGoal');
   // Show/hide slide field
   toggleSlideGroups(c.format);
@@ -1107,6 +1110,7 @@ function buildContent(withPerf){
     slideScript:isCar?slideEls.map((el,i)=>`Slide ${i+1}: ${el.value.trim()}`).filter(s=>!s.endsWith(': ')).join('\n'):(document.getElementById('inSlideScript')?.value.trim()||''),
     hook:cs['inHook']||'—',
     struct:cs['inStruct']||'—',
+    pillar:cs['inPillar']||'—',
     topic:cs['inTopic']||'—',
     goal:cs['inGoal']||'—',
     notes:document.getElementById('inNotes')?.value.trim()||null,
@@ -2328,6 +2332,7 @@ async function renderInsight(){
     :'';
   // Store plain text version for copy
   window._insightText=buildInsightText(live, cur, avgViewVal, avgSaveVal, topFmt);
+  const pillarLive=live.filter(c=>c.pillar&&c.pillar!=='—');
   document.getElementById('insightBody').innerHTML=`
     ${personaKicker}
     ${warningHtml}
@@ -2365,6 +2370,12 @@ async function renderInsight(){
     <div class="sec-hdr"><span class="sec-title">Per Topik</span><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="bulk-topic-btn" id="gapIdeasBtn" onclick="generateGapIdeas()"><span style="font-size:12px">✦</span> Ide dari Gap</button><button class="bulk-topic-btn" id="bulkTopicBtn" onclick="bulkAutoTopic()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>✦ Auto Topik Massal</button></div></div>
     <div id="bulkTopicStatus" style="display:none;margin-bottom:8px"></div>
     <div class="card"><div class="card-body">${buildTable(live,'topic')}</div></div>
+    <div style="height:4px"></div>
+    <div class="sec-hdr"><span class="sec-title">Per Pilar</span><button class="bulk-topic-btn" id="bulkPillarBtn" onclick="bulkLabelPillar()">✦ Label Pilar Massal</button></div>
+    <div id="bulkPillarStatus" style="display:none;margin-bottom:8px"></div>
+    ${pillarLive.length
+      ?`<div class="card"><div class="card-body">${buildTable(pillarLive,'pillar')}</div></div>`
+      :`<div class="info-box">Belum ada konten berpilar. Isi pilar di Pengaturan (posisi brand), lalu pakai "Label Pilar Massal".</div>`}
     <div id="gapIdeas"></div>`;
 }
 function buildLineChart(live){
@@ -2838,7 +2849,7 @@ async function generateGapIdeas(){
   const known=cur.topics&&cur.topics.length?cur.topics.map(t=>`- ${t}`).join('\n'):'- Belum ada.';
   const best=[...live].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).slice(0,10).sort((a,b)=>b.perf.view-a.perf.view).slice(0,5).map(c=>`- "${c.title||'Tanpa judul'}" (topik: ${c.topic||'—'}, ${fmt(c.perf.view)} view, ${c.perf.save} save)`).join('\n');
   const contextBlock=await buildContextBlock(cur);
-  const prompt=`Platform: ${cur.platform}\nNiche: ${cur.niche}${contextBlock}\n\nSkor per topik (histori):\n${statsText}\n\nDaftar topik yang sudah ada:\n${known}\n\n5 konten terbaik terakhir:\n${best}\n\nTugas: temukan gap konten yang relevan dengan posisi brand & persona di atas. Kembalikan HANYA JSON valid tanpa markdown:\n{"underproduced":[{"topic":"…","reason":"…","evidence":"…"}],"deprioritize":[{"topic":"…","reason":"…"}],"newIdeas":[{"topic":"…","angle":"…","why":"…"}]}\nunderproduced = topik yang masih punya ruang; deprioritize = topik yang sebaiknya dikurangi; newIdeas = ide topik baru yang belum ada di daftar. Sebut angka dari data bila ada.`;
+  const prompt=`Platform: ${cur.platform}\nNiche: ${cur.niche}${contextBlock}\n\nSkor per topik (histori):\n${statsText}\n\nDaftar topik yang sudah ada:\n${known}\n\n5 konten terbaik terakhir:\n${best}\n\nTugas: temukan gap konten yang relevan dengan posisi brand & persona di atas. Kembalikan HANYA JSON valid tanpa markdown:\n{"underproduced":[{"topic":"…","reason":"…","evidence":"…"}],"deprioritize":[{"topic":"…","reason":"…"}],"newIdeas":[{"topic":"…","angle":"…","why":"…"}]}\nunderproduced = topik yang masih punya ruang; deprioritize = topik yang sebaiknya dikurangi; newIdeas = ide topik baru yang belum ada di daftar. Sebut angka dari data bila ada.${(cur.positioning&&cur.positioning.pillars||[]).length?' Ide baru (newIdeas) harus selaras dengan pilar konten akun di atas.':''}`;
   try{
     const r=await callAI({system:`Kamu adalah strategist konten ${cur.platform} niche "${cur.niche}". Jawab HANYA dengan JSON valid, tanpa markdown.`,messages:[{role:'user',content:prompt}],maxTokens:2048});
     if(!r.ok){showToast('AI gagal: '+r.error);box.innerHTML=`<div class="info-box">⚠️ ${escapeHtml(r.error)}</div>`;return;}
@@ -3170,8 +3181,9 @@ async function renderSettings(){
     <div class="form-group"><label class="form-label">Tone of Voice</label><input type="text" class="form-input" id="editTone" value="${escapeHtml(cur.positioning.tone||'')}" placeholder="Misal: santai tapi berbasis data"/></div>
     <div class="form-group"><label class="form-label">Target Audiens</label><textarea class="form-input" id="editAudience" placeholder="Siapa yang dituju? Contoh: mahasiswa yang mau mulai investasi..." style="min-height:70px">${escapeHtml(cur.positioning.audience||'')}</textarea></div>
     <div class="form-group">
-      <label class="form-label">Pilar Konten</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Pilar Konten</label><button class="auto-topic-btn" id="suggestPillarBtn" onclick="suggestPillars()">✦ Saran Pilar</button></div>
       <div class="chip-group" id="editPillarChips">${editChips(cur.positioning.pillars,'rmEditPillar','addEditPillar')}</div>
+      <div id="pillarSuggest"></div>
     </div>
     <div class="form-group">
       <label class="form-label">Topik Konten</label>
@@ -3208,6 +3220,41 @@ function syncPositioningInputs(){
 }
 function rmEditPillar(i){syncPositioningInputs();cur.positioning.pillars.splice(i,1);renderSettings();}
 function addEditPillar(){const v=prompt('Nama pilar konten baru:');if(!v)return;syncPositioningInputs();cur.positioning=cur.positioning||{tone:'',audience:'',pillars:[]};cur.positioning.pillars=cur.positioning.pillars||[];cur.positioning.pillars.push(v.trim());renderSettings();}
+async function suggestPillars(){
+  if(!cur)return;
+  const btn=document.getElementById('suggestPillarBtn');
+  const box=document.getElementById('pillarSuggest');
+  if(!box)return;
+  const orig=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.textContent='⟳ Menyusun...';}
+  box.innerHTML='<div style="color:var(--text-3);font-size:12px" class="ai-thinking">AI menyusun saran pilar...</div>';
+  const topics=cur.topics&&cur.topics.length?cur.topics.join(', '):'—';
+  try{
+    const r=await callAI({system:'Jawab hanya dengan JSON array string tanpa penjelasan atau markdown.',messages:[{role:'user',content:`Niche: ${cur.niche}\nPlatform: ${cur.platform}\nTopik yang sudah ada: ${topics}\n\nUsulkan 3-5 pilar konten (tema besar/kategori yang melingkupi topik-topik di atas). Format: ["pilar1","pilar2",...]. Hanya JSON.`}]});
+    if(!r.ok){box.innerHTML=`<div style="color:var(--red);font-size:12px">⚠️ ${escapeHtml(r.error)}</div>`;return;}
+    let arr=[];
+    try{arr=JSON.parse(stripAiMarkdown(r.text));}catch{}
+    const existing=(cur.positioning.pillars||[]).map(p=>p.toLowerCase());
+    const fresh=(Array.isArray(arr)?arr:[]).filter(p=>typeof p==='string'&&p.trim()&&!existing.includes(p.trim().toLowerCase()));
+    if(!fresh.length){box.innerHTML='<div style="color:var(--text-3);font-size:12px">AI tidak memberi saran baru. Coba lagi.</div>';return;}
+    box.innerHTML=`<div style="font-size:11px;color:var(--text-3);margin:6px 0 4px">Tap untuk tambah (lalu Simpan Perubahan tidak wajib — langsung tersimpan):</div><div class="chip-group">${fresh.map(p=>`<div class="chip chip-add" data-v="${escapeHtml(p.trim())}" onclick="addSuggestedPillar(this.dataset.v)">+ ${escapeHtml(p.trim())}</div>`).join('')}</div>`;
+  }catch{
+    box.innerHTML='<div style="color:var(--text-3);font-size:12px">Gagal terhubung ke AI.</div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML=orig||'✦ Saran Pilar';}
+  }
+}
+async function addSuggestedPillar(v){
+  if(!cur||!v)return;
+  syncPositioningInputs();
+  cur.positioning=cur.positioning||{tone:'',audience:'',pillars:[]};
+  cur.positioning.pillars=cur.positioning.pillars||[];
+  if(cur.positioning.pillars.some(p=>p.toLowerCase()===v.toLowerCase())){showToast('Pilar sudah ada');return;}
+  cur.positioning.pillars.push(v);
+  await dbPut('accounts',cur);
+  renderSettings();
+  showToast(`Pilar ditambahkan: ${v}`);
+}
 let editingPersonaId=null;
 async function openPersonaEditor(id){
   const personas=await dbByIdx('audience','accountId',cur.id);
@@ -3748,7 +3795,12 @@ async function generatePlanSuggestions(){
   const formats=(cur.formats&&cur.formats.length?cur.formats:Object.keys(DRAFT_TAB_LABELS)).join(', ');
   const daysTotal=Math.max(1,Math.round((new Date(end+'T00:00:00')-new Date(start+'T00:00:00'))/86400000)+1);
   const spacing=Math.max(1,Math.floor(daysTotal/count));
-  const prompt=`Platform: ${cur.platform} · Niche: ${cur.niche}\nRentang minggu: ${start} s/d ${end} (${daysTotal} hari)\nRitme historis: sekitar ${rhythm} konten/minggu (4 minggu terakhir: ${recent.length} konten)\nJumlah diminta: ${count} konten\nFormat yang dipakai akun: ${formats}\nTopik queue (urut skor gap):\n${topicLines}\nKonten yang sudah ada di rentang ini:\n${existingLines}\n\nSusun usulan jadwal posting untuk minggu tersebut. Kembalikan HANYA JSON valid tanpa markdown:\n{"suggestions":[{"date":"YYYY-MM-DD","topic":"","format":"","hook":""}]}\nAturan:\n1. Tanggal wajib berada di rentang (perhatikan pergantian bulan/tahun).\n2. Usulkan TEPAT ${count} konten, disebar MERATA mulai dari tanggal awal rentang dengan jarak sekitar ${spacing} hari antar konten — JANGAN menumpuk semua di satu tanggal atau di akhir minggu.\n3. Maksimal 1 konten per tanggal, kecuali ${count} lebih besar dari ${daysTotal} hari.\n4. Hook opsional tapi bila diisi harus spesifik niche; format pilih dari daftar format akun.`;
+  const pillars=(cur.positioning&&cur.positioning.pillars)||[];
+  const pillarCounts={};live.forEach(c=>{const k=(c.pillar&&c.pillar!=='—')?c.pillar:'(tanpa pilar)';pillarCounts[k]=(pillarCounts[k]||0)+1;});
+  const pillarLines=pillars.length
+    ?`Pilar konten akun: ${pillars.join(', ')}\nDistribusi konten live saat ini: ${Object.entries(pillarCounts).map(([k,v])=>`${k} (${v})`).join(', ')||'belum ada'}\n`
+    :'';
+  const prompt=`Platform: ${cur.platform} · Niche: ${cur.niche}\nRentang minggu: ${start} s/d ${end} (${daysTotal} hari)\nRitme historis: sekitar ${rhythm} konten/minggu (4 minggu terakhir: ${recent.length} konten)\nJumlah diminta: ${count} konten\nFormat yang dipakai akun: ${formats}\n${pillarLines}Topik queue (urut skor gap):\n${topicLines}\nKonten yang sudah ada di rentang ini:\n${existingLines}\n\nSusun usulan jadwal posting untuk minggu tersebut. Kembalikan HANYA JSON valid tanpa markdown:\n{"suggestions":[{"date":"YYYY-MM-DD","topic":"","format":"","hook":"","pillar":""}]}\nAturan:\n1. Tanggal wajib berada di rentang (perhatikan pergantian bulan/tahun).\n2. Usulkan TEPAT ${count} konten, disebar MERATA mulai dari tanggal awal rentang dengan jarak sekitar ${spacing} hari antar konten — JANGAN menumpuk semua di satu tanggal atau di akhir minggu.\n3. Maksimal 1 konten per tanggal, kecuali ${count} lebih besar dari ${daysTotal} hari.\n4. Hook opsional tapi bila diisi harus spesifik niche; format pilih dari daftar format akun.${pillars.length?'\n5. Setiap usulan wajib mengisi "pillar" dengan salah satu pilar akun; sebar merata antar pilar — pilar dengan konten live paling sedikit mendapat porsi lebih besar.':''}`;
   try{
     const r=await callAI({system:`Kamu adalah perencana konten ${cur.platform} niche "${cur.niche}". Jawab HANYA JSON valid tanpa markdown.`,messages:[{role:'user',content:prompt}],maxTokens:1024});
     if(!r.ok){box.innerHTML=`<div class="info-box">⚠️ ${escapeHtml(r.error)}</div>`;return;}
@@ -3769,7 +3821,7 @@ function renderPlanSuggestions(box,expected){
   const rows=plannerSuggestions.map((s,i)=>{
     const d=s.date?new Date(s.date+'T00:00:00'):null;
     const label=d?d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'}):'—';
-    return`<div class="cal-item"><input type="checkbox" class="plan-check" data-idx="${i}" checked style="flex:none"/><div class="cal-item-info"><div class="cal-item-title">${escapeHtml(s.topic||'(Tanpa topik)')}</div><div class="cal-item-meta">${label} · ${escapeHtml(s.format||'—')}${s.hook?' · '+escapeHtml(s.hook):''}</div></div></div>`;
+    return`<div class="cal-item"><input type="checkbox" class="plan-check" data-idx="${i}" checked style="flex:none"/>    <div class="cal-item-info"><div class="cal-item-title">${escapeHtml(s.topic||'(Tanpa topik)')}</div><div class="cal-item-meta">${label} · ${escapeHtml(s.format||'—')}${s.pillar&&s.pillar!=='—'?' · '+escapeHtml(s.pillar):''}${s.hook?' · '+escapeHtml(s.hook):''}</div></div></div>`;
   }).join('');
   const shortWarn=(expected&&plannerSuggestions.length<expected)?`<div class="info-box" style="margin-top:10px">AI memberi ${plannerSuggestions.length} dari ${expected} usulan — coba Generate ulang bila kurang.</div>`:'';
   box.innerHTML=`<div class="sec-hdr" style="margin-top:14px"><span class="sec-title">Usulan (${plannerSuggestions.length})</span></div>${rows}${shortWarn}<button class="btn-primary" onclick="addPlannedContents()">Tambahkan yang Dicentang</button>`;
@@ -3791,6 +3843,7 @@ async function addPlannedContents(){
       slideScript:'',
       hook:s.hook||'—',
       struct:'—',
+      pillar:s.pillar||'—',
       topic:s.topic||'—',
       goal:'—',
       notes:null,
@@ -4116,6 +4169,7 @@ async function buildContextBlock(acc){
   const personas=await dbByIdx('audience','accountId',acc.id);
   const persona=personas[0];
   let s=`\nPosisi brand: ${p.tone||'—'}\nTarget audiens: ${p.audience||'—'}`;
+  if(p.pillars&&p.pillars.length)s+=`\nPilar konten: ${p.pillars.join('; ')}`;
   if(persona){
     s+=`\nPersona: ${persona.name||'—'} (${persona.ageRange||'—'})`;
     if(persona.painPoints&&persona.painPoints.length)s+=` — pain: ${persona.painPoints.join('; ')}`;
@@ -4400,6 +4454,47 @@ async function bulkClassify(){
 
   await renderInsight();
   showToast(`${updated} konten berhasil diberi label ✓`);
+}
+
+async function bulkLabelPillar(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const pillars=(cur.positioning&&cur.positioning.pillars)||[];
+  if(!pillars.length){showToast('Isi pilar konten dulu di Pengaturan');openSheet('sheetSettings');return;}
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const todo=all.filter(c=>c.perf&&c.perf.view>0&&(!c.pillar||c.pillar==='—'));
+  if(!todo.length){showToast('Semua konten live sudah punya pilar ✓');return;}
+
+  const btn=document.getElementById('bulkPillarBtn');
+  const statusEl=document.getElementById('bulkPillarStatus');
+  if(btn){btn.disabled=true;btn.textContent='⟳ Memproses...';}
+  if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<div class="info-box">Memproses ${todo.length} konten... <span id="bulkPillarProgress">0/${todo.length}</span></div>`;}
+
+  const pillarList=pillars.map((p,i)=>`${i+1}. ${p}`).join('\n');
+  let updated=0;
+  for(let i=0;i<todo.length;i++){
+    const c=todo[i];
+    const contentText=[c.title,c.desc,c.slideScript].filter(Boolean).join('\n');
+    const prompt=`Niche: ${cur.niche}\nPlatform: ${cur.platform}\n\nDaftar pilar konten:\n${pillarList}\n\nKonten: ${contentText}\n\nPilih SATU pilar paling sesuai dari daftar di atas.\n\nJawab hanya JSON:\n{"pillar":"pilar dari daftar"}`;
+    try{
+      const r=await callAI({system:'Jawab hanya dengan JSON.',messages:[{role:'user',content:prompt}]});
+      if(!r.ok)continue;
+      let parsed;
+      try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{continue;}
+      const pick=String(parsed.pillar||'').trim();
+      const match=pillars.find(p=>p.toLowerCase()===pick.toLowerCase());
+      if(!match)continue;
+      c.pillar=match;
+      await dbPut('contents',c);
+      updated++;
+      const progress=document.getElementById('bulkPillarProgress');
+      if(progress)progress.textContent=`${i+1}/${todo.length}`;
+    }catch{
+      // skip this content on error
+    }
+  }
+
+  await renderInsight();
+  showToast(`${updated} konten berhasil diberi pilar ✓`);
 }
 
 init();

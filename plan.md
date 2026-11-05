@@ -154,6 +154,28 @@
 
 ---
 
+## Fase 8 — Pilar Konten Aktif — SELESAI
+
+> Sebelumnya `positioning.pillars` hanya tersimpan di Pengaturan tanpa dipakai siapa pun.
+
+### 8a. Pilar masuk konteks AI
+- [x] `buildContextBlock()` menambahkan baris `Pilar konten: p1; p2; p3` bila ada → otomatis ikut ke prompt `analyzeDraft`, `generateNarrative`, `generateGapIdeas`, `autoSelectTopic` (semua sudah inject contextBlock).
+- [x] Tombol "✦ Saran Pilar" di sheet Pengaturan (pola tombol Auto Topik) → `suggestPillars()`: AI usulkan 3–5 pilar dari niche/platform/topik, hasil tampil sebagai chip `+ tap untuk tambah` → `addSuggestedPillar()` (dedup case-insensitive, langsung `dbPut`, human-in-the-loop).
+
+### 8b. Konten punya pilar + analitiknya
+- [x] Field opsional `content.pillar` (string, default `'—'`) — tanpa migrasi DB.
+- [x] Sheet Add/Edit: chip-group `inPillarChips` dari `cur.positioning.pillars` (`mkChips` di `renderAddChips`, `selByText` di `openEditSheet`, dibaca `buildContent()` sebagai `cs['inPillar']`).
+- [x] "✦ Label Pilar Massal" di Insight → `bulkLabelPillar()` (pola `bulkAutoTopic`): konten live tanpa pilar diklasifikasi AI ke SATU pilar dari daftar akun (jawaban divalidasi ke daftar, ditolak bila di luar), progress info-box.
+- [x] Section "Per Pilar" di Insight (setelah Per Topik): `buildTable(live.filter(pillar),'pillar')` — tampil hanya bila ada konten berpilar; kosong → info-box pengarah.
+
+### 8c. Pilar dalam perencanaan
+- [x] Prompt "Rencanakan Minggu": daftar pilar + distribusi konten live per pilar + aturan 5 (sebar merata antar pilar, pilar terlemah dapat porsi lebih besar; field `pillar` wajib di suggestions — hanya saat akun punya pilar). Usulan menampilkan pilar di meta & `addPlannedContents()` menyimpan `pillar`.
+- [x] Prompt Ide dari Gap: instruksi `newIdeas` selaras dengan pilar (bila ada) — konteks pilar sendiri sudah masuk via contextBlock 8a.
+
+- [x] Verifikasi: ekstraksi `<script>` → `node --check` OK; uji headless `buildContextBlock` (pilar masuk, aman bila kosong), `buildTable` per pilar (urut avg save), filter bulk (hanya konten tanpa pilar). Catatan: panggilan AI live & tap-test UI tidak diuji (tanpa API key; WebView debugging nonaktif di build ini).
+
+---
+
 ## Urutan Eksekusi & Verifikasi
 
 1. Fase 1 (fondasi `buildPatternSummary`, Narasi AI, Ide dari Gap)
