@@ -3207,7 +3207,7 @@ async function renderAccountsSheet(){
     const cs=await dbByIdx('contents','accountId',acc.id);
     const active=cur&&cur.id===acc.id;
     const url=await getAvatarUrl(acc.id);
-    const avatarStyle=`background:${acc.color||'#3D9B9C'};${url?`background-image:url("${url}");background-size:cover;background-position:center;`:''}`;
+    const avatarStyle=`background:${acc.color||'#3D9B9C'};${url?`background-image:url('${url}');background-size:cover;background-position:center;`:''}`;
     return`<div class="acc-card ${active?'active-acc':''}" onclick='switchAccountFromSheet(${JSON.stringify(acc)})'><div class="acc-avatar" style="${avatarStyle}">${url?'':(acc.name||'?')[0].toUpperCase()}</div><div class="acc-info"><div class="acc-name">${acc.username||acc.name}</div><div class="acc-detail">${acc.platform} · ${acc.niche}</div></div><div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${cs.length} konten</div></div>`;
   }));
   list.innerHTML=rows.join('');
@@ -3239,7 +3239,7 @@ async function renderSettings(){
   const profileCard=`
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:18px">
       <div style="display:flex;gap:14px;align-items:center">
-        <div id="editAvatar" style="width:72px;height:72px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;overflow:hidden;background:${cur.color||'var(--teal)'};${avatarUrl?`background-image:url("${avatarUrl}");background-size:cover;background-position:center;`:''}">${avatarUrl?'':escapeHtml((cur.name||'?')[0].toUpperCase())}</div>
+        <div id="editAvatar" style="width:72px;height:72px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;overflow:hidden;background:${cur.color||'var(--teal)'};${avatarUrl?`background-image:url('${avatarUrl}');background-size:cover;background-position:center;`:''}">${avatarUrl?'':escapeHtml((cur.name||'?')[0].toUpperCase())}</div>
         <div style="min-width:0;flex:1">
           <div style="font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cur.name||'—')}</div>
           <div style="font-size:12px;color:var(--text-2);margin-top:1px">${cur.username?escapeHtml(cur.username.startsWith('@')?cur.username:'@'+cur.username):'@username'}</div>
@@ -3982,7 +3982,7 @@ async function renderCompare(){
   const selAvatars=await Promise.all(accs.map(a=>getAvatarUrl(a.id)));
   sel.innerHTML=accs.map((a,i)=>{
     const url=selAvatars[i];
-    const avatarStyle=`background:${a.color||'var(--teal)'};${url?`background-image:url("${url}");background-size:cover;background-position:center;`:''}`;
+    const avatarStyle=`background:${a.color||'var(--teal)'};${url?`background-image:url('${url}');background-size:cover;background-position:center;`:''}`;
     return`
     <div class="cmp-acc-btn ${cmpSelected.includes(a.id)?'selected':''}" onclick="toggleCmpAcc('${a.id}')">
       <div class="cmp-acc-avatar" style="${avatarStyle}">${url?'':(a.name||'?')[0].toUpperCase()}</div>
