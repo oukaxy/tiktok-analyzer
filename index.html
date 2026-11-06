@@ -788,7 +788,10 @@ async function saveNewAccount(){
   if(!name){showToast('Isi nama akun dulu');return;}
   if(!obPlatform){showToast('Pilih platform dulu');return;}
   if(!niche){showToast('Isi niche dulu');return;}
-  const acc={id:Date.now().toString(),name,username,platform:obPlatform,niche,topics:obTopics.length?[...obTopics]:[niche],formats:[...(FMT[obPlatform]||['Carousel','Video','Foto'])],hooks:[...HOOKS],structs:[...STRUCTS],goals:[...GOALS],color:COLORS[Math.floor(Math.random()*COLORS.length)],createdAt:new Date().toISOString()};
+  const accs=await dbGetAll('accounts');
+  const used=new Set(accs.map(a=>a.color));
+  const color=COLORS.find(c=>!used.has(c))||COLORS[Math.floor(Math.random()*COLORS.length)];
+  const acc={id:Date.now().toString(),name,username,platform:obPlatform,niche,topics:obTopics.length?[...obTopics]:[niche],formats:[...(FMT[obPlatform]||['Carousel','Video','Foto'])],hooks:[...HOOKS],structs:[...STRUCTS],goals:[...GOALS],color,createdAt:new Date().toISOString()};
   await dbPut('accounts',acc);
   hideOnboarding();
   await switchAccount(acc);
@@ -3261,6 +3264,12 @@ async function renderSettings(){
     ${profileCard}
     <div class="form-group"><label class="form-label">Nama Akun</label><input type="text" class="form-input" id="editName" value="${escapeHtml(cur.name)}"/></div>
     <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="editUsername" value="${escapeHtml(cur.username||'')}"/></div>
+    <div class="form-group">
+      <label class="form-label">Warna Akun <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(dipakai di tab Bandingkan)</span></label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${COLORS.map(c=>`<button type="button" data-color="${c}" onclick="setAccountColor('${c}')" style="width:32px;height:32px;border-radius:50%;border:${cur.color===c?'2px solid var(--text)':'1px solid var(--border)'};background:${c};cursor:pointer;padding:0"></button>`).join('')}
+      </div>
+    </div>
     <div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="editPlatform">${['TikTok','Instagram','YouTube','X','Threads'].map(p=>`<option ${cur.platform===p?'selected':''}>${p}</option>`).join('')}</select></div>
     <div class="form-group"><label class="form-label">Niche</label><input type="text" class="form-input" id="editNiche" value="${escapeHtml(cur.niche)}"/></div>
     <div class="sec-title" style="margin:18px 0 10px;display:block">Posisi Brand</div>
@@ -3415,6 +3424,18 @@ async function removeAvatar(){
   await renderSettings();
   await updateTopAvatar(cur);
   showToast('Foto profil dihapus');
+}
+async function setAccountColor(hex){
+  if(!cur)return;
+  cur.color=hex;
+  await dbPut('accounts',cur);
+  document.querySelectorAll('#settingsBody [data-color]').forEach(el=>{
+    el.style.border=el.dataset.color===hex?'2px solid var(--text)':'1px solid var(--border)';
+  });
+  const av=document.getElementById('editAvatar');
+  if(av)av.style.backgroundColor=hex;
+  await updateTopAvatar(cur);
+  showToast('Warna akun diperbarui ✓');
 }
 async function saveSettings(){
   cur.name=document.getElementById('editName').value.trim();cur.username=document.getElementById('editUsername').value.trim();
