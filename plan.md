@@ -176,12 +176,82 @@
 
 ---
 
+## Fase 9 — Sync Instagram + Threads (Meta API)
+
+> Fokus **Instagram dulu, metrik lengkap**; Threads menyusul setelah IG stabil.
+> Pola mengikuti sync TikTok (`ttConnectAccount` → `callback.html` → `api/*-token.js` → `api/*-sync.js` → upsert `contents`), tapi token Meta **per akun aplikasi** dan tanpa `refresh_token` (long-lived 60 hari).
+> **Meta Business account bukan syarat akses API** — yang wajib: Meta Developer App + produk Instagram/Threads + akun IG Professional terdaftar sebagai tester (tanpa App Review untuk akun sendiri).
+>
+> **Status:** kode 9b–9e sudah dibuat & lolos `node --check`, uji logika mapping/upsert, uji token refresh (7 hari), dan uji handler API dengan fetch tiruan (profil, media, insights + fallback metrik, paginasi). Belum diuji ke API Meta asli (menunggu env Vercel + app Meta); checkbox tetap terbuka sampai uji live.
+
+### 9a. Prasyarat manual & cek awal
+- [ ] Buat Meta App tipe Business; tambah produk **Instagram API with Instagram Login** → catat *Instagram App ID* + *App Secret*.
+- [ ] Daftarkan redirect URI `https://tiktok-analyzer-sand.vercel.app/callback.html`; daftarkan akun IG Professional sebagai tester lalu terima undangan di app Instagram.
+- [ ] Set env Vercel: `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`.
+- [ ] **Uji lebih dulu**: apakah OAuth Meta bisa dibuka dari WebView/Guest Browser yang dipakai sekarang. Bila ditolak, rencana butuh browser eksternal + deep link (belum termasuk fase ini).
+- [ ] Nanti untuk Threads: produk **Threads API**, `THREADS_APP_ID`, `THREADS_APP_SECRET`, `THREADS_REDIRECT_URI`, redirect URI sama, akun Threads sebagai tester.
+
+### 9b. Backend Instagram
+- [ ] `api/config.js`: tambah field publik `instagramAppId`, `instagramRedirectUri` (dan `threadsAppId`, `threadsRedirectUri` nanti). Secret tidak pernah ikut.
+- [ ] `api/instagram-token.js` (baru): `POST {code}` → `POST https://api.instagram.com/oauth/access_token` (form) lalu `GET https://graph.instagram.com/access_token?grant_type=ig_exchange_token` → long-lived 60 hari; `POST {grant_type:'refresh', access_token}` → `GET https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token`. Secret hanya dari env server.
+- [ ] `api/instagram-sync.js` (baru): `POST {access_token, cursor?}`.
+  - Profil: `GET /me?fields=user_id,username,account_type,followers_count,follows_count,media_count`.
+  - Media: `GET /{ig_user_id}/media?fields=id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count,view_count&limit=25`.
+  - Insight per media **hanya halaman pertama**: `metric=saved,shares,views,reach` → fallback `saved,shares` → `null` bila gagal; concurrency 4; jangan gagalkan seluruh sync karena satu media.
+  - Return `{profile, media, next, has_more}`; error Meta diteruskan (message + code).
+  - Batas 4 halaman (100 post) per sync — beri komentar `shortcut:` di kode.
+- [ ] `vercel.json`: `"functions": {"api/instagram-sync.js": {"maxDuration": 60}}` (nanti threads).
+- [ ] `callback.html`: dukung state prefix `ig:`; verifikasi terhadap `ka_oauth_state`; panggil `/api/instagram-token`; simpan `ka_syncToken_<akunAktif>`; redirect. Jalur TikTok (`tt_oauth_state`, `tt_oauth_token`) tidak diubah.
+
+### 9c. Frontend Instagram (`index.html`)
+- [ ] Token per akun: `ka_syncToken_<accId>` = `{provider, access_token, obtained_at, expires_in, userId, username, lastSyncAt}`. Token TikTok lama dibiarkan apa adanya.
+- [ ] `igConnectAccount()`: redirect ke `https://www.instagram.com/oauth/authorize?client_id=…&scope=instagram_business_basic,instagram_business_manage_insights&response_type=code&state=ig:…`.
+- [ ] `igEnsureFreshToken()`: refresh bila sisa < 7 hari; gagal → putuskan token + minta reconnect di banner.
+- [ ] `igSync()`: profil → `cur.stats = {follower, following, likes:0, posts:media_count, updatedAt}`; media → mapping → `upsertSyncedContents`.
+- [ ] Helper `upsertSyncedContents(items, keyField)`: adaptasi logika `ttSyncVideos` (cocok exact by key, fuzzy `ttSimilarity` ≥ 0.85 untuk draft tanpa key, buat baru bila tidak ada). Field manual (`format/hook/struct/topic/goal/notes/retention`) tidak ditimpa; `save/share` lama dipertahankan bila insight `null`.
+- [ ] Mapping format: `media_product_type==='REELS'` → `Reels`; `CAROUSEL_ALBUM` → `Carousel`; `VIDEO` → `Video`; `IMAGE` → `Foto`. Judul = baris pertama caption (maks 120), fallback `(Tanpa judul)`; `shareUrl = permalink`; `date` dari `timestamp`.
+- [ ] `perf`: `view = insights.views ?? view_count ?? 0`, `like = like_count`, `comment = comments_count`, `save = insights.saved ?? 0`, `share = insights.shares ?? 0`, `follower = 0`.
+- [ ] Banner koneksi dipakai ulang untuk TikTok/Instagram/Threads (judul, sub, tombol Sync, disconnect per platform); banner import CSV tetap khusus TikTok.
+- [ ] `ttMaybeAutoSync` digeneralisasi: auto-sync 30 menit untuk akun IG yang punya token.
+- [ ] `editSync` menyimpan `igId`/`thId` (dan `lastSyncAt`) agar tidak hilang saat `saveContentFull`.
+- [ ] `deleteAccount` ikut `localStorage.removeItem('ka_syncToken_'+cur.id)`.
+- [ ] Kartu profil di `renderSettings`: sel ke-3 jadi "Postingan" (`stats.posts`) untuk IG/Threads; "Total Suka" tetap untuk TikTok.
+
+### 9d. Backend Threads (setelah IG stabil)
+- [ ] `api/threads-token.js` (baru): authorize `https://threads.net/oauth/authorize`; tukar `POST https://graph.threads.net/oauth/access_token`; perpanjang `GET …/access_token?grant_type=th_exchange_token`; refresh `GET …/refresh_access_token?grant_type=th_refresh_token`.
+- [ ] `api/threads-sync.js` (baru): `GET /me?fields=id,username,threads_profile_picture_url,threads_biography`; `GET /me/threads?fields=id,media_product_type,media_type,permalink,username,text,timestamp,shortcode,thumbnail_url&limit=25`; insight per post `GET /{id}/insights?metric=views,likes,replies,reposts,quotes,shares`; follower `GET /{user-id}/threads_insights?metric=followers_count`. Concurrency 4, batas halaman sama.
+- [ ] `vercel.json`: `maxDuration: 60` untuk `api/threads-sync.js`.
+
+### 9e. Frontend Threads (`index.html`)
+- [ ] `thConnectAccount()` scope `threads_basic,threads_manage_insights`; token per akun dengan `provider:'threads'`; refresh analog IG.
+- [ ] `thSync()`: profil → `cur.stats = {follower, following:0, likes:0, posts:0, updatedAt}`; post → `upsertSyncedContents` key `thId`.
+- [ ] Mapping: `TEXT_POST` → `Post`, `IMAGE` → `Foto`, `VIDEO` → `Video`, `CAROUSEL_ALBUM` → `Post`; judul = baris pertama `text` (maks 120), `shareUrl = permalink`.
+- [ ] `perf`: `view = insights.views`, `like = insights.likes`, `comment = insights.replies`, `share = insights.reposts + insights.quotes`, `save = 0`, `follower = 0`.
+
+### 9f. Verifikasi
+- [ ] `node --check` semua `api/*.js`; ekstraksi inline `<script>` dari `index.html` → `node --check`.
+- [ ] Uji token + `/me` + media via Graph API Explorer/curl sebelum wiring frontend.
+- [ ] Connect → Sync → cek jumlah konten, format, tanggal, `shareUrl`; sync kedua tidak membuat duplikat.
+- [ ] Edit konten hasil sync → `igId`/`thId` tetap; reload → data tetap.
+- [ ] Disconnect/reconnect; token kedaluwarsa → refresh; izin kurang → pesan error jelas (bukan crash).
+- [ ] Export/import tidak membawa token.
+
+### 9g. Ceiling / risiko
+- Meta tidak memberi `refresh_token`; refresh hanya bisa setelah token berumur 24 jam. Bila token benar-benar kedaluwarsa → user harus reconnect.
+- Insight per-post = N panggilan; hanya halaman pertama yang di-insight → `save/share` post lama bisa 0. Upgrade: job background / tombol refresh insight bila diperlukan.
+- Token di localStorage (pola sama dengan TikTok), scope read-only (tanpa publish). Risiko XSS tetap sama seperti token TikTok sekarang.
+- Tanpa App Review hanya akun tester yang bisa sync; Advanced Access + verifikasi bisnis dibutuhkan bila nanti dipakai user lain.
+- OAuth Meta bisa menolak embedded WebView — **cek 9a dulu** sebelum membangun seluruh fase.
+
+---
+
 ## Urutan Eksekusi & Verifikasi
 
 1. Fase 1 (fondasi `buildPatternSummary`, Narasi AI, Ide dari Gap)
 2. Fase 2 (Repurpose + aiTags — aiTags memperkaya prompt fase berikutnya)
 3. Fase 3 → 4 → 5 → 6 → 7.
-4. Setiap fase selesai & terverifikasi:
+4. Fase 9 — cek 9a dulu (WebView + app Meta), lalu 9b → 9c (Instagram), baru 9d → 9e (Threads).
+5. Setiap fase selesai & terverifikasi:
    - Centang `- [x]` item terkait di file ini.
    - Verifikasi standar: ekstraksi `<script>` → `node --check`; uji `callAI` dengan mock; uji manual aplikasi lokal (`python3 -m http.server`) sambil memastikan tidak merusak data lama.
    - (Opsional) commit pesan singkat `feat(faseX): …` bila kamu minta.
@@ -191,3 +261,22 @@
 - AI **menyarankan**, USER yang **memutuskan**: "+ ke Topik", "Isi ke Draft", checkbox planner, Keep/Stop/Iterate — tidak ada penulisan data oleh AI ke log tanpa validasi user.
 - Semua penambahan data oleh AI menyimpan asal-usul (`origin`) supaya bisa ditracking & dibedakan dari input manual manusia.
 - Data lama (IndexedDB v1) harus tetap bebas berubah tanpa migrasi — migrasi versi DB dilakukan idempotent di `onupgradeneeded`.
+
+---
+
+## Backlog — Nice to Have (draft ide, belum dieksekusi)
+
+> Ide tersimpan agar tidak hilang. Tidak ada komitmen waktu; kerjakan bila kebutuhan muncul.
+
+### B1 — Auto-Posting (publish/schedule via API)
+- [ ] Urutan realistis: **Threads teks** (MVP, caption draft → publish langsung, tanpa hosting file) → **Instagram Reels** (akun Business + Meta review + video di URL publik: container → poll FINISHED → `media_publish`) → **TikTok direct post** (`video.publish`, wajib audit TikTok — sandbox tidak cukup; paling berat).
+- [ ] Arsitektur: fungsi `api/` baru per platform (token + publish, pola `tiktok-token.js`/`tiktok-videos.js`); OAuth reuse pola `callback.html`; scheduler = cron eksternal/Vercel memanggil endpoint publish dengan shared secret; guard idempotensi agar retry tidak dobel-post.
+- [ ] Bloker utama: app hanya menyimpan **metadata** konten, bukan file video → butuh form upload + blob storage (Vercel Blob/Cloudinary) sebelum auto-post video mungkin. Tanpa itu, hanya konten teks (Threads/X) yang layak di-MVP.
+- [ ] Tutup loop planner: item kalender → terbit otomatis di jam H → sync menarik performanya.
+
+### B2 — Balas Komentar berkonteks
+- [ ] Diferensiator vs harness generik (n8n/Zapier): app punya konteks per-post (hook/topik/pilar/persona/tone/verdict A/B) — balasan AI selaras dengan konten yang dikomentari, bukan balasan generik.
+- [ ] **MVP tanpa API baru** (jalan hari ini, semua platform termasuk TikTok): sheet "Balas Komentar (paste manual)" — paste teks komentar + pilih post dari log → AI drafting balasan pakai `buildContextBlock()` + data post → copy manual ke platform.
+- [ ] **Model B — inbox in-app**: Instagram (`instagram_manage_comments`: GET `/{media}/comments` + POST reply) & Threads (`threads_manage_replies`) via `api/` baru (poll, atau webhook Meta); **TikTok terblokir** Comments Management API sampai app lolos audit.
+- [ ] **Model A — n8n sebagai tangan**: saat sync, app push "context bundle" per post-id ke endpoint Vercel (secret key) → n8n menarik konteks itu saat membalas. Untuk full-auto; default tetap approve-first sesuai prinsip di atas.
+- [ ] Prasyarat Model B/A: akun Instagram Business/Creator (belum dikonfirmasi) + Meta App Review untuk permission komentar.

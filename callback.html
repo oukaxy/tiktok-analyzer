@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Menghubungkan ke TikTok...</title>
+<title>Menghubungkan akun...</title>
 <style>
   :root{ --bg:#0f1115; --text:#e7e9ee; --sub:#9aa1ad; --teal:#2dd4bf; --red:#ef4444; }
   *{box-sizing:border-box}
@@ -31,7 +31,7 @@
 <body>
   <div class="box">
     <div class="spinner" id="spinner"></div>
-    <h1 id="title">Menghubungkan akun TikTok...</h1>
+    <h1 id="title">Menghubungkan akun...</h1>
     <p id="msg">Mohon tunggu sebentar.</p>
     <a class="btn" id="backBtn" href="/index.html" style="display:none">Kembali ke aplikasi</a>
   </div>
@@ -53,29 +53,34 @@
 
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
-  const state = params.get('state');
+  const state = params.get('state') || '';
   const errorParam = params.get('error');
   const errorDesc = params.get('error_description');
 
+  // New flows put the provider in the state prefix: "ig:..." / "th:...".
+  // TikTok keeps its original unprefixed state for backward compatibility.
+  const provider = state.indexOf('ig:') === 0 ? 'instagram' : state.indexOf('th:') === 0 ? 'threads' : 'tiktok';
+  const stateKey = provider === 'tiktok' ? 'tt_oauth_state' : 'ka_oauth_state';
+
   if (errorParam) {
-    fail(errorDesc || ('TikTok menolak otorisasi: ' + errorParam));
+    fail(errorDesc || ('Otorisasi ditolak: ' + errorParam));
     return;
   }
   if (!code) {
-    fail('Tidak ada kode otorisasi dari TikTok. Coba ulangi proses login dari awal.');
+    fail('Tidak ada kode otorisasi. Coba ulangi proses login dari awal.');
     return;
   }
 
-  // CSRF check: state must match what we generated before redirecting to TikTok.
-  const expectedState = sessionStorage.getItem('tt_oauth_state');
-  sessionStorage.removeItem('tt_oauth_state');
+  // CSRF check: state must match what we generated before redirecting.
+  const expectedState = sessionStorage.getItem(stateKey);
+  sessionStorage.removeItem(stateKey);
   if (!expectedState || state !== expectedState) {
     fail('State tidak cocok (kemungkinan sesi login basi atau permintaan tidak sah). Coba ulangi dari awal.');
     return;
   }
 
   try {
-    const resp = await fetch('/api/tiktok-token', {
+    const resp = await fetch('/api/' + (provider === 'tiktok' ? 'tiktok' : provider) + '-token', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ code })
@@ -87,20 +92,37 @@
       return;
     }
 
-    // Store tokens locally (this app keeps all data client-side).
-    const record = {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      open_id: data.open_id,
-      scope: data.scope,
-      obtained_at: Date.now(),
-      expires_in: data.expires_in,
-      refresh_expires_in: data.refresh_expires_in
-    };
-    localStorage.setItem('tt_oauth_token', JSON.stringify(record));
+    if (provider === 'tiktok') {
+      // TikTok keeps its original storage key.
+      const record = {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        open_id: data.open_id,
+        scope: data.scope,
+        obtained_at: Date.now(),
+        expires_in: data.expires_in,
+        refresh_expires_in: data.refresh_expires_in
+      };
+      localStorage.setItem('tt_oauth_token', JSON.stringify(record));
+    } else {
+      const activeAccId = localStorage.getItem('ka_activeAcc');
+      if (!activeAccId) {
+        fail('Akun aktif tidak ditemukan. Buka aplikasi, pilih akun, lalu sambungkan ulang.');
+        return;
+      }
+      // Meta tokens have no refresh_token; expires_in is all we need.
+      localStorage.setItem('ka_syncToken_' + activeAccId, JSON.stringify({
+        provider: provider,
+        access_token: data.access_token,
+        expires_in: data.expires_in,
+        user_id: data.user_id || null,
+        obtained_at: Date.now(),
+        lastSyncAt: null
+      }));
+    }
 
     titleEl.textContent = 'Berhasil terhubung!';
-    msgEl.textContent = 'Akun TikTok kamu sudah tersambung. Mengarahkan kembali...';
+    msgEl.textContent = 'Akun kamu sudah tersambung. Mengarahkan kembali...';
     spinnerEl.style.display = 'none';
     setTimeout(() => { window.location.href = '/index.html'; }, 1200);
   } catch (err) {

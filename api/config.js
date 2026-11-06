@@ -15,7 +15,17 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // App IDs and redirect URIs are public (they already appear in the OAuth
+  // URL). Secrets stay only in the *-token.js functions.
   // Safe to cache briefly — this rarely changes and contains no secrets.
-  res.setHeader('Cache-Control', 'public, max-age=300');
-  res.status(200).json({ clientKey, redirectUri });
+  // Keep it short so newly added platform env vars show up quickly.
+  res.setHeader('Cache-Control', 'public, max-age=60');
+  res.status(200).json({
+    clientKey,
+    redirectUri,
+    instagramAppId: process.env.INSTAGRAM_APP_ID || null,
+    instagramRedirectUri: process.env.INSTAGRAM_REDIRECT_URI || null,
+    threadsAppId: process.env.THREADS_APP_ID || null,
+    threadsRedirectUri: process.env.THREADS_REDIRECT_URI || null,
+  });
 };

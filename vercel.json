@@ -1,4 +1,8 @@
 {
+  "functions": {
+    "api/instagram-sync.js": { "maxDuration": 60 },
+    "api/threads-sync.js": { "maxDuration": 60 }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }

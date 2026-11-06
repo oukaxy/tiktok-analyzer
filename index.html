@@ -367,13 +367,13 @@
 
 <!-- VIEWS -->
 <div class="view active" id="viewLog">
-  <div class="tt-import-banner" id="ttConnectBanner" style="display:none" onclick="ttConnectAccount()">
-    <div class="tt-import-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.66 6.63c-2.11.11-4.28-.62-5.84-2.18a7.6 7.6 0 01-2.18-4.45h-3.6v14.75a2.9 2.9 0 11-2.9-2.9c.3 0 .58.04.85.11V8.02a6.4 6.4 0 00-.85-.06 6.44 6.44 0 106.44 6.44V9.28c1.5.94 3.27 1.44 5.08 1.4V6.63z"/></svg></div>
+  <div class="tt-import-banner" id="ttConnectBanner" style="display:none" onclick="connectCurrentPlatform()">
+    <div class="tt-import-icon" id="ttConnectIcon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.66 6.63c-2.11.11-4.28-.62-5.84-2.18a7.6 7.6 0 01-2.18-4.45h-3.6v14.75a2.9 2.9 0 11-2.9-2.9c.3 0 .58.04.85.11V8.02a6.4 6.4 0 00-.85-.06 6.44 6.44 0 106.44 6.44V9.28c1.5.94 3.27 1.44 5.08 1.4V6.63z"/></svg></div>
     <div class="tt-import-text">
       <div class="tt-import-title" id="ttConnectTitle">Hubungkan Akun TikTok</div>
       <div class="tt-import-sub" id="ttConnectSub">Tarik data video & statistik otomatis lewat TikTok API</div>
     </div>
-    <button type="button" id="ttSyncBtn" style="display:none;background:var(--teal);color:#0f1115;border:none;border-radius:14px;padding:6px 12px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:pointer" onclick="event.stopPropagation();ttSyncVideos();">Sync</button>
+    <button type="button" id="ttSyncBtn" style="display:none;background:var(--teal);color:#0f1115;border:none;border-radius:14px;padding:6px 12px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:pointer" onclick="event.stopPropagation();syncCurrentPlatform();">Sync</button>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--teal);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
   </div>
   <div class="tt-import-banner" id="ttImportBanner" style="display:none" onclick="document.getElementById('ttCsvFile').click()">
@@ -713,7 +713,7 @@ let cs={}; // chip state
 let editingId=null; // id konten yang sedang diedit
 let contentOrigin=null; // asal konten saat disimpan (mis. hasil repurpose)
 let draftOrigin=null; // asal draft yang menunggu disimpan lewat "Simpan ke Log"
-let editSync={tiktokId:null,lastSyncAt:null}; // kunci sync TikTok — dipertahankan saat edit agar re-sync tidak buat draft baru
+let editSync={tiktokId:null,igId:null,thId:null,lastSyncAt:null}; // kunci sync per platform — dipertahankan saat edit agar re-sync tidak buat draft baru
 let slideCount=3;
 let obTopics=[];
 let obPlatform='';
@@ -818,11 +818,7 @@ async function switchAccount(acc){
   renderDraftChips();renderAddChips();
   const ttBanner=document.getElementById('ttImportBanner');
   if(ttBanner)ttBanner.style.display=(acc.platform==='TikTok')?'flex':'none';
-  const ttConnBanner=document.getElementById('ttConnectBanner');
-  if(ttConnBanner){
-    ttConnBanner.style.display=(acc.platform==='TikTok')?'flex':'none';
-    ttUpdateConnectBanner();
-  }
+  ttUpdateConnectBanner();
   await renderLog();await renderInsight();
   closeSheet('sheetAccounts');
   ttMaybeAutoSync();
@@ -833,10 +829,12 @@ async function switchAccount(acc){
 // shows up without the user having to remember to tap Sync.
 const TT_AUTO_SYNC_INTERVAL_MS=30*60*1000; // 30 min
 function ttMaybeAutoSync(){
-  if(!cur||cur.platform!=='TikTok'||!ttIsTokenConnected())return;
-  const tok=ttGetStoredToken();
-  const dueForSync=!tok?.lastSyncAt||(Date.now()-new Date(tok.lastSyncAt).getTime())>TT_AUTO_SYNC_INTERVAL_MS;
-  if(dueForSync)ttSyncVideos();
+  if(!cur)return;
+  if(cur.platform!=='TikTok'&&!isMetaPlatform(cur.platform))return;
+  const tok=syncTokenForCur();
+  if(!tok)return;
+  const dueForSync=!tok.lastSyncAt||(Date.now()-new Date(tok.lastSyncAt).getTime())>TT_AUTO_SYNC_INTERVAL_MS;
+  if(dueForSync)syncCurrentPlatform();
 }
 
 // ===== CHIPS =====
@@ -1027,7 +1025,7 @@ function openAddSheet(){
   editingId=null;
   contentOrigin=null;
   draftOrigin=null;
-  editSync={tiktokId:null,lastSyncAt:null};
+  editSync={tiktokId:null,igId:null,thId:null,lastSyncAt:null};
   document.getElementById('addSheetTitle').textContent='Tambah Konten';
   const today=new Date().toISOString().split('T')[0];
   const dateEl=document.getElementById('inDateHidden');
@@ -1046,7 +1044,7 @@ async function openEditSheet(id){
   editingId=id;
   contentOrigin=c.origin||null;
   draftOrigin=null;
-  editSync={tiktokId:c.tiktokId||null,lastSyncAt:c.lastSyncAt||null};
+  editSync={tiktokId:c.tiktokId||null,igId:c.igId||null,thId:c.thId||null,lastSyncAt:c.lastSyncAt||null};
   const setVal=(elId,val)=>{const el=document.getElementById(elId);if(el)el.value=val||'';};
   document.getElementById('addSheetTitle').textContent='Edit Konten';
   // Reset chips
@@ -1158,11 +1156,13 @@ function buildContent(withPerf){
   };
   if(contentOrigin)content.origin=contentOrigin;
   if(editSync.tiktokId)content.tiktokId=editSync.tiktokId;
+  if(editSync.igId)content.igId=editSync.igId;
+  if(editSync.thId)content.thId=editSync.thId;
   if(editSync.lastSyncAt)content.lastSyncAt=editSync.lastSyncAt;
   return content;
 }
-async function saveAsDraft(){if(!document.getElementById('inTitle').value.trim()){showToast('Isi judul dulu ya');return;}await dbPut('contents',buildContent(false));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;editSync={tiktokId:null,lastSyncAt:null};}
-async function saveContentFull(){await dbPut('contents',buildContent(true));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;editSync={tiktokId:null,lastSyncAt:null};}
+async function saveAsDraft(){if(!document.getElementById('inTitle').value.trim()){showToast('Isi judul dulu ya');return;}await dbPut('contents',buildContent(false));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;editSync={tiktokId:null,igId:null,thId:null,lastSyncAt:null};}
+async function saveContentFull(){await dbPut('contents',buildContent(true));closeSheet('sheetAdd');await renderLog();await renderInsight();showToast(editingId?'Konten diperbarui ✓':'Konten disimpan ✓');editingId=null;contentOrigin=null;draftOrigin=null;editSync={tiktokId:null,igId:null,thId:null,lastSyncAt:null};}
 
 // ===== PERFORMA =====
 async function openPerfSheet(id){
@@ -1459,6 +1459,9 @@ function ttStripBOM(text){
 // env vars) instead of being hardcoded here — makes it easy to point this
 // app at a different TikTok app/account later without editing this file.
 const TT_SCOPES = 'user.info.basic,user.info.stats,video.list';
+const IG_SCOPES = 'instagram_business_basic,instagram_business_manage_insights';
+const TH_SCOPES = 'threads_basic,threads_manage_insights';
+const META_MAX_PAGES = 4; // 4 x 25 post per sync
 let ttConfigCache=null;
 
 async function ttGetConfig(){
@@ -1510,23 +1513,141 @@ function ttDisconnectAccount(){
   showToast('Akun TikTok diputuskan');
 }
 
+// ===== META (INSTAGRAM / THREADS) SYNC =====
+const TT_BANNER_ICONS={
+  TikTok:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.66 6.63c-2.11.11-4.28-.62-5.84-2.18a7.6 7.6 0 01-2.18-4.45h-3.6v14.75a2.9 2.9 0 11-2.9-2.9c.3 0 .58.04.85.11V8.02a6.4 6.4 0 00-.85-.06 6.44 6.44 0 106.44 6.44V9.28c1.5.94 3.27 1.44 5.08 1.4V6.63z"/></svg>',
+  Instagram:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',
+  Threads:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.5 12.068c0-3.52.85-6.374 2.495-8.424C5.845 1.34 8.598.16 12.179.136h.014c2.64.018 4.963.8 6.637 2.26 1.64 1.429 2.597 3.406 2.819 5.877l-2.004.17c-.179-2.004-.944-3.584-2.274-4.697-1.317-1.1-3.152-1.682-5.178-1.696-2.916.019-5.074.99-6.41 2.89C4.583 6.437 4 8.969 4 12.068c0 3.1.583 5.632 1.783 7.128 1.336 1.9 3.494 2.872 6.41 2.89 2.327-.016 3.93-.636 5.137-1.958 1.348-1.476 1.73-3.648 1.73-5.06 0-.082-.003-.163-.006-.244a5.92 5.92 0 00-2.088-4.266c-.17 2.453-1.14 4.114-2.835 4.91-1.063.5-2.332.733-3.776.695-1.185-.032-2.186-.378-2.899-1.001-.75-.655-1.145-1.574-1.145-2.655 0-2.253 1.734-3.636 4.64-3.739.951-.034 1.876.019 2.762.157a3.914 3.914 0 00-.155-1.058c-.282-.94-1.036-1.486-2.13-1.537-.764-.037-1.476.152-2.04.542l-.94-1.626c.86-.57 1.948-.88 3.146-.823 2.08.1 3.439 1.165 3.878 2.99.127.535.181 1.102.162 1.693 1.274.548 2.257 1.508 2.778 2.805.064.16.12.322.169.487.015-.33.022-.663.022-1 .001-1.785-.45-4.36-2.2-6.13-1.567-1.584-3.68-2.387-6.272-2.387z"/></svg>'
+};
+
+function isMetaPlatform(p){return p==='Instagram'||p==='Threads';}
+function metaProvider(p){return p==='Instagram'?'instagram':'threads';}
+function syncTokenKey(accountId){return 'ka_syncToken_'+accountId;}
+function getAccountSyncToken(accountId){
+  const id=accountId||(cur&&cur.id);
+  if(!id)return null;
+  try{const raw=localStorage.getItem(syncTokenKey(id));return raw?JSON.parse(raw):null;}catch{return null;}
+}
+function setAccountSyncToken(tok,accountId){
+  const id=accountId||(cur&&cur.id);
+  if(!id)return;
+  localStorage.setItem(syncTokenKey(id),JSON.stringify(tok));
+}
+function clearAccountSyncToken(accountId){
+  const id=accountId||(cur&&cur.id);
+  if(id)localStorage.removeItem(syncTokenKey(id));
+}
+function syncTokenForCur(){
+  if(!cur)return null;
+  if(cur.platform==='TikTok')return ttGetStoredToken();
+  if(isMetaPlatform(cur.platform))return getAccountSyncToken();
+  return null;
+}
+function connectCurrentPlatform(){
+  if(!cur)return;
+  if(cur.platform==='TikTok')return ttConnectAccount();
+  if(cur.platform==='Instagram')return igConnectAccount();
+  if(cur.platform==='Threads')return thConnectAccount();
+}
+function syncCurrentPlatform(){
+  if(!cur)return;
+  if(cur.platform==='TikTok')return ttSyncVideos();
+  if(cur.platform==='Instagram')return igSync();
+  if(cur.platform==='Threads')return thSync();
+}
+function disconnectCurrentPlatform(){
+  if(!cur)return;
+  if(cur.platform==='TikTok'){ttDisconnectAccount();return;}
+  clearAccountSyncToken();
+  ttUpdateConnectBanner();
+  showToast('Akun '+cur.platform+' diputuskan');
+}
+
 function ttUpdateConnectBanner(){
   const banner=document.getElementById('ttConnectBanner');
+  const title=document.getElementById('ttConnectTitle');
   const sub=document.getElementById('ttConnectSub');
   const syncBtn=document.getElementById('ttSyncBtn');
+  const icon=document.getElementById('ttConnectIcon');
   if(!banner)return;
-  if(ttIsTokenConnected()){
-    const tok=ttGetStoredToken();
-    sub.textContent=tok?.lastSyncAt
-      ? 'Terakhir sync: '+ttFormatSyncTime(tok.lastSyncAt)+' — klik ikon untuk putuskan'
+  const p=cur&&cur.platform;
+  if(p!=='TikTok'&&!isMetaPlatform(p)){banner.style.display='none';return;}
+  banner.style.display='flex';
+  if(icon)icon.innerHTML=TT_BANNER_ICONS[p]||TT_BANNER_ICONS.TikTok;
+  const tok=syncTokenForCur();
+  if(tok){
+    title.textContent='Akun '+p+' terhubung';
+    sub.textContent=tok.lastSyncAt
+      ? 'Terakhir sync: '+ttFormatSyncTime(tok.lastSyncAt)+' — klik untuk putuskan'
       : 'Terhubung — tap Sync untuk tarik data pertama kali';
-    banner.onclick=()=>{if(confirm('Putuskan koneksi akun TikTok?'))ttDisconnectAccount();};
+    banner.onclick=()=>{if(confirm('Putuskan koneksi akun '+p+'?'))disconnectCurrentPlatform();};
     if(syncBtn)syncBtn.style.display='inline-block';
   }else{
-    sub.textContent='Tarik data video & statistik otomatis lewat TikTok API';
-    banner.onclick=ttConnectAccount;
+    title.textContent='Hubungkan Akun '+p;
+    sub.textContent='Tarik data & statistik otomatis lewat API '+p;
+    banner.onclick=connectCurrentPlatform;
     if(syncBtn)syncBtn.style.display='none';
   }
+}
+
+async function igConnectAccount(){
+  try{
+    const cfg=await ttGetConfig();
+    if(!cfg.instagramAppId||!cfg.instagramRedirectUri)throw new Error('Instagram belum dikonfigurasi di server');
+    const state='ig:'+ttGenerateState();
+    sessionStorage.setItem('ka_oauth_state',state);
+    const url='https://www.instagram.com/oauth/authorize'
+      +'?client_id='+encodeURIComponent(cfg.instagramAppId)
+      +'&redirect_uri='+encodeURIComponent(cfg.instagramRedirectUri)
+      +'&response_type=code'
+      +'&scope='+encodeURIComponent(IG_SCOPES)
+      +'&state='+encodeURIComponent(state);
+    window.location.href=url;
+  }catch(err){
+    showToast('Gagal memulai login Instagram: '+err.message);
+  }
+}
+
+async function thConnectAccount(){
+  try{
+    const cfg=await ttGetConfig();
+    if(!cfg.threadsAppId||!cfg.threadsRedirectUri)throw new Error('Threads belum dikonfigurasi di server');
+    const state='th:'+ttGenerateState();
+    sessionStorage.setItem('ka_oauth_state',state);
+    const url='https://threads.net/oauth/authorize'
+      +'?client_id='+encodeURIComponent(cfg.threadsAppId)
+      +'&redirect_uri='+encodeURIComponent(cfg.threadsRedirectUri)
+      +'&response_type=code'
+      +'&scope='+encodeURIComponent(TH_SCOPES)
+      +'&state='+encodeURIComponent(state);
+    window.location.href=url;
+  }catch(err){
+    showToast('Gagal memulai login Threads: '+err.message);
+  }
+}
+
+async function metaEnsureFreshToken(provider){
+  const tok=getAccountSyncToken();
+  if(!tok||tok.provider!==provider)throw new Error('Akun '+provider+' belum terhubung');
+  const ageMs=Date.now()-(tok.obtained_at||0);
+  const expiresMs=(tok.expires_in||0)*1000;
+  // Refresh only when < 7 days left. Meta requires the token to be >= 24h old.
+  const stillValid=expiresMs&&ageMs<expiresMs-7*24*60*60*1000;
+  if(stillValid)return tok.access_token;
+  if(!expiresMs||ageMs<24*60*60*1000)throw new Error('Sesi '+provider+' belum bisa diperpanjang, coba lagi nanti');
+  const resp=await fetch('/api/'+provider+'-token',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({grant_type:'refresh',access_token:tok.access_token})
+  });
+  const data=await resp.json();
+  if(!resp.ok||data.error){
+    clearAccountSyncToken();
+    throw new Error(data.error||'Sesi '+provider+' kedaluwarsa, sambungkan ulang akunnya');
+  }
+  const updated={...tok,access_token:data.access_token,expires_in:data.expires_in,obtained_at:Date.now()};
+  setAccountSyncToken(updated);
+  return updated.access_token;
 }
 function ttFormatSyncTime(iso){
   try{
@@ -1701,6 +1822,189 @@ async function ttSyncVideos(){
   }finally{
     if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync';}
   }
+}
+
+function mapIgMedia(m){
+  const caption=m.caption||'';
+  const title=(caption.split('\n')[0]||'').trim().slice(0,120)||'(Tanpa judul)';
+  const ins=m.insights||null;
+  const fmt=m.media_product_type==='REELS'?'Reels':m.media_type==='CAROUSEL_ALBUM'?'Carousel':m.media_type==='VIDEO'?'Video':'Foto';
+  return {
+    extId:m.id,
+    title,
+    desc:caption,
+    date:m.timestamp?m.timestamp.slice(0,10):new Date().toISOString().slice(0,10),
+    format:fmt,
+    shareUrl:m.permalink||null,
+    perf:{
+      view:ins?(ins.views==null?null:ins.views):(m.view_count==null?null:m.view_count),
+      like:m.like_count==null?null:m.like_count,
+      save:ins?(ins.saved==null?null:ins.saved):null,
+      comment:m.comments_count==null?null:m.comments_count,
+      share:ins?(ins.shares==null?null:ins.shares):null,
+      follower:null
+    }
+  };
+}
+
+function mapThreadsPost(p){
+  const text=p.text||'';
+  const title=(text.split('\n')[0]||'').trim().slice(0,120)||'(Tanpa judul)';
+  const ins=p.insights||null;
+  const fmt=p.media_type==='VIDEO'?'Video':p.media_type==='IMAGE'?'Foto':'Post';
+  return {
+    extId:p.id,
+    title,
+    desc:text,
+    date:p.timestamp?p.timestamp.slice(0,10):new Date().toISOString().slice(0,10),
+    format:fmt,
+    shareUrl:p.permalink||null,
+    perf:{
+      view:ins?(ins.views==null?null:ins.views):null,
+      like:ins?(ins.likes==null?null:ins.likes):null,
+      save:ins?0:null,
+      comment:ins?(ins.replies==null?null:ins.replies):null,
+      share:ins?((ins.reposts||0)+(ins.quotes||0)+(ins.shares||0)):null,
+      follower:null
+    }
+  };
+}
+
+// Shared upsert for IG/Threads. Mirrors ttSyncVideos: match by platform id,
+// then fuzzy-title claim a draft without an id, then create. Manual fields
+// (format/hook/struct/topic/goal/notes/retention) are never overwritten, and
+// a null metric keeps the previous value (insights may be unavailable).
+async function upsertSyncedContents(items,keyField,existing){
+  const byExt={};
+  for(const c of existing)if(c[keyField])byExt[c[keyField]]=c;
+  const SIM_THRESHOLD=0.85;
+  // Only claim manual entries; never steal a post already synced from another platform.
+  const unclaimed=existing.filter(c=>!c[keyField]&&!c.ttVideoId&&!c.igId&&!c.thId);
+  const claimedIds=new Set();
+  const nowIso=new Date().toISOString();
+  let created=0,updated=0,matched=0;
+  for(const item of items){
+    let c=byExt[item.extId];
+    if(!c){
+      let best=null,bestScore=0;
+      for(const cand of unclaimed){
+        if(claimedIds.has(cand.id))continue;
+        const score=ttSimilarity(item.title,cand.title);
+        if(score>bestScore){bestScore=score;best=cand;}
+      }
+      if(best&&bestScore>=SIM_THRESHOLD){
+        c=best;
+        c[keyField]=item.extId;
+        claimedIds.add(c.id);
+        byExt[item.extId]=c;
+        matched++;
+      }
+    }
+    if(!c){
+      c={
+        id:Date.now().toString()+'_'+item.extId,
+        accountId:cur.id,
+        title:item.title,
+        desc:item.desc,
+        date:item.date,
+        format:item.format||'—',
+        slides:0,hook:'—',struct:'—',topic:'—',goal:'—',
+        notes:null,retention:{},
+        createdAt:new Date().toISOString()
+      };
+      c[keyField]=item.extId;
+      existing.push(c);
+      byExt[item.extId]=c;
+      created++;
+    }else{
+      updated++;
+    }
+    const prev=c.perf||{};
+    const pick=(v,k)=>(v==null?(prev[k]==null?0:prev[k]):v);
+    c.perf={
+      view:pick(item.perf.view,'view'),
+      like:pick(item.perf.like,'like'),
+      save:pick(item.perf.save,'save'),
+      comment:pick(item.perf.comment,'comment'),
+      share:pick(item.perf.share,'share'),
+      follower:pick(item.perf.follower,'follower')
+    };
+    c.shareUrl=item.shareUrl||c.shareUrl;
+    c.lastSyncAt=nowIso;
+    await dbPut('contents',c);
+  }
+  return {created,updated,matched};
+}
+
+async function runMetaSync(provider,endpoint,keyField,itemsKey,mapItem,onProfile){
+  if(!cur)return;
+  const syncBtn=document.getElementById('ttSyncBtn');
+  let accessToken;
+  try{
+    accessToken=await metaEnsureFreshToken(provider);
+  }catch(err){
+    ttUpdateConnectBanner();
+    showToast(err.message);
+    return;
+  }
+  if(syncBtn){syncBtn.disabled=true;syncBtn.textContent='...';}
+  try{
+    const existing=await dbByIdx('contents','accountId',cur.id);
+    let cursor=null,pages=0,created=0,updated=0,matched=0;
+    const nowIso=new Date().toISOString();
+    do{
+      const resp=await fetch(endpoint,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({access_token:accessToken,...(cursor?{cursor}:{})})
+      });
+      const data=await resp.json();
+      if(!resp.ok||data.error)throw new Error(data.error||'Gagal mengambil data dari '+provider);
+      if(data.profile&&onProfile)await onProfile(data.profile);
+      const mapped=(data[itemsKey]||[]).map(mapItem);
+      const r=await upsertSyncedContents(mapped,keyField,existing);
+      created+=r.created;updated+=r.updated;matched+=r.matched;
+      cursor=data.next||null;
+      pages++;
+    }while(cursor&&pages<META_MAX_PAGES);
+
+    const tok=getAccountSyncToken();
+    if(tok){tok.lastSyncAt=nowIso;setAccountSyncToken(tok);}
+    await renderLog();await renderInsight();ttUpdateConnectBanner();
+    const label=provider==='instagram'?'Instagram':'Threads';
+    const matchedTxt=matched>0?`, ${matched} draft ke-link otomatis`:'';
+    showToast(`Sync ${label}: ${created} baru, ${updated} diperbarui${matchedTxt}`);
+  }catch(err){
+    showToast('Gagal sync '+provider+': '+err.message);
+  }finally{
+    if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync';}
+  }
+}
+
+async function igSync(){
+  return runMetaSync('instagram','/api/instagram-sync','igId','media',mapIgMedia,async(profile)=>{
+    cur.stats={
+      follower:profile.followers_count||0,
+      following:profile.follows_count||0,
+      likes:0,
+      posts:profile.media_count||0,
+      updatedAt:new Date().toISOString()
+    };
+    await dbPut('accounts',cur);
+  });
+}
+
+async function thSync(){
+  return runMetaSync('threads','/api/threads-sync','thId','posts',mapThreadsPost,async(profile)=>{
+    cur.stats={
+      follower:profile.followers_count||0,
+      following:0,
+      likes:0,
+      posts:0,
+      updatedAt:new Date().toISOString()
+    };
+    await dbPut('accounts',cur);
+  });
 }
 
 function ttReadFileAsText(file){
@@ -3255,7 +3559,7 @@ async function renderSettings(){
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
         ${statCell('Follower',stats?.follower||0)}
         ${statCell('Mengikuti',stats?.following||0)}
-        ${statCell('Total Suka',stats?.likes||0)}
+        ${statCell(isMetaPlatform(cur.platform)?'Postingan':'Total Suka',isMetaPlatform(cur.platform)?(stats?.posts||0):(stats?.likes||0))}
       </div>
       <div style="font-size:10px;color:var(--text-3);text-align:center;margin-top:8px">${stats?.updatedAt?('Diperbarui '+ttFormatSyncTime(stats.updatedAt)):''}</div>
     </div>
@@ -3451,6 +3755,8 @@ async function deleteAccount(){
   const au=await dbByIdx('audience','accountId',cur.id);for(const a of au)await dbDel('audience',a.id);
   const comps=await dbByIdx('competitors','accountId',cur.id);for(const cp of comps)await dbDel('competitors',cp.id);
   await deleteAvatarFile(cur.id);
+  if(cur.platform==='TikTok')localStorage.removeItem('tt_oauth_token');
+  clearAccountSyncToken(cur.id);
   await dbDel('accounts',cur.id);cur=null;closeSheet('sheetSettings');
   const accs=await dbGetAll('accounts');if(accs.length)await switchAccount(accs[0]);else showOnboarding();
   showToast('Akun dihapus');
@@ -3557,7 +3863,7 @@ function saveToLog(){
   // Pre-fill openAddSheet with draft data
   editingId=null;
   contentOrigin=draftOrigin||null;
-  editSync={tiktokId:null,lastSyncAt:null};
+  editSync={tiktokId:null,igId:null,thId:null,lastSyncAt:null};
   document.getElementById('addSheetTitle').textContent='Simpan ke Log';
   // Reset
   ['inTitle','inDesc','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inWatchTime','inCompRate','inRewatchRate','inDuration'].forEach(id=>{
