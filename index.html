@@ -317,10 +317,6 @@
       <input type="text" class="form-input" id="obUsername" placeholder="@namaakun"/>
     </div>
     <div class="form-group">
-      <label class="form-label">Bio <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional)</span></label>
-      <textarea class="form-input" id="obBio" placeholder="Ceritakan singkat akun kamu..." style="min-height:60px"></textarea>
-    </div>
-    <div class="form-group">
       <label class="form-label">Platform</label>
       <div class="platform-grid" style="grid-template-columns:repeat(3,1fr)">
         <div class="platform-btn" onclick="selPlatform('TikTok',this)"><div class="platform-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.19 8.19 0 004.79 1.52V6.82a4.85 4.85 0 01-1.02-.13z"/></svg></div><div class="platform-name">TikTok</div></div>
@@ -748,7 +744,7 @@ function renderEmptyNoAccount(){
 async function showOnboarding(){
   document.getElementById('onboarding').classList.add('show');
   obTopics=[];obPlatform='';
-  ['obName','obUsername','obBio','obNiche'].forEach(id=>document.getElementById(id).value='');
+  ['obName','obUsername','obNiche'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('obTopicArea').style.display='none';
   document.querySelectorAll('.platform-btn').forEach(b=>b.classList.remove('selected'));
   // Show close button only if there's already at least 1 account
@@ -788,12 +784,11 @@ function addObTopic(){const v=document.getElementById('obTopicInput').value.trim
 async function saveNewAccount(){
   const name=document.getElementById('obName').value.trim();
   const username=document.getElementById('obUsername').value.trim();
-  const bio=document.getElementById('obBio').value.trim();
   const niche=document.getElementById('obNiche').value.trim();
   if(!name){showToast('Isi nama akun dulu');return;}
   if(!obPlatform){showToast('Pilih platform dulu');return;}
   if(!niche){showToast('Isi niche dulu');return;}
-  const acc={id:Date.now().toString(),name,username,bio,platform:obPlatform,niche,topics:obTopics.length?[...obTopics]:[niche],formats:[...(FMT[obPlatform]||['Carousel','Video','Foto'])],hooks:[...HOOKS],structs:[...STRUCTS],goals:[...GOALS],color:COLORS[Math.floor(Math.random()*COLORS.length)],createdAt:new Date().toISOString()};
+  const acc={id:Date.now().toString(),name,username,platform:obPlatform,niche,topics:obTopics.length?[...obTopics]:[niche],formats:[...(FMT[obPlatform]||['Carousel','Video','Foto'])],hooks:[...HOOKS],structs:[...STRUCTS],goals:[...GOALS],color:COLORS[Math.floor(Math.random()*COLORS.length)],createdAt:new Date().toISOString()};
   await dbPut('accounts',acc);
   hideOnboarding();
   await switchAccount(acc);
@@ -3211,7 +3206,9 @@ async function renderAccountsSheet(){
   const rows=await Promise.all(accs.map(async acc=>{
     const cs=await dbByIdx('contents','accountId',acc.id);
     const active=cur&&cur.id===acc.id;
-    return`<div class="acc-card ${active?'active-acc':''}" onclick='switchAccountFromSheet(${JSON.stringify(acc)})'><div class="acc-avatar" style="background:${acc.color||'#3D9B9C'}">${(acc.name||'?')[0].toUpperCase()}</div><div class="acc-info"><div class="acc-name">${acc.username||acc.name}</div><div class="acc-detail">${acc.platform} · ${acc.niche}</div></div><div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${cs.length} konten</div></div>`;
+    const url=await getAvatarUrl(acc.id);
+    const avatarStyle=`background:${acc.color||'#3D9B9C'};${url?`background-image:url("${url}");background-size:cover;background-position:center;`:''}`;
+    return`<div class="acc-card ${active?'active-acc':''}" onclick='switchAccountFromSheet(${JSON.stringify(acc)})'><div class="acc-avatar" style="${avatarStyle}">${url?'':(acc.name||'?')[0].toUpperCase()}</div><div class="acc-info"><div class="acc-name">${acc.username||acc.name}</div><div class="acc-detail">${acc.platform} · ${acc.niche}</div></div><div style="font-size:11px;color:var(--text-3);font-family:'DM Mono',monospace">${cs.length} konten</div></div>`;
   }));
   list.innerHTML=rows.join('');
 }
@@ -3246,7 +3243,6 @@ async function renderSettings(){
         <div style="min-width:0;flex:1">
           <div style="font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cur.name||'—')}</div>
           <div style="font-size:12px;color:var(--text-2);margin-top:1px">${cur.username?escapeHtml(cur.username.startsWith('@')?cur.username:'@'+cur.username):'@username'}</div>
-          <div style="font-size:12px;color:var(--text-2);line-height:1.5;margin-top:5px">${cur.bio?escapeHtml(cur.bio):'Belum ada bio'}</div>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
@@ -3265,7 +3261,6 @@ async function renderSettings(){
     ${profileCard}
     <div class="form-group"><label class="form-label">Nama Akun</label><input type="text" class="form-input" id="editName" value="${escapeHtml(cur.name)}"/></div>
     <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="editUsername" value="${escapeHtml(cur.username||'')}"/></div>
-    <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="editBio" placeholder="Bio singkat akun..." style="min-height:60px">${escapeHtml(cur.bio||'')}</textarea></div>
     <div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="editPlatform">${['TikTok','Instagram','YouTube','X','Threads'].map(p=>`<option ${cur.platform===p?'selected':''}>${p}</option>`).join('')}</select></div>
     <div class="form-group"><label class="form-label">Niche</label><input type="text" class="form-input" id="editNiche" value="${escapeHtml(cur.niche)}"/></div>
     <div class="sec-title" style="margin:18px 0 10px;display:block">Posisi Brand</div>
@@ -3423,7 +3418,6 @@ async function removeAvatar(){
 }
 async function saveSettings(){
   cur.name=document.getElementById('editName').value.trim();cur.username=document.getElementById('editUsername').value.trim();
-  cur.bio=document.getElementById('editBio')?.value.trim()||'';
   cur.platform=document.getElementById('editPlatform').value;cur.niche=document.getElementById('editNiche').value.trim();
   cur.positioning=cur.positioning||{tone:'',audience:'',pillars:[]};
   cur.positioning.tone=document.getElementById('editTone')?.value.trim()||'';
@@ -3985,12 +3979,17 @@ async function renderCompare(){
   }
   // Default select first 2
   if(!cmpSelected.length) cmpSelected=accs.slice(0,2).map(a=>a.id);
-  sel.innerHTML=accs.map(a=>`
+  const selAvatars=await Promise.all(accs.map(a=>getAvatarUrl(a.id)));
+  sel.innerHTML=accs.map((a,i)=>{
+    const url=selAvatars[i];
+    const avatarStyle=`background:${a.color||'var(--teal)'};${url?`background-image:url("${url}");background-size:cover;background-position:center;`:''}`;
+    return`
     <div class="cmp-acc-btn ${cmpSelected.includes(a.id)?'selected':''}" onclick="toggleCmpAcc('${a.id}')">
-      <div class="cmp-acc-avatar" style="background:${a.color||'var(--teal)'}">${(a.name||'?')[0].toUpperCase()}</div>
+      <div class="cmp-acc-avatar" style="${avatarStyle}">${url?'':(a.name||'?')[0].toUpperCase()}</div>
       <div class="cmp-acc-name">${a.username||a.name}</div>
       <div class="cmp-acc-plat">${a.platform}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   if(cmpSelected.length<2){body.innerHTML=`<div class="info-box">Pilih minimal 2 akun untuk dibandingkan.</div>`;return;}
   // Load data for selected accounts
   const selected=accs.filter(a=>cmpSelected.includes(a.id)).slice(0,3);
