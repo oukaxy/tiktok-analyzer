@@ -317,6 +317,10 @@
       <input type="text" class="form-input" id="obUsername" placeholder="@namaakun"/>
     </div>
     <div class="form-group">
+      <label class="form-label">Bio <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional)</span></label>
+      <textarea class="form-input" id="obBio" placeholder="Ceritakan singkat akun kamu..." style="min-height:60px"></textarea>
+    </div>
+    <div class="form-group">
       <label class="form-label">Platform</label>
       <div class="platform-grid" style="grid-template-columns:repeat(3,1fr)">
         <div class="platform-btn" onclick="selPlatform('TikTok',this)"><div class="platform-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.19 8.19 0 004.79 1.52V6.82a4.85 4.85 0 01-1.02-.13z"/></svg></div><div class="platform-name">TikTok</div></div>
@@ -653,13 +657,14 @@
 let db;
 function initDB(){
   return new Promise((res,rej)=>{
-    const r=indexedDB.open('KontenAnalyzerDB',2);
+    const r=indexedDB.open('KontenAnalyzerDB',3);
     r.onupgradeneeded=e=>{
       const d=e.target.result;
       if(!d.objectStoreNames.contains('accounts')) d.createObjectStore('accounts',{keyPath:'id'});
       if(!d.objectStoreNames.contains('contents')){const s=d.createObjectStore('contents',{keyPath:'id'});s.createIndex('accountId','accountId',{unique:false});}
       if(!d.objectStoreNames.contains('audience')){const s=d.createObjectStore('audience',{keyPath:'id'});s.createIndex('accountId','accountId',{unique:false});}
       if(!d.objectStoreNames.contains('competitors')){const s=d.createObjectStore('competitors',{keyPath:'id'});s.createIndex('accountId','accountId',{unique:false});}
+      if(!d.objectStoreNames.contains('avatars')) d.createObjectStore('avatars',{keyPath:'accountId'});
     };
     r.onsuccess=e=>{db=e.target.result;res(db);};
     r.onerror=()=>rej(r.error);
@@ -670,6 +675,41 @@ const dbGet=(s,k)=>new Promise((res,rej)=>{const r=db.transaction(s,'readonly').
 const dbByIdx=(s,idx,v)=>new Promise((res,rej)=>{const r=db.transaction(s,'readonly').objectStore(s).index(idx).getAll(v);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
 const dbPut=(s,o)=>new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).put(o);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
 const dbDel=(s,k)=>new Promise((res,rej)=>{const r=db.transaction(s,'readwrite').objectStore(s).delete(k);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});
+
+// ===== AVATAR (blob di IndexedDB, bukan localStorage) =====
+const avatarUrlCache={};
+async function getAvatarUrl(accountId){
+  if(avatarUrlCache[accountId])return avatarUrlCache[accountId];
+  const rec=await dbGet('avatars',accountId).catch(()=>null);
+  if(!rec||!rec.blob)return null;
+  const url=URL.createObjectURL(rec.blob);
+  avatarUrlCache[accountId]=url;
+  return url;
+}
+function releaseAvatarUrl(accountId){
+  if(avatarUrlCache[accountId]){URL.revokeObjectURL(avatarUrlCache[accountId]);delete avatarUrlCache[accountId];}
+}
+async function saveAvatarFile(accountId,file){
+  if(!file)return;
+  if(!file.type.startsWith('image/'))throw new Error('File harus berupa gambar');
+  if(file.size>5*1024*1024)throw new Error('Ukuran gambar maks 5 MB');
+  releaseAvatarUrl(accountId);
+  await dbPut('avatars',{accountId,blob:file,updatedAt:new Date().toISOString()});
+}
+async function deleteAvatarFile(accountId){
+  releaseAvatarUrl(accountId);
+  await dbDel('avatars',accountId);
+}
+async function updateTopAvatar(acc){
+  const el=document.getElementById('topAvatar');if(!el||!acc)return;
+  el.style.background=acc.color||'var(--teal)';
+  el.style.backgroundImage='';
+  el.style.backgroundSize='cover';
+  el.style.backgroundPosition='center';
+  el.textContent=(acc.name||'?')[0].toUpperCase();
+  const url=await getAvatarUrl(acc.id);
+  if(url){el.textContent='';el.style.backgroundImage=`url("${url}")`;}
+}
 
 // ===== STATE =====
 let cur=null; // current account
@@ -708,7 +748,7 @@ function renderEmptyNoAccount(){
 async function showOnboarding(){
   document.getElementById('onboarding').classList.add('show');
   obTopics=[];obPlatform='';
-  ['obName','obUsername','obNiche'].forEach(id=>document.getElementById(id).value='');
+  ['obName','obUsername','obBio','obNiche'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('obTopicArea').style.display='none';
   document.querySelectorAll('.platform-btn').forEach(b=>b.classList.remove('selected'));
   // Show close button only if there's already at least 1 account
@@ -748,11 +788,12 @@ function addObTopic(){const v=document.getElementById('obTopicInput').value.trim
 async function saveNewAccount(){
   const name=document.getElementById('obName').value.trim();
   const username=document.getElementById('obUsername').value.trim();
+  const bio=document.getElementById('obBio').value.trim();
   const niche=document.getElementById('obNiche').value.trim();
   if(!name){showToast('Isi nama akun dulu');return;}
   if(!obPlatform){showToast('Pilih platform dulu');return;}
   if(!niche){showToast('Isi niche dulu');return;}
-  const acc={id:Date.now().toString(),name,username,platform:obPlatform,niche,topics:obTopics.length?[...obTopics]:[niche],formats:[...(FMT[obPlatform]||['Carousel','Video','Foto'])],hooks:[...HOOKS],structs:[...STRUCTS],goals:[...GOALS],color:COLORS[Math.floor(Math.random()*COLORS.length)],createdAt:new Date().toISOString()};
+  const acc={id:Date.now().toString(),name,username,bio,platform:obPlatform,niche,topics:obTopics.length?[...obTopics]:[niche],formats:[...(FMT[obPlatform]||['Carousel','Video','Foto'])],hooks:[...HOOKS],structs:[...STRUCTS],goals:[...GOALS],color:COLORS[Math.floor(Math.random()*COLORS.length)],createdAt:new Date().toISOString()};
   await dbPut('accounts',acc);
   hideOnboarding();
   await switchAccount(acc);
@@ -771,8 +812,7 @@ async function switchAccount(acc){
   if(!cur.goals||!cur.goals.length){cur.goals=[...GOALS];migrated=true;}
   if(migrated)await dbPut('accounts',cur);
   localStorage.setItem('ka_activeAcc',acc.id);
-  document.getElementById('topAvatar').textContent=(acc.name||'?')[0].toUpperCase();
-  document.getElementById('topAvatar').style.background=acc.color||'var(--teal)';
+  await updateTopAvatar(acc);
   document.getElementById('topName').textContent=acc.username||acc.name;
   document.getElementById('topPlat').textContent=acc.platform+' · '+acc.niche;
   document.getElementById('draftInfoBox').style.display='none';
@@ -1532,6 +1572,29 @@ async function ttEnsureFreshToken(){
   return updated.access_token;
 }
 
+// Fetches account-level stats (follower / following / total likes) for the
+// active account. Username & bio stay manual — only numbers are synced.
+async function ttFetchProfile(accessToken){
+  if(!cur)return null;
+  const token=accessToken||await ttEnsureFreshToken();
+  const resp=await fetch('/api/tiktok-user',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({access_token:token})
+  });
+  const data=await resp.json();
+  if(!resp.ok||data.error)throw new Error(data.error||'Gagal ambil statistik profil TikTok');
+  const u=data.user||{};
+  cur.stats={
+    follower:u.follower_count||0,
+    following:u.following_count||0,
+    likes:u.likes_count||0,
+    updatedAt:new Date().toISOString()
+  };
+  await dbPut('accounts',cur);
+  return cur.stats;
+}
+
 // Pulls videos + stats from TikTok (paginated) and upserts them into the
 // local 'contents' store for the active account, matched by tiktokId.
 // Existing manually-tracked fields (format/hook/struct/topic/goal/notes/
@@ -1550,6 +1613,7 @@ async function ttSyncVideos(){
   }
   if(syncBtn){syncBtn.disabled=true;syncBtn.textContent='...';}
   try{
+    try{await ttFetchProfile(accessToken);}catch(e){console.warn('Profile sync gagal:',e.message);}
     const existing=await dbByIdx('contents','accountId',cur.id);
     const byTiktokId={};
     for(const c of existing)if(c.tiktokId)byTiktokId[c.tiktokId]=c;
@@ -3172,9 +3236,36 @@ async function renderSettings(){
         </div>
       </div>
     </div>`).join(''):'<div style="color:var(--text-3);font-size:12px;margin-bottom:8px">Belum ada persona. Tambahkan agar AI menyesuaikan bahasa & sudut pandang.</div>';
+  const avatarUrl=await getAvatarUrl(cur.id);
+  const stats=cur.stats||null;
+  const statCell=(label,val)=>`<div><div style="font-size:16px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text)">${stats?fmt(val):'—'}</div><div style="font-size:10px;color:var(--text-3);margin-top:2px">${label}</div></div>`;
+  const profileCard=`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:18px">
+      <div style="display:flex;gap:14px;align-items:center">
+        <div id="editAvatar" style="width:72px;height:72px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;overflow:hidden;background:${cur.color||'var(--teal)'};${avatarUrl?`background-image:url("${avatarUrl}");background-size:cover;background-position:center;`:''}">${avatarUrl?'':escapeHtml((cur.name||'?')[0].toUpperCase())}</div>
+        <div style="min-width:0;flex:1">
+          <div style="font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(cur.name||'—')}</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:1px">${cur.username?escapeHtml(cur.username.startsWith('@')?cur.username:'@'+cur.username):'@username'}</div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.5;margin-top:5px">${cur.bio?escapeHtml(cur.bio):'Belum ada bio'}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-secondary" style="flex:1;margin:0" onclick="document.getElementById('avatarFile').click()">Ganti Foto</button>
+        <button class="btn-secondary" style="flex:1;margin:0;color:var(--red)" onclick="removeAvatar()">Hapus Foto</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
+        ${statCell('Follower',stats?.follower||0)}
+        ${statCell('Mengikuti',stats?.following||0)}
+        ${statCell('Total Suka',stats?.likes||0)}
+      </div>
+      <div style="font-size:10px;color:var(--text-3);text-align:center;margin-top:8px">${stats?.updatedAt?('Diperbarui '+ttFormatSyncTime(stats.updatedAt)):''}</div>
+    </div>
+    <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="handleAvatarPick(event)"/>`;
   document.getElementById('settingsBody').innerHTML=`
+    ${profileCard}
     <div class="form-group"><label class="form-label">Nama Akun</label><input type="text" class="form-input" id="editName" value="${escapeHtml(cur.name)}"/></div>
     <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="editUsername" value="${escapeHtml(cur.username||'')}"/></div>
+    <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="editBio" placeholder="Bio singkat akun..." style="min-height:60px">${escapeHtml(cur.bio||'')}</textarea></div>
     <div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="editPlatform">${['TikTok','Instagram','YouTube','X','Threads'].map(p=>`<option ${cur.platform===p?'selected':''}>${p}</option>`).join('')}</select></div>
     <div class="form-group"><label class="form-label">Niche</label><input type="text" class="form-input" id="editNiche" value="${escapeHtml(cur.niche)}"/></div>
     <div class="sec-title" style="margin:18px 0 10px;display:block">Posisi Brand</div>
@@ -3311,8 +3402,28 @@ function rmEditStruct(i){cur.structs.splice(i,1);renderSettings();}
 function addEditStruct(){const v=prompt('Nama struktur konten baru:');if(!v)return;cur.structs=cur.structs||[];cur.structs.push(v.trim());renderSettings();}
 function rmEditGoal(i){cur.goals.splice(i,1);renderSettings();}
 function addEditGoal(){const v=prompt('Nama tujuan konten baru:');if(!v)return;cur.goals=cur.goals||[];cur.goals.push(v.trim());renderSettings();}
+async function handleAvatarPick(e){
+  const file=e.target.files&&e.target.files[0];
+  e.target.value='';
+  if(!cur||!file)return;
+  try{
+    await saveAvatarFile(cur.id,file);
+    await renderSettings();
+    await updateTopAvatar(cur);
+    showToast('Foto profil diperbarui ✓');
+  }catch(err){showToast('Gagal simpan foto: '+err.message);}
+}
+async function removeAvatar(){
+  if(!cur)return;
+  if(!confirm('Hapus foto profil?'))return;
+  await deleteAvatarFile(cur.id);
+  await renderSettings();
+  await updateTopAvatar(cur);
+  showToast('Foto profil dihapus');
+}
 async function saveSettings(){
   cur.name=document.getElementById('editName').value.trim();cur.username=document.getElementById('editUsername').value.trim();
+  cur.bio=document.getElementById('editBio')?.value.trim()||'';
   cur.platform=document.getElementById('editPlatform').value;cur.niche=document.getElementById('editNiche').value.trim();
   cur.positioning=cur.positioning||{tone:'',audience:'',pillars:[]};
   cur.positioning.tone=document.getElementById('editTone')?.value.trim()||'';
@@ -3324,6 +3435,7 @@ async function deleteAccount(){
   const cs=await dbByIdx('contents','accountId',cur.id);for(const c of cs)await dbDel('contents',c.id);
   const au=await dbByIdx('audience','accountId',cur.id);for(const a of au)await dbDel('audience',a.id);
   const comps=await dbByIdx('competitors','accountId',cur.id);for(const cp of comps)await dbDel('competitors',cp.id);
+  await deleteAvatarFile(cur.id);
   await dbDel('accounts',cur.id);cur=null;closeSheet('sheetSettings');
   const accs=await dbGetAll('accounts');if(accs.length)await switchAccount(accs[0]);else showOnboarding();
   showToast('Akun dihapus');
