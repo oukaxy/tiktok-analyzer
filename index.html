@@ -976,7 +976,7 @@ function applyFilter(){
     document.getElementById('contentList').innerHTML='<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><div class="empty-title">Tidak ditemukan</div><p>Coba kata kunci atau filter lain.</p></div>';
     return;
   }
-  renderContentList(filtered, avgView, avgSave, ttEngagementStats(allContents));
+  renderContentList(filtered, avgView, avgSave, ttEngagementStats(allContents), metricAvg);
 }
 
 function getPerfBadge(c, avgView, avgSave){
@@ -988,7 +988,7 @@ function getPerfBadge(c, avgView, avgSave){
   return'';
 }
 
-function renderContentList(list, avgView, avgSave, retStats){
+function renderContentList(list, avgView, avgSave, retStats, metricAvg){
   const listEl=document.getElementById('contentList');
   listEl.innerHTML=list.map(c=>{
     const hp=c.perf&&c.perf.view>0;
