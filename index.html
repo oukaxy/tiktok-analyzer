@@ -46,6 +46,8 @@
     .badge{font-size:10px;font-weight:600;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;letter-spacing:.3px;flex-shrink:0}
     .b-teal{background:var(--teal-bg);color:var(--teal)}
     .b-amber{background:var(--amber-bg);color:var(--amber)}
+    .b-green{background:var(--green-bg);color:var(--green)}
+    .b-red{background:var(--red-bg);color:var(--red)}
     .b-neu{background:var(--surface2);color:var(--text-2)}
     .metrics-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
     .metric-item{text-align:center}
@@ -546,8 +548,10 @@
       <div class="form-group"><label class="form-label">Tipe Hook</label><div class="chip-group" id="inHookChips"></div></div>
       <div class="form-group"><label class="form-label">Struktur Konten</label><div class="chip-group" id="inStructChips"></div></div>
       <div class="form-group"><label class="form-label">Pilar Konten</label><div class="chip-group" id="inPillarChips"></div></div>
+      <div class="form-group"><label class="form-label">Tahap Funnel</label><div class="chip-group" id="inFunnelChips"></div></div>
       <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><label class="form-label" style="margin-bottom:0">Topik Spesifik</label><button class="auto-topic-btn" id="autoTopicBtnAdd" onclick="autoSelectTopic('add')">✦ Auto Topik</button></div><div class="chip-group" id="inTopicChips"></div></div>
       <div class="form-group"><label class="form-label">Tujuan Konten</label><div class="chip-group" id="inGoalChips"></div></div>
+      <div class="form-group"><label class="form-label">Target Angka & Hasil <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional — bila tujuannya terukur, mis. 300 penjualan)</span></label><div class="grid2"><input type="number" class="form-input" id="inTarget" placeholder="Target (mis. 300)"/><input type="number" class="form-input" id="inActual" placeholder="Hasil aktual"/></div></div>
       <div class="form-group"><label class="form-label">Catatan Pribadi <span style="color:var(--text-3);font-weight:400;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0">(opsional)</span></label><textarea class="form-input" id="inNotes" placeholder="Misal: konten ini viral karena trending audio, dibuat saat ramadan..." style="min-height:70px"></textarea></div>
       <button class="btn-primary" onclick="goStep2()">Lanjut → Input Performa</button>
       <button class="btn-secondary" onclick="saveAsDraft()">Simpan Dulu (Belum Ada Performa)</button>
@@ -723,6 +727,30 @@ const HOOKS=['Pain point','Angka / List','Pertanyaan','Storytelling','Kontrovers
 const STRUCTS=['Numbered list','Storytelling','Problem → Solusi','Tips langsung','Edukasi','Listicle'];
 const FMT={TikTok:['Carousel','Video','Foto'],Instagram:['Carousel','Reels','Foto','Story'],YouTube:['Shorts','Video'],X:['Post','Thread','Video'],Threads:['Post','Thread','Video','Foto']};
 const GOALS=['Save tinggi','Like & engagement','Jangkauan luas','Follower growth'];
+function goalMetric(g){g=String(g||'').toLowerCase();if(/save/.test(g))return'save';if(/like|engag/.test(g))return'like';if(/jangkau|reach|view/.test(g))return'view';if(/follower/.test(g))return'follower';return'save';}
+function goalVerdict(c,metricAvg){
+  if(!c.goal||c.goal==='—')return null;
+  if(c.target!=null&&c.target>0){
+    if(c.actual==null)return{st:'wait',txt:'menunggu hasil'};
+    const pct=Math.round(c.actual/c.target*100);
+    return c.actual>=c.target?{st:'ok',txt:`${fmt(c.actual)}/${fmt(c.target)}`}:{st:'bad',txt:`${fmt(c.actual)}/${fmt(c.target)} (${pct}%)`};
+  }
+  if(c.perf&&c.perf.view>0&&metricAvg){
+    const m=goalMetric(c.goal),v=c.perf[m]||0,avg=metricAvg[m]||0;
+    if(!avg)return null;
+    return v>=avg?{st:'ok',txt:`${fmt(v)} ≥ avg`}:{st:'bad',txt:`${fmt(v)} < avg`};
+  }
+  return null;
+}
+function goalBadge(c,metricAvg){
+  if(!c.goal||c.goal==='—')return'';
+  const v=goalVerdict(c,metricAvg);
+  if(!v)return`<span class="badge b-amber">${escapeHtml(c.goal)}</span>`;
+  const cls=v.st==='ok'?'b-green':v.st==='bad'?'b-red':'b-amber';
+  const mark=v.st==='ok'?' ✓':v.st==='bad'?' ✗':'';
+  const tip=v.st==='wait'?'Target sudah dipasang — isi Hasil Aktual saat hasilnya masuk':v.st==='ok'?'Tujuan tercapai':'Di bawah target/rata-rata akun';
+  return`<span class="badge ${cls}" title="${tip}">${escapeHtml(c.goal)} · ${escapeHtml(v.txt)}${mark}</span>`;
+}
 const COLORS=['#3D9B9C','#D4922A','#E05A4A','#4CAF7D','#7B61FF','#E91E8C'];
 
 // ===== INIT =====
@@ -850,6 +878,7 @@ function renderAddChips(){
   mkChips('inFmtChips',fmts,'inFmt');mkChips('inHookChips',cur.hooks||HOOKS,'inHook');
   mkChips('inStructChips',cur.structs||STRUCTS,'inStruct');mkChips('inTopicChips',cur.topics||[],'inTopic');
   mkChips('inPillarChips',cur.positioning&&cur.positioning.pillars||[],'inPillar');
+  mkChips('inFunnelChips',['TOFU','MOFU','BOFU'],'inFunnel');
   mkChips('inGoalChips',cur.goals||GOALS,'inGoal');
 }
 function selChip(el,group){
@@ -925,6 +954,8 @@ function applyFilter(){
   const live2=allContents.filter(c=>c.perf&&c.perf.view>0);
   const avgView=live2.length?live2.reduce((s,c)=>s+c.perf.view,0)/live2.length:0;
   const avgSave=live2.length?live2.reduce((s,c)=>s+c.perf.save,0)/live2.length:0;
+  const mTot={};live2.forEach(c=>['view','like','save','follower'].forEach(m=>{(mTot[m]=mTot[m]||{s:0,n:0}).s+=c.perf[m]||0;mTot[m].n++;}));
+  const metricAvg={};Object.entries(mTot).forEach(([m,d])=>metricAvg[m]=d.n?d.s/d.n:0);
   let filtered=allContents.filter(c=>{
     if(q&&!(c.title||'').toLowerCase().includes(q))return false;
     if(activeFilters.status==='live'&&!(c.perf&&c.perf.view>0))return false;
@@ -1004,7 +1035,7 @@ function renderContentList(list, avgView, avgSave, retStats){
         ${phaseBadge}
       </div>
       <div class="card-body">
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:${c.notes||needsPerf?'10px':'0'}">${c.hook&&c.hook!=='—'?`<span class="badge b-neu">${c.hook}</span>`:''} ${c.struct&&c.struct!=='—'?`<span class="badge b-neu">${c.struct}</span>`:''} ${c.topic&&c.topic!=='—'?`<span class="badge b-teal">${c.topic}</span>`:''} ${c.goal&&c.goal!=='—'?`<span class="badge b-amber">${c.goal}</span>`:''}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:${c.notes||needsPerf?'10px':'0'}">${c.hook&&c.hook!=='—'?`<span class="badge b-neu">${c.hook}</span>`:''} ${c.struct&&c.struct!=='—'?`<span class="badge b-neu">${c.struct}</span>`:''} ${c.topic&&c.topic!=='—'?`<span class="badge b-teal">${c.topic}</span>`:''} ${goalBadge(c,metricAvg)}</div>
         ${notesHtml}
         ${perf}
       </div>
@@ -1030,7 +1061,7 @@ function openAddSheet(){
   const today=new Date().toISOString().split('T')[0];
   const dateEl=document.getElementById('inDateHidden');
   if(dateEl)dateEl.value=today;
-  ['inTitle','inDesc','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['inTitle','inDesc','inSlideScript','inView','inLike','inSave','inComment','inShare','inFollower','inNotes','inTarget','inActual'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   resetSlideInputs('inSlidesContainer');
   const retSec=document.getElementById('retentionSectionAdd');if(retSec)retSec.innerHTML='';
   document.querySelectorAll('#sheetAdd .chip').forEach(c=>c.classList.remove('selected'));
@@ -1071,7 +1102,10 @@ async function openEditSheet(id){
   selByText('inStructChips',c.struct,'inStruct');
   selByText('inTopicChips',c.topic,'inTopic');
   selByText('inPillarChips',c.pillar,'inPillar');
+  selByText('inFunnelChips',c.funnel,'inFunnel');
   selByText('inGoalChips',c.goal,'inGoal');
+  const inT=document.getElementById('inTarget');if(inT)inT.value=c.target!=null?c.target:'';
+  const inA=document.getElementById('inActual');if(inA)inA.value=c.actual!=null?c.actual:'';
   // Show/hide slide field
   toggleSlideGroups(c.format);
   // Fill step 2
@@ -1147,8 +1181,11 @@ function buildContent(withPerf){
     hook:cs['inHook']||'—',
     struct:cs['inStruct']||'—',
     pillar:cs['inPillar']||'—',
+    funnel:cs['inFunnel']||'—',
     topic:cs['inTopic']||'—',
     goal:cs['inGoal']||'—',
+    target:parseInt(document.getElementById('inTarget')?.value)||null,
+    actual:parseInt(document.getElementById('inActual')?.value)||null,
     notes:document.getElementById('inNotes')?.value.trim()||null,
     retention:buildRetentionFromForm('in', cs['inFmt']||''),
     perf:withPerf?{view:parseInt(document.getElementById('inView').value)||0,like:parseInt(document.getElementById('inLike').value)||0,save:parseInt(document.getElementById('inSave').value)||0,comment:parseInt(document.getElementById('inComment').value)||0,share:parseInt(document.getElementById('inShare').value)||0,follower:parseInt(document.getElementById('inFollower').value)||0}:null,
@@ -2742,6 +2779,10 @@ async function renderInsight(){
     ${pillarLive.length
       ?`<div class="card"><div class="card-body">${buildTable(pillarLive,'pillar')}</div></div>`
       :`<div class="info-box">Belum ada konten berpilar. Isi pilar di Pengaturan (posisi brand), lalu pakai "Label Pilar Massal".</div>`}
+    <div style="height:4px"></div>
+    <div class="sec-hdr"><span class="sec-title">Per Funnel</span><button class="bulk-topic-btn" id="bulkFunnelBtn" onclick="bulkLabelFunnel()">✦ Label Funnel Massal</button></div>
+    <div id="bulkFunnelStatus" style="display:none;margin-bottom:8px"></div>
+    <div class="card"><div class="card-body">${buildTable(live,'funnel')}</div></div>
     <div id="gapIdeas"></div>`;
 }
 function buildLineChart(live){
@@ -2825,9 +2866,28 @@ function buildPatterns(live){
   const bs=[...live].sort((a,b)=>b.perf.save-a.perf.save)[0];
   if(bs.perf.save>0) p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>`,title:'Driver Save',text:`Konten save tertinggi: "${bs.title||'—'}" (${bs.perf.save} save). Hook: "${bs.hook}" · Struktur: "${bs.struct}".`});
   if(live.every(c=>c.perf.comment===0)) p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`,title:'Zero Komentar',text:`Semua konten belum ada yang trigger komentar. Coba tambahkan pertanyaan di caption atau CTA yang mengundang diskusi.`});
-  const avg=live.reduce((s,c)=>s+c.perf.save,0)/live.length;
-  const gs=live.filter(c=>c.goal==='Save tinggi');
-  if(gs.length>0){const gAvg=gs.reduce((s,c)=>s+c.perf.save,0)/gs.length;p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,title:'Tujuan vs Realita',text:gAvg>=avg?`Konten "Save tinggi" rata-rata ${gAvg.toFixed(1)} save — di atas rata-rata (${avg.toFixed(1)}). ✓`:`Konten "Save tinggi" rata-rata ${gAvg.toFixed(1)} save — di bawah rata-rata (${avg.toFixed(1)}). Evaluasi hook dan struktur.`});}
+  const goalsSeen=[...new Set(live.map(c=>c.goal).filter(g=>g&&g!=='—'))];
+  if(goalsSeen.length){
+    const goalLines=goalsSeen.map(g=>{
+      const m=goalMetric(g);
+      const withTarget=live.filter(c=>c.goal===g&&c.target>0);
+      const parts=[];
+      if(withTarget.length){
+        const tt=withTarget.reduce((s,c)=>s+c.target,0),ta=withTarget.reduce((s,c)=>s+(c.actual||0),0);
+        const wait=withTarget.filter(c=>c.actual==null).length;
+        parts.push(`target ${fmt(ta)}/${fmt(tt)} (${tt?Math.round(ta/tt*100):0}%) ${ta>=tt?'✓':'✗'}${wait?` · ${wait} menunggu hasil`:''}`);
+      }
+      const rel=live.filter(c=>c.goal===g&&!(c.target>0));
+      if(rel.length){
+        const avgM=live.reduce((s,c)=>s+(c.perf[m]||0),0)/live.length;
+        const gAvg=rel.reduce((s,c)=>s+(c.perf[m]||0),0)/rel.length;
+        const nOk=rel.filter(c=>(c.perf[m]||0)>=avgM).length;
+        parts.push(`rata2 ${fmt(Math.round(gAvg))} ${m} vs akun ${fmt(Math.round(avgM))} ${m} — ${gAvg>=avgM?'✓':'✗'} (${nOk}/${rel.length} tercapai)`);
+      }
+      return`<strong>${escapeHtml(g)}</strong>: ${parts.join(' · ')||'belum ada data'}`;
+    }).join('<br>');
+    p.push({icon:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,title:'Tujuan vs Realita',text:goalLines});
+  }
   // Retention insights
   const ret=buildRetentionInsight(live);
   if(ret){
@@ -4233,7 +4293,9 @@ async function generatePlanSuggestions(){
   const pillarLines=pillars.length
     ?`Pilar konten akun: ${pillars.join(', ')}\nDistribusi konten live saat ini: ${Object.entries(pillarCounts).map(([k,v])=>`${k} (${v})`).join(', ')||'belum ada'}\n`
     :'';
-  const prompt=`Platform: ${cur.platform} · Niche: ${cur.niche}\nRentang minggu: ${start} s/d ${end} (${daysTotal} hari)\nRitme historis: sekitar ${rhythm} konten/minggu (4 minggu terakhir: ${recent.length} konten)\nJumlah diminta: ${count} konten\nFormat yang dipakai akun: ${formats}\n${pillarLines}Topik queue (urut skor gap):\n${topicLines}\nKonten yang sudah ada di rentang ini:\n${existingLines}\n\nSusun usulan jadwal posting untuk minggu tersebut. Kembalikan HANYA JSON valid tanpa markdown:\n{"suggestions":[{"date":"YYYY-MM-DD","topic":"","format":"","hook":"","pillar":""}]}\nAturan:\n1. Tanggal wajib berada di rentang (perhatikan pergantian bulan/tahun).\n2. Usulkan TEPAT ${count} konten, disebar MERATA mulai dari tanggal awal rentang dengan jarak sekitar ${spacing} hari antar konten — JANGAN menumpuk semua di satu tanggal atau di akhir minggu.\n3. Maksimal 1 konten per tanggal, kecuali ${count} lebih besar dari ${daysTotal} hari.\n4. Hook opsional tapi bila diisi harus spesifik niche; format pilih dari daftar format akun.${pillars.length?'\n5. Setiap usulan wajib mengisi "pillar" dengan salah satu pilar akun; sebar merata antar pilar — pilar dengan konten live paling sedikit mendapat porsi lebih besar.':''}`;
+  const funnelCounts={};live.forEach(c=>{const k=(c.funnel&&c.funnel!=='—')?c.funnel:'(tanpa funnel)';funnelCounts[k]=(funnelCounts[k]||0)+1;});
+  const funnelLines=`Tahap funnel (TOFU=kenalan/awareness, MOFU=pertimbangan/edukasi, BOFU=konversi/jual)\nDistribusi funnel konten live saat ini: ${Object.entries(funnelCounts).map(([k,v])=>`${k} (${v})`).join(', ')||'belum ada'}\n`;
+  const prompt=`Platform: ${cur.platform} · Niche: ${cur.niche}\nRentang minggu: ${start} s/d ${end} (${daysTotal} hari)\nRitme historis: sekitar ${rhythm} konten/minggu (4 minggu terakhir: ${recent.length} konten)\nJumlah diminta: ${count} konten\nFormat yang dipakai akun: ${formats}\n${pillarLines}${funnelLines}Topik queue (urut skor gap):\n${topicLines}\nKonten yang sudah ada di rentang ini:\n${existingLines}\n\nSusun usulan jadwal posting untuk minggu tersebut. Kembalikan HANYA JSON valid tanpa markdown:\n{"suggestions":[{"date":"YYYY-MM-DD","topic":"","format":"","hook":"","pillar":"","funnel":""}]}\nAturan:\n1. Tanggal wajib berada di rentang (perhatikan pergantian bulan/tahun).\n2. Usulkan TEPAT ${count} konten, disebar MERATA mulai dari tanggal awal rentang dengan jarak sekitar ${spacing} hari antar konten — JANGAN menumpuk semua di satu tanggal atau di akhir minggu.\n3. Maksimal 1 konten per tanggal, kecuali ${count} lebih besar dari ${daysTotal} hari.\n4. Hook opsional tapi bila diisi harus spesifik niche; format pilih dari daftar format akun.\n5. Setiap usulan wajib mengisi "funnel" dengan salah satu TOFU/MOFU/BOFU sesuai sudut kontennya; sebar seimbang dan pilih funnel dengan konten live paling sedikit lebih dulu.${pillars.length?'\n6. Setiap usulan wajib mengisi "pillar" dengan salah satu pilar akun; sebar merata antar pilar — pilar dengan konten live paling sedikit mendapat porsi lebih besar.':''}`;
   try{
     const r=await callAI({system:`Kamu adalah perencana konten ${cur.platform} niche "${cur.niche}". Jawab HANYA JSON valid tanpa markdown.`,messages:[{role:'user',content:prompt}],maxTokens:1024});
     if(!r.ok){box.innerHTML=`<div class="info-box">⚠️ ${escapeHtml(r.error)}</div>`;return;}
@@ -4254,7 +4316,7 @@ function renderPlanSuggestions(box,expected){
   const rows=plannerSuggestions.map((s,i)=>{
     const d=s.date?new Date(s.date+'T00:00:00'):null;
     const label=d?d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'}):'—';
-    return`<div class="cal-item"><input type="checkbox" class="plan-check" data-idx="${i}" checked style="flex:none"/>    <div class="cal-item-info"><div class="cal-item-title">${escapeHtml(s.topic||'(Tanpa topik)')}</div><div class="cal-item-meta">${label} · ${escapeHtml(s.format||'—')}${s.pillar&&s.pillar!=='—'?' · '+escapeHtml(s.pillar):''}${s.hook?' · '+escapeHtml(s.hook):''}</div></div></div>`;
+    return`<div class="cal-item"><input type="checkbox" class="plan-check" data-idx="${i}" checked style="flex:none"/>    <div class="cal-item-info"><div class="cal-item-title">${escapeHtml(s.topic||'(Tanpa topik)')}</div><div class="cal-item-meta">${label} · ${escapeHtml(s.format||'—')}${s.pillar&&s.pillar!=='—'?' · '+escapeHtml(s.pillar):''}${s.funnel&&s.funnel!=='—'?' · '+escapeHtml(s.funnel):''}${s.hook?' · '+escapeHtml(s.hook):''}</div></div></div>`;
   }).join('');
   const shortWarn=(expected&&plannerSuggestions.length<expected)?`<div class="info-box" style="margin-top:10px">AI memberi ${plannerSuggestions.length} dari ${expected} usulan — coba Generate ulang bila kurang.</div>`:'';
   box.innerHTML=`<div class="sec-hdr" style="margin-top:14px"><span class="sec-title">Usulan (${plannerSuggestions.length})</span></div>${rows}${shortWarn}<button class="btn-primary" onclick="addPlannedContents()">Tambahkan yang Dicentang</button>`;
@@ -4277,6 +4339,7 @@ async function addPlannedContents(){
       hook:s.hook||'—',
       struct:'—',
       pillar:s.pillar||'—',
+      funnel:(['TOFU','MOFU','BOFU'].includes(String(s.funnel||'').toUpperCase())?String(s.funnel).toUpperCase():'—'),
       topic:s.topic||'—',
       goal:'—',
       notes:null,
@@ -4608,6 +4671,8 @@ async function buildContextBlock(acc){
   const persona=personas[0];
   let s=`\nPosisi brand: ${p.tone||'—'}\nTarget audiens: ${p.audience||'—'}`;
   if(p.pillars&&p.pillars.length)s+=`\nPilar konten: ${p.pillars.join('; ')}`;
+  const fcs={};(await dbByIdx('contents','accountId',acc.id)).filter(c=>c.perf&&c.perf.view>0).forEach(c=>{const k=(c.funnel&&c.funnel!=='—')?c.funnel:'(tanpa funnel)';fcs[k]=(fcs[k]||0)+1;});
+  if(Object.keys(fcs).length)s+=`\nDistribusi funnel konten live: ${Object.entries(fcs).map(([k,v])=>`${k} (${v})`).join(', ')}`;
   if(persona){
     s+=`\nPersona: ${persona.name||'—'} (${persona.ageRange||'—'})`;
     if(persona.painPoints&&persona.painPoints.length)s+=` — pain: ${persona.painPoints.join('; ')}`;
@@ -4933,6 +4998,43 @@ async function bulkLabelPillar(){
 
   await renderInsight();
   showToast(`${updated} konten berhasil diberi pilar ✓`);
+}
+
+async function bulkLabelFunnel(){
+  if(!cur){showToast('Pilih akun dulu');return;}
+  const all=await dbByIdx('contents','accountId',cur.id);
+  const todo=all.filter(c=>c.perf&&c.perf.view>0&&(!c.funnel||c.funnel==='—'));
+  if(!todo.length){showToast('Semua konten live sudah punya funnel ✓');return;}
+
+  const btn=document.getElementById('bulkFunnelBtn');
+  const statusEl=document.getElementById('bulkFunnelStatus');
+  if(btn){btn.disabled=true;btn.textContent='⟳ Memproses...';}
+  if(statusEl){statusEl.style.display='';statusEl.innerHTML=`<div class="info-box">Memproses ${todo.length} konten... <span id="bulkFunnelProgress">0/${todo.length}</span></div>`;}
+
+  let updated=0;
+  for(let i=0;i<todo.length;i++){
+    const c=todo[i];
+    const contentText=[c.title,c.desc,c.slideScript].filter(Boolean).join('\n');
+    const prompt=`Niche: ${cur.niche}\nPlatform: ${cur.platform}\n\nDefinisi: TOFU=awareness/kenalan (hiburan, edukasi dasar, reach luas), MOFU=pertimbangan (perbandingan, tips mendalam, bangun kepercayaan), BOFU=konversi (promo, testimoni, ajakan beli/coba).\n\nKonten: ${contentText}\n\nPilih SATU tahap funnel paling sesuai: TOFU, MOFU, atau BOFU.\n\nJawab hanya JSON:\n{"funnel":"TOFU|MOFU|BOFU"}`;
+    try{
+      const r=await callAI({system:'Jawab hanya dengan JSON.',messages:[{role:'user',content:prompt}]});
+      if(!r.ok)continue;
+      let parsed;
+      try{parsed=JSON.parse(stripAiMarkdown(r.text));}catch{continue;}
+      const pick=String(parsed.funnel||'').trim().toUpperCase();
+      if(!['TOFU','MOFU','BOFU'].includes(pick))continue;
+      c.funnel=pick;
+      await dbPut('contents',c);
+      updated++;
+      const progress=document.getElementById('bulkFunnelProgress');
+      if(progress)progress.textContent=`${i+1}/${todo.length}`;
+    }catch{
+      // skip this content on error
+    }
+  }
+
+  await renderInsight();
+  showToast(`${updated} konten berhasil diberi funnel ✓`);
 }
 
 init();

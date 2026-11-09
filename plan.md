@@ -245,6 +245,49 @@
 
 ---
 
+## Fase 10 — Klasifikasi Funnel (TOFU/MOFU/BOFU) — SELESAI
+
+> Menyalin pola Fase 8 (pilar) untuk tahap funnel. Enum tetap 3 nilai — tanpa pengaturan, tanpa migrasi DB.
+
+### 10a. Konten & draft punya funnel
+- [x] Field opsional `content.funnel` ('TOFU'/'MOFU'/'BOFU', default `'—'`).
+- [x] Sheet Add/Edit: chip-group `inFunnelChips` tetap (TOFU/MOFU/BOFU) setelah Pilar Konten (`mkChips` di `renderAddChips`, `selByText` di `openEditSheet`, dibaca `buildContent()` sebagai `cs['inFunnel']`). Semua draft yang disimpan ke Log otomatis punya funnel.
+
+### 10b. Funnel dalam perencanaan & konteks AI
+- [x] Prompt "Rencanakan Minggu": distribusi funnel konten live + definisi singkat TOFU/MOFU/BOFU + aturan wajib isi `"funnel"` per usulan, sebar seimbang (funnel terlemah dulu). Usulan menampilkan funnel di meta; `addPlannedContents()` menyimpan `funnel` (divalidasi ke 3 nilai, upper-case).
+- [x] `buildContextBlock()`: baris `Distribusi funnel konten live: TOFU (n), …` bila ada konten live → semua prompt yang inject contextBlock sadar mix funnel akun.
+
+### 10c. Analitik funnel
+- [x] Section "Per Funnel" di Insight (setelah Per Pilar): `buildTable(live,'funnel')` — selalu tampil, termasuk bucket `'—'` supaya terlihat berapa konten yang belum berlabel; per baris: jumlah konten + avg view/save.
+- [x] "✦ Label Funnel Massal" → `bulkLabelFunnel()` (pola `bulkLabelPillar`, lebih simpel — daftar tetap): konten live tanpa funnel diklasifikasi AI ke SATU nilai TOFU/MOFU/BOFU (validasi ke daftar, ditolak bila di luar), progress info-box.
+
+- [x] Verifikasi: ekstraksi `<script>` → `node --check` OK; uji headless `buildTable` per funnel (bucket `'—'` tampil, urut avg save), filter bulk (hanya konten live tanpa funnel), validasi nilai planner. Catatan: panggilan AI live & tap-test UI tidak diuji (tanpa API key).
+
+---
+
+## Fase 11 — Mekanisme "Tujuan Tercapai" — SELESAI
+
+> Sebelumnya satu-satunya evaluasi tujuan hardcoded ke goal "Save tinggi" saja (`buildPatterns`). Sekarang: verdict per konten + rekap semua tujuan, dengan dua batas keberhasilan.
+
+### 11a. Batas "tercapai" — dua lapis, tanpa input wajib
+- [x] **Relatif** (default): tujuan dipetakan ke metrik `perf` via `goalMetric(g)` (save→save, like/engag→like, jangkau/reach/view→view, follower→follower, fallback save). Tercapai bila nilai konten ≥ rata-rata akun untuk metrik itu (dihitung ulang saat render, ikut tumbuh saat akun berkembang).
+- [x] **Absolut** (opsional): field `content.target` + `content.actual` (number, null bila kosong) untuk tujuan terukur manual — mis. "Penjualan" target 300, aktual diisi belakangan saat hasil masuk. Sinkron dengan funnel: konten BOFU = kandidat paling wajar diberi target.
+
+### 11b. Verdict per konten (Log)
+- [x] Helper murni `goalVerdict(c, metricAvg)` + `goalBadge(c, metricAvg)`: target+aktual → hijau ✓ / merah ✗ "120/300 (40%)"; target saja → amber "menunggu hasil"; tanpa target (ada performa) → ✓/✗ relatif "5 ≥ avg"; tanpa goal/performa → badge polos seperti dulu.
+- [x] `applyFilter()` menghitung `metricAvg` per metrik dari konten live; badge tujuan di kartu Log kini render via `goalBadge` (CSS baru `.b-green`/`.b-red` memakai var yang sudah ada).
+
+### 11c. Rekap "Tujuan vs Realita" (Insight)
+- [x] `buildPatterns()` — blok hardcoded "Save tinggi" diganti loop semua tujuan yang muncul di konten live: konten bertarget dijumlah absolut (`total aktual/total target` + % + jumlah yang menunggu hasil), sisanya relatif (`rata2 vs akun` + `n/N tercapai`).
+
+### 11d. Form
+- [x] Sheet Add/Edit: pasangan input number "Target Angka & Hasil (opsional)" di bawah Tujuan Konten; reset di `openAddSheet`, prefill di `openEditSheet`, disimpan `buildContent()`.
+- [x] Batasan: satu tujuan + satu pasang target/aktual per konten — konversi kedua dicatat di catatan pribadi.
+
+- [x] Verifikasi: ekstraksi `<script>` → `node --check` OK; uji headless `goalMetric` (5 mapping), `goalVerdict` (absolut ok/bad/wait, relatif ok/bad, tanpa goal/data), `goalBadge` (kelas warna), agregat absolut & relatif untuk kartu Insight. Catatan: tap-test UI tidak diuji (WebView debugging nonaktif di build ini).
+
+---
+
 ## Urutan Eksekusi & Verifikasi
 
 1. Fase 1 (fondasi `buildPatternSummary`, Narasi AI, Ide dari Gap)
